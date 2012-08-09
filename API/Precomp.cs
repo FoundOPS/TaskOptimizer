@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Drawing.Drawing2D;
 using System.IO;
 using TaskOptimizer.API;
@@ -16,13 +17,14 @@ namespace TaskOptimizer
     class Precomp
     {
         
-        public static NpgsqlConnection pgsql = new NpgsqlConnection("Server=192.168.1.102;Port=5432;Database=osmroutes;User Id=postgres;Password=14oaI29qa6up");
+        public static NpgsqlConnection pgsql = new NpgsqlConnection("Server=127.0.0.1;Port=5432;Database=osmroutes;User Id=postgres;Password=14oaI29qa6up");
         public static void Main()
         {
             var s = getCSV(new FileInfo(@"C:\LatLon.csv"));
             DateTime startTime = System.DateTime.Now;
+            Console.WriteLine(getDistance(s[0], s[1]));
+    
             /*
-            
             NpgsqlConnectionStringBuilder sb = new NpgsqlConnectionStringBuilder();
             sb.Host = "192.168.1.102";
             sb.UserName = "postgres";
@@ -31,12 +33,13 @@ namespace TaskOptimizer
             NpgsqlConnection pgsql = new NpgsqlConnection(sb.ConnectionString);
             pgsql.Open();
             NpgsqlCommand pgcmd = pgsql.CreateCommand();
-            */
+           
             
             pgsql.Open();
+             */
           List<Coordinate> stops = new List<Coordinate>();
                     Random r = new Random();
-                    while (stops.Count < 45)
+                    while (stops.Count < 100)
                     {
                         Coordinate c = s[r.Next(s.Count)];
                         if (!stops.Contains(c))
@@ -48,10 +51,11 @@ namespace TaskOptimizer
                     OSMResponse route = getRoute(stops);
                     foreach (OSMInstruction inst in route.Route_Instructions)
                     {
-                        Console.WriteLine(inst.Road_Name);
+                        Console.WriteLine(inst.Road_Name+" " +inst.Instruction_Duration);
                     }
                     Console.WriteLine(DateTime.Now.Subtract(startTime).Ticks / 10000000.00);
 
+                    Console.WriteLine(route.Route_Geometry);
         }
         public static void reCompute(ICollection<Coordinate> coords)
         {
@@ -190,10 +194,11 @@ namespace TaskOptimizer
             Optimizer o = new Optimizer(optConf);
             System.Threading.Thread.Sleep(1000);
             
-            while (o.stillInit())
+            while (o.stillInit() || o.MinSequences == null)
             {
-
+                Console.WriteLine(o.m_creationThread.ThreadState.ToString());
             }
+            Console.WriteLine(o.m_creationThread.ThreadState);
             List<Coordinate> routeList = new List<Coordinate>();
             foreach (Task t in o.MinSequences[0].Tasks)
             {
@@ -239,7 +244,7 @@ namespace TaskOptimizer
         {
             try
             {
-                HttpWebRequest request = WebRequest.Create("http://192.168.1.102:5050/nearest?loc="+a.lat+","+a.lon) as HttpWebRequest;
+                HttpWebRequest request = WebRequest.Create("http://127.0.0.1:5050/nearest?loc="+a.lat+","+a.lon) as HttpWebRequest;
                 using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
@@ -311,7 +316,7 @@ namespace TaskOptimizer
         {
              try
             {
-                HttpWebRequest request = WebRequest.Create(makeRequest(new [] {a,b})) as HttpWebRequest;
+                HttpWebRequest request = WebRequest.Create("http://127.0.0.1:5050/distance?loc="+a.ToString()+"&loc="+b.ToString()) as HttpWebRequest;
                 using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
@@ -319,11 +324,8 @@ namespace TaskOptimizer
                         "Server error (HTTP {0}: {1}).",
                         response.StatusCode,
                         response.StatusDescription));
-                    DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(OSMResponse));
-                    object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
-                    OSMResponse jsonResponse
-                    = objResponse as OSMResponse;
-                    return jsonResponse.Route_Summary.Total_Distance;
+                    StreamReader sr = new StreamReader(response.GetResponseStream());
+                    return Int32.Parse(sr.ReadToEnd());
                 }
              }
                  catch (Exception e){

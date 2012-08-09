@@ -101,12 +101,15 @@ namespace TaskOptimizer.Model
 
         public int distanceTo(Task task)
         {
-            if (task == null)
+            if (task == null || task == this)
             {
                 return 0;
             }
-
-            return Precomp.getDistance(new Coordinate(this.X, this.Y), new Coordinate(task.X, task.Y));
+            if (m_distances[task.Id] == 0)
+            {
+                m_distances[task.Id] = Precomp.getDistance(new Coordinate(this.X, this.Y), new Coordinate(task.X, task.Y));
+            }
+            return m_distances[task.Id]; 
         }
 
         public override string ToString()

@@ -27,10 +27,10 @@ namespace TaskOptimizer.Model
             m_creationThread.Start();            
         }
 
-        Thread m_creationThread;
+        public Thread m_creationThread;
         public Boolean stillInit()
         {
-            if (m_creationThread.ThreadState == ThreadState.Running) return true; 
+            if (m_creationThread.ThreadState == ThreadState.Running || m_creationThread.ThreadState == ThreadState.WaitSleepJoin) return true; 
             return false;
         }
         private void create(Configuration config)
