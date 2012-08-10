@@ -9,7 +9,7 @@ using System.Net;
 namespace TaskOptimizer.API
 {
     [DataContract]
-    class OSMResponse
+   public class OSMResponse
     {
         [DataMember(Name = "version")]
         public double Version { get; set; }
@@ -52,7 +52,7 @@ namespace TaskOptimizer.API
         public String Transaction_Id { get; set; }
     }
     [DataContract]
-    class OSMInstruction{
+    public class OSMInstruction{
         [DataMember]
         public String Instruction_Type { get; set; }
         [DataMember]
@@ -82,7 +82,7 @@ namespace TaskOptimizer.API
         }
     }
     [DataContract]
-    class RouteSummary{
+   public class RouteSummary{
         [DataMember(Name = "total_distance")]
         public int Total_Distance { get; set; }
         [DataMember(Name = "total_time")]
@@ -93,7 +93,7 @@ namespace TaskOptimizer.API
         public String End_Point { get; set; }
     }
     [DataContract]
-    class AlternativeInstructions
+    public class AlternativeInstructions
     {
         [DataMember]
         public OSMInstruction[] Instructions { get; set; }

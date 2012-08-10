@@ -14,7 +14,7 @@ using TaskOptimizer.View;
 
 namespace TaskOptimizer
 {
-    class Precomp
+    public class Precomp
     {
         
         public static NpgsqlConnection pgsql = new NpgsqlConnection("Server=127.0.0.1;Port=5432;Database=osmroutes;User Id=postgres;Password=14oaI29qa6up");
@@ -39,7 +39,7 @@ namespace TaskOptimizer
              */
           List<Coordinate> stops = new List<Coordinate>();
                     Random r = new Random();
-                    while (stops.Count < 100)
+                    while (stops.Count < 10)
                     {
                         Coordinate c = s[r.Next(s.Count)];
                         if (!stops.Contains(c))
@@ -156,7 +156,7 @@ namespace TaskOptimizer
             }
             return coords;
         }
-        public static OSMResponse getRoute(List<Coordinate> stops)
+        public static HttpWebResponse getRawRoute(List<Coordinate> stops)
         {
             List<Coordinate> resolved = new List<Coordinate>();
             foreach (Coordinate c in stops)
@@ -205,11 +205,11 @@ namespace TaskOptimizer
                 Coordinate rp = new Coordinate(t.X, t.Y);
                 routeList.Add(rp);
             }
-            return MakeTransaction(makeRequest(routeList));
+            return getRaw(makeRequest(routeList));
         }
         public static String makeRequest(ICollection<Coordinate> coords)
         {
-            String requestString = "http://127.0.0.1:5050/viaroute?";
+            String requestString = "http://192.168.2.102:5050/viaroute?";
             foreach (Coordinate c in coords){
                 requestString += "loc="+c.lat+","+c.lon+"&";
             }
@@ -244,7 +244,7 @@ namespace TaskOptimizer
         {
             try
             {
-                HttpWebRequest request = WebRequest.Create("http://127.0.0.1:5050/nearest?loc="+a.lat+","+a.lon) as HttpWebRequest;
+                HttpWebRequest request = WebRequest.Create("http://192.168.2.102:5050/nearest?loc="+a.lat+","+a.lon) as HttpWebRequest;
                 using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
@@ -262,6 +262,24 @@ namespace TaskOptimizer
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                return null;
+            }
+        }
+        public static HttpWebResponse getRaw(string requestUrl)
+        {
+            try
+            {
+                HttpWebRequest request = WebRequest.Create(requestUrl) as HttpWebRequest;
+                HttpWebResponse response = request.GetResponse() as HttpWebResponse;
+                    if (response.StatusCode != HttpStatusCode.OK)
+                        throw new Exception(String.Format(
+                        "Server error (HTTP {0}: {1}).",
+                        response.StatusCode,
+                        response.StatusDescription));
+                    return response;
+            }
+            catch
+            {
                 return null;
             }
         }
@@ -312,11 +330,62 @@ namespace TaskOptimizer
                 return null;
             }
         }
+        public static OSMResponse getRoute(List<Coordinate> coords)
+        {
+            return MakeTransaction(getRawRoute(coords));
+        }
+        public static OSMResponse MakeTransaction(HttpWebResponse response)
+        {
+            try
+            {
+                    if (response.StatusCode != HttpStatusCode.OK)
+                        throw new Exception(String.Format(
+                        "Server error (HTTP {0}: {1}).",
+                        response.StatusCode,
+                        response.StatusDescription));
+                    DataContractJsonSerializer jsonSerializer = new DataContractJsonSerializer(typeof(OSMResponse));
+                    object objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
+                    OSMResponse jsonResponse
+                    = objResponse as OSMResponse;
+                    List<OSMInstruction> instructions = new List<OSMInstruction>();
+                    foreach (Object[] objs in jsonResponse.Raw_Route)
+                    {
+                        instructions.Add(new OSMInstruction(objs));
+                    }
+                    jsonResponse.Route_Instructions = instructions.ToArray();
+                    List<AlternativeInstructions> alt_instructions = new List<AlternativeInstructions>();
+                    foreach (Object[][] instSet in jsonResponse.Raw_Alternatives)
+                    {
+                        OSMInstruction[] i = new OSMInstruction[instSet.Length];
+                        for (int j = 0; j < instSet.Length; j++)
+                        {
+                            i[j] = new OSMInstruction(instSet[j]);
+                        }
+                        AlternativeInstructions alt = new AlternativeInstructions();
+                        alt.Instructions = i;
+                        alt_instructions.Add(alt);
+                    }
+                    jsonResponse.Alternative_Instructions = alt_instructions.ToArray();
+                    List<Coordinate> via_coords = new List<Coordinate>();
+                    foreach (Object[] raw_coord in jsonResponse.Raw_Via)
+                    {
+                        via_coords.Add(new Coordinate(Convert.ToDouble(raw_coord[0]), Convert.ToDouble(raw_coord[1])));
+                    }
+                    jsonResponse.Via_Points = via_coords.ToArray();
+                    return jsonResponse;
+                }
+            
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
+        }
         public static int getDistance(Coordinate a, Coordinate b)
         {
              try
             {
-                HttpWebRequest request = WebRequest.Create("http://127.0.0.1:5050/distance?loc="+a.ToString()+"&loc="+b.ToString()) as HttpWebRequest;
+                HttpWebRequest request = WebRequest.Create("http://192.168.2.102:5050/distance?loc="+a.ToString()+"&loc="+b.ToString()) as HttpWebRequest;
                 using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
