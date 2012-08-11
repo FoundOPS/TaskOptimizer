@@ -1,18 +1,13 @@
-using System;
-using System.Collections;
-using System.Text;
-
-
 namespace TaskOptimizer.Model
 {
     public class FitnessLevels
     {
+        private int m_costMultiplier;
+        private int m_timeMultiplier;
+
         public int TimeMultiplier
         {
-            get
-            {
-                return m_timeMultiplier;
-            }
+            get { return m_timeMultiplier; }
 
             set
             {
@@ -28,10 +23,7 @@ namespace TaskOptimizer.Model
 
         public int CostMultiplier
         {
-            get
-            {
-                return m_costMultiplier;
-            }
+            get { return m_costMultiplier; }
 
             set
             {
@@ -44,8 +36,5 @@ namespace TaskOptimizer.Model
                 }
             }
         }
-
-        private int m_timeMultiplier;
-        private int m_costMultiplier;
     }
 }

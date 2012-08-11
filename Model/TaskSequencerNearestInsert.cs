@@ -1,15 +1,15 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 
 namespace TaskOptimizer.Model
 {
-    class TaskSequencerNearestInsert
+    internal class TaskSequencerNearestInsert
     {
+        private readonly Random m_rand = new Random(10);
+
         public void generate(List<Task> remainingTasks, int nbTasksInSequence, TaskSequence sequence)
-        {            
-            List<Task> ordered_tasks = new List<Task>(nbTasksInSequence);
+        {
+            var ordered_tasks = new List<Task>(nbTasksInSequence);
 
             if (nbTasksInSequence > remainingTasks.Count)
             {
@@ -24,7 +24,6 @@ namespace TaskOptimizer.Model
 
                 if (remainingTasks.Count > 0)
                 {
-
                     task = findAlmostNearestTask(task, remainingTasks, 1.0);
                     remainingTasks.Remove(task);
                     ordered_tasks.Add(task);
@@ -39,7 +38,8 @@ namespace TaskOptimizer.Model
 
                         for (int t1 = 0; t1 < ordered_tasks.Count - 1; t1++)
                         {
-                            int cost = findCheapestInsert(ordered_tasks[t1], ordered_tasks[t1 + 1], remainingTasks, out task);
+                            int cost = findCheapestInsert(ordered_tasks[t1], ordered_tasks[t1 + 1], remainingTasks,
+                                                          out task);
                             if (cost < minCost)
                             {
                                 minCost = cost;
@@ -47,7 +47,7 @@ namespace TaskOptimizer.Model
                                 minInsertPos = t1;
                             }
                         }
-                       
+
                         remainingTasks.Remove(minTask);
                         ordered_tasks.Insert(minInsertPos + 1, minTask);
                     }
@@ -56,12 +56,13 @@ namespace TaskOptimizer.Model
                 }
             }
 
-            sequence.Tasks = ordered_tasks;  
+            sequence.Tasks = ordered_tasks;
         }
 
-        public TaskSequence generate(List<Task> remainingTasks, int nbTasksInSequence, Robot robot, double startX, double startY, FitnessLevels fitnessLevels)
-        {            
-            TaskSequence sequence = new TaskSequence();
+        public TaskSequence generate(List<Task> remainingTasks, int nbTasksInSequence, Robot robot, double startX,
+                                     double startY, FitnessLevels fitnessLevels)
+        {
+            var sequence = new TaskSequence();
 
             sequence.Robot = robot;
             sequence.StartX = startX;
@@ -102,19 +103,16 @@ namespace TaskOptimizer.Model
                 int distance = task.distanceTo(fromTask);
                 if (distance < minDistance && (minTask == null || m_rand.Next(2) == 0))
                 {
-                    int adjustedDistance = (int)(distance * tolerance);
+                    var adjustedDistance = (int) (distance*tolerance);
                     if (adjustedDistance < minDistance)
                     {
                         minDistance = adjustedDistance;
                     }
                     minTask = task;
                 }
-            }            
+            }
 
             return minTask;
-
         }
-
-        private Random m_rand = new Random(10);
     }
 }

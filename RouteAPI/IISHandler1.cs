@@ -11,15 +11,19 @@ namespace RouteAPI
     {
         public string Loc { get; set; }
     }
+
     public class APIResponse
     {
         public string Result { get; set; }
     }
+
     public class RouteAPIService : IService<RouteAPI>
     {
+        #region IService<RouteAPI> Members
+
         public object Execute(RouteAPI request)
         {
-            List<Coordinate> coords = new List<Coordinate>();
+            var coords = new List<Coordinate>();
             String[] splitCoords = request.Loc.Split('$');
             foreach (String c in splitCoords)
             {
@@ -28,10 +32,12 @@ namespace RouteAPI
             }
             HttpWebResponse resp = Precomp.getRawRoute(coords);
             String retString = "";
-            StreamReader sr = new StreamReader(resp.GetResponseStream());
+            var sr = new StreamReader(resp.GetResponseStream());
             retString += sr.ReadToEnd();
 
             return retString;
         }
-    } 
+
+        #endregion
+    }
 }

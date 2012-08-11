@@ -2,9 +2,12 @@ using TaskOptimizer.API;
 
 namespace TaskOptimizer.Model
 {
-
     public class Task
     {
+        private readonly int[] m_distances;
+        private readonly int m_id;
+        private int m_defaultDistance;
+
         public Task(int id, int nbTasks)
         {
             m_id = id;
@@ -21,70 +24,22 @@ namespace TaskOptimizer.Model
             X = task.X;
             Y = task.Y;
             Effort = task.Effort;
-
         }
 
-        public int UserId
-        {
-            get
-            {
-                return m_userId;
-            }
-
-            set
-            {
-                m_userId = value;
-            }
-        }
+        public int UserId { get; set; }
 
         public int Id
         {
-            get
-            {
-                return m_id;
-            }
-
-
+            get { return m_id; }
         }
 
-        public double X
-        {
-            get
-            {
-                return m_x;
-            }
+        public double X { get; set; }
 
-            set
-            {
-                m_x = value;
-            }
-        }
+        public double Y { get; set; }
 
-        public double Y
-        {
-            get
-            {
-                return m_y;
-            }
-
-            set
-            {
-                m_y = value;
-            }
-        }
-
-        public int Effort
-        {
-            get
-            {
-                return m_effort;
-            }
-
-            set
-            {
-                m_effort = value;
-            }
-        }
+        public int Effort { get; set; }
+        public double lat { get; set; }
+        public double lon { get; set; }
 
         public void setDefaultDistance(int distance)
         {
@@ -104,9 +59,9 @@ namespace TaskOptimizer.Model
             }
             if (m_distances[task.Id] == 0)
             {
-                m_distances[task.Id] = Precomp.getDistance(new Coordinate(this.X, this.Y), new Coordinate(task.X, task.Y));
+                m_distances[task.Id] = Precomp.getDistance(new Coordinate(X, Y), new Coordinate(task.X, task.Y));
             }
-            return m_distances[task.Id]; 
+            return m_distances[task.Id];
         }
 
         public override string ToString()
@@ -116,19 +71,12 @@ namespace TaskOptimizer.Model
 
         public override bool Equals(object obj)
         {
-            return ((Task)obj).Id == Id;
+            return ((Task) obj).Id == Id;
         }
 
         public override int GetHashCode()
         {
             return Id;
         }
-
-        int[] m_distances;
-        private double m_x, m_y;
-        private int  m_effort, m_userId, m_id, m_defaultDistance;
-        public double lat{get;set;}
-        public double lon {get;set;}
     }
-
 }

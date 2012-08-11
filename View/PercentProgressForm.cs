@@ -1,9 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Text;
 using System.Windows.Forms;
 using TaskOptimizer.Interfaces;
 
@@ -11,41 +6,43 @@ namespace TaskOptimizer.View
 {
     public partial class PercentProgressForm : Form, WorkProgress
     {
+        private bool m_cancelled;
+        private bool m_ended;
+
         public PercentProgressForm()
         {
             InitializeComponent();
 
-            this.cancellingLabel.Visible = false;
-            m_cancelled = false;            
+            cancellingLabel.Visible = false;
+            m_cancelled = false;
             m_ended = false;
         }
 
-        delegate void WorkProgressDelegate(string description, int percent);
+        #region WorkProgress Members
+
         public void onWorkProgress(string description, int percent)
         {
             if (InvokeRequired)
-            {                
-                WorkProgressDelegate del = new WorkProgressDelegate(onWorkProgress);
-                Invoke(del, new object[] { description, percent });
+            {
+                WorkProgressDelegate del = onWorkProgress;
+                Invoke(del, new object[] {description, percent});
                 return;
             }
-            
+
             if (description.Length > 0)
             {
-                this.descriptionLabel.Text = description;
+                descriptionLabel.Text = description;
             }
 
-            this.progressBar.Value = percent;
-            this.percentLabel.Text = percent.ToString() + "%";
+            progressBar.Value = percent;
+            percentLabel.Text = percent.ToString() + "%";
         }
 
-        delegate void NoParamDelegate();
         public void onWorkEnd()
         {
-
             if (InvokeRequired)
             {
-                NoParamDelegate del = new NoParamDelegate(onWorkEnd);
+                NoParamDelegate del = onWorkEnd;
                 Invoke(del);
                 return;
             }
@@ -54,14 +51,16 @@ namespace TaskOptimizer.View
             if (Visible)
             {
                 Close();
-            }            
+            }
         }
 
-        
+
         public bool WorkCancelled
         {
             get { return m_cancelled; }
         }
+
+        #endregion
 
         protected override void OnVisibleChanged(EventArgs e)
         {
@@ -73,12 +72,12 @@ namespace TaskOptimizer.View
                     return;
                 }
             }
-            
+
             base.OnVisibleChanged(e);
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
-        {            
+        {
             base.OnFormClosing(e);
         }
 
@@ -89,12 +88,20 @@ namespace TaskOptimizer.View
 
         private void cancel()
         {
-            this.cancellingLabel.Visible = true;
+            cancellingLabel.Visible = true;
             m_cancelled = true;
         }
 
+        #region Nested type: NoParamDelegate
 
-        private bool m_cancelled;        
-        private bool m_ended;        
+        private delegate void NoParamDelegate();
+
+        #endregion
+
+        #region Nested type: WorkProgressDelegate
+
+        private delegate void WorkProgressDelegate(string description, int percent);
+
+        #endregion
     }
 }

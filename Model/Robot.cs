@@ -1,77 +1,31 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Drawing;
 
 namespace TaskOptimizer.Model
 {
     public class Robot
     {
+        private Brush m_brush;
+        private Color m_color;
+
         public Robot()
         {
-            m_distanceCost = 1;
-            m_workCost = 1;
-            m_distanceTime = 1;
-            m_workTime = 1;
-        }
-        public int DistanceCost
-        {
-            get
-            {
-                return m_distanceCost;
-            }
-
-            set
-            {
-                m_distanceCost = value;
-            }
+            DistanceCost = 1;
+            WorkCost = 1;
+            DistanceTime = 1;
+            WorkTime = 1;
         }
 
-        public int WorkCost
-        {
-            get
-            {
-                return m_workCost;
-            }
+        public int DistanceCost { get; set; }
 
-            set
-            {
-                m_workCost = value;
-            }
-        }
+        public int WorkCost { get; set; }
 
-        public int DistanceTime
-        {
-            get
-            {
-                return m_distanceTime;
-            }
+        public int DistanceTime { get; set; }
 
-            set
-            {
-                m_distanceTime = value;
-            }
-        }
-
-        public int WorkTime
-        {
-            get
-            {
-                return m_workTime;
-            }
-
-            set
-            {
-                m_workTime = value;
-            }
-        }
+        public int WorkTime { get; set; }
 
         public Color Color
         {
-            get
-            {
-                return m_color;
-            }
+            get { return m_color; }
 
             set
             {
@@ -82,15 +36,7 @@ namespace TaskOptimizer.Model
 
         public Brush Brush
         {
-            get
-            {
-                return m_brush;
-            }
+            get { return m_brush; }
         }
-
-        private int m_workCost, m_distanceCost, m_distanceTime, m_workTime;
-        private Color m_color;
-        private Brush m_brush;
     }
-
 }

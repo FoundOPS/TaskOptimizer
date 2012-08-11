@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using TaskOptimizer.Interfaces;
 
@@ -9,30 +7,60 @@ namespace TaskOptimizer.Model
 {
     public class Optimizer
     {
-        public class Configuration
-        {
-            public List<Robot> robots;
-            public List<Task> tasks;
-            public double startX, startY;
-            public FitnessLevels fitnessLevels;
-            public int nbDistributors;
-            public int randomSeed;
-            public WorkProgress progress;
-        }
+        public Thread m_creationThread;
+        private int m_curIteration;
+        private TaskDistributor[] m_distributors;
+        private bool m_endOptimizeThread;
+        private TaskDistributor m_minDistributor;
+        private int m_minDistributorFitness = Int32.MaxValue;
+        private Random m_rand;
+        private bool[] m_recomputeFitnesses;
+        private Thread[] m_threads;
 
         public Optimizer(Configuration config)
         {
             ThreadStart start = delegate { create(config); };
             m_creationThread = new Thread(start);
-            m_creationThread.Start();            
+            m_creationThread.Start();
         }
 
-        public Thread m_creationThread;
+        public int TotalTime
+        {
+            get { return m_minDistributor.TotalTime; }
+        }
+
+        public int TotalCost
+        {
+            get { return m_minDistributor.TotalCost; }
+        }
+
+        public int CurrentIteration
+        {
+            get { return m_curIteration; }
+        }
+
+        public List<TaskSequence> MinSequences
+        {
+            get { return new List<TaskSequence>(m_minDistributor.MinSequences); }
+        }
+
+        public int Fitness
+        {
+            get { return m_minDistributor.Fitness; }
+        }
+
+        public int NbUsedRobots
+        {
+            get { return m_minDistributor.NbUsedRobots; }
+        }
+
         public Boolean stillInit()
         {
-            if (m_creationThread.ThreadState == ThreadState.Running || m_creationThread.ThreadState == ThreadState.WaitSleepJoin) return true; 
+            if (m_creationThread.ThreadState == ThreadState.Running ||
+                m_creationThread.ThreadState == ThreadState.WaitSleepJoin) return true;
             return false;
         }
+
         private void create(Configuration config)
         {
             Console.WriteLine("Creating?");
@@ -43,7 +71,7 @@ namespace TaskOptimizer.Model
             m_threads = new Thread[config.nbDistributors];
             m_recomputeFitnesses = new bool[config.nbDistributors];
 
-            TaskDistributor.Configuration taskDistributorConfiguration = new TaskDistributor.Configuration();
+            var taskDistributorConfiguration = new TaskDistributor.Configuration();
             taskDistributorConfiguration.robots = config.robots;
             taskDistributorConfiguration.tasks = config.tasks;
             taskDistributorConfiguration.startX = config.startX;
@@ -51,32 +79,32 @@ namespace TaskOptimizer.Model
             taskDistributorConfiguration.fitnessLevels = config.fitnessLevels;
             taskDistributorConfiguration.optimizer = this;
             taskDistributorConfiguration.progress = config.progress;
-            
+
             for (int t = 0; t < config.nbDistributors; t++)
             {
                 Console.WriteLine(t);
                 if (config.progress.WorkCancelled)
-                {                    
+                {
                     config.progress.onWorkEnd();
                     return;
                 }
 
-                config.progress.onWorkProgress("Generating distributors...", t * 100 / config.nbDistributors);
+                config.progress.onWorkProgress("Generating distributors...", t*100/config.nbDistributors);
                 Console.WriteLine("Generating distributors");
                 taskDistributorConfiguration.randomSeed = m_rand.Next();
-                taskDistributorConfiguration.startProgressPercent = t * 100 / config.nbDistributors;
-                taskDistributorConfiguration.endProgressPercent = taskDistributorConfiguration.startProgressPercent + 100 / config.nbDistributors;
+                taskDistributorConfiguration.startProgressPercent = t*100/config.nbDistributors;
+                taskDistributorConfiguration.endProgressPercent = taskDistributorConfiguration.startProgressPercent +
+                                                                  100/config.nbDistributors;
                 m_distributors[t] = new TaskDistributor(taskDistributorConfiguration);
                 m_recomputeFitnesses[t] = false;
                 m_threads[t] = new Thread(optimizeThread);
             }
 
             config.progress.onWorkProgress("Starting...", 100);
-            
-            start();
-            
-            config.progress.onWorkEnd();
 
+            start();
+
+            config.progress.onWorkEnd();
         }
 
         public void recomputeFitness()
@@ -93,7 +121,7 @@ namespace TaskOptimizer.Model
             m_endOptimizeThread = false;
             for (int t = 0; t < m_threads.Length; t++)
             {
-                m_threads[t].Start((object)t);
+                m_threads[t].Start(t);
             }
         }
 
@@ -130,7 +158,7 @@ namespace TaskOptimizer.Model
 
         private void optimizeThread(object index)
         {
-            int distributorIndex = (int)index;
+            var distributorIndex = (int) index;
 
             TaskDistributor distributor = m_distributors[distributorIndex];
 
@@ -144,65 +172,20 @@ namespace TaskOptimizer.Model
                 distributor.optimize();
             }
         }
-         
 
+        #region Nested type: Configuration
 
-        public int TotalTime
+        public class Configuration
         {
-            get
-            {
-                return m_minDistributor.TotalTime;
-            }
+            public FitnessLevels fitnessLevels;
+            public int nbDistributors;
+            public WorkProgress progress;
+            public int randomSeed;
+            public List<Robot> robots;
+            public double startX, startY;
+            public List<Task> tasks;
         }
 
-        public int TotalCost
-        {
-            get
-            {
-                return m_minDistributor.TotalCost;
-            }
-        }
-
-        public int CurrentIteration
-        {
-            get
-            {                
-                return m_curIteration;
-            }
-        }
-
-        public List<TaskSequence> MinSequences
-        {
-            get
-            {
-                return new List<TaskSequence>(m_minDistributor.MinSequences);
-            }
-        }
-
-        public int Fitness
-        {
-            get
-            {
-                return m_minDistributor.Fitness;
-            }
-        }
-
-        public int NbUsedRobots
-        {
-            get
-            {
-                return m_minDistributor.NbUsedRobots;
-            }
-        }
-
-        private Thread[] m_threads;
-        private bool m_endOptimizeThread = false;
-        private Random m_rand;
-        
-        private TaskDistributor[] m_distributors;
-        private bool[] m_recomputeFitnesses;
-        private TaskDistributor m_minDistributor;
-        private int m_minDistributorFitness = Int32.MaxValue;
-        private int m_curIteration = 0;
+        #endregion
     }
 }

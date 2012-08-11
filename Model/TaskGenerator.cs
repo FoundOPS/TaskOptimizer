@@ -1,23 +1,22 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using System.Drawing;
 using TaskOptimizer.API;
 
 namespace TaskOptimizer.Model
 {
-    class TaskGenerator
+    internal class TaskGenerator
     {
+        private readonly Random m_rand;
+
         public TaskGenerator(int randomSeed)
         {
             m_rand = new Random(randomSeed);
-        }        
+        }
 
         public List<Task> generateTasks(int nbTasks, bool randomTaskSizes, int startX, int startY)
-        {            
-            
-            List<Task> tasks = new List<Task>(nbTasks);
+        {
+            var tasks = new List<Task>(nbTasks);
 
             for (int t = 0; t < nbTasks; t++)
             {
@@ -39,20 +38,18 @@ namespace TaskOptimizer.Model
 
         private int computeDistance(double x, double y, Task task)
         {
-            return Precomp.getDistance(new Coordinate(x,y),new Coordinate(task.lat,task.lon));
+            return Precomp.getDistance(new Coordinate(x, y), new Coordinate(task.lat, task.lon));
         }
 
         private Task generateTask(int id, int nbTasks, bool randomTaskSizes)
         {
-            Task task = new Task(id, nbTasks);
+            var task = new Task(id, nbTasks);
             if (randomTaskSizes)
             {
-
                 task.Effort = m_rand.Next(50) + 10;
                 if (m_rand.Next(nbTasks) == 0)
                 {
                     task.Effort = 150;
-
                 }
             }
             else
@@ -61,14 +58,14 @@ namespace TaskOptimizer.Model
             }
             task.X = m_rand.Next(1000);
             task.Y = m_rand.Next(600);
-            
-            
+
+
             return task;
         }
 
         public List<Robot> generateRobots(int nbRobots)
-        {            
-            List<Robot> robots = new List<Robot>(nbRobots);
+        {
+            var robots = new List<Robot>(nbRobots);
 
             for (int t = 0; t < nbRobots; t++)
             {
@@ -112,22 +109,19 @@ namespace TaskOptimizer.Model
             robots.Add(robot);
             */
 
-            
-           
+
             return robots;
         }
 
         private Robot generateRobot()
         {
-            Robot robot = new Robot();
+            var robot = new Robot();
             robot.Color = Color.FromArgb(m_rand.Next(255), m_rand.Next(255), m_rand.Next(255));
-            robot.DistanceCost = 1;//m_rand.Next(10) + 10;
+            robot.DistanceCost = 1; //m_rand.Next(10) + 10;
             robot.WorkCost = 1; //m_rand.Next(10) + 10;
-            robot.DistanceTime = 5;//m_rand.Next(10) + 100;
-            robot.WorkTime = 5;// m_rand.Next(10) + 100;
+            robot.DistanceTime = 5; //m_rand.Next(10) + 100;
+            robot.WorkTime = 5; // m_rand.Next(10) + 100;
             return robot;
         }
-
-        private Random m_rand;
     }
 }

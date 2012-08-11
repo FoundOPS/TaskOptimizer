@@ -1,32 +1,38 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using TaskOptimizer.Interfaces;
 
 namespace TaskOptimizer.Model
 {
     public class TaskDistribution : Individual
     {
-        public class Configuration
-        {
-            public List<Robot> robots;
-            public List<Task> tasks;
-            public double startX;
-            public double startY;
-            public FitnessLevels fitnessLevels;
-            public int randomSeed;
-            public TaskDistributor distributor;
-        }
+        private readonly TaskSequencerNearestInsert m_nearestInsert = new TaskSequencerNearestInsert();
+        private List<Task>[] m_distributedTasks;
+        private TaskDistributor m_distributor;
+        private int m_fitness;
+        private FitnessLevels m_fitnessLevels;
+        private int[] m_lastTaskDistributedRobot;
 
-        public TaskDistribution(TaskDistribution.Configuration config)
+        private int m_nbUsedRobots;
+        private bool m_optimizingSequences;
+        private Random m_rand;
+        private List<Robot> m_robots;
+        private TaskSequencer[] m_sequencers;
+        private List<TaskSequence> m_sequences;
+        private double m_startX, m_startY;
+        private int[] m_taskDistributedRobot;
+        private List<Task> m_tasks;
+        private int m_totalCost;
+        private int m_totalTime;
+
+        public TaskDistribution(Configuration config)
         {
             configure(config);
         }
 
         public TaskDistribution(TaskDistribution distribution)
         {
-            Configuration config = new Configuration();
+            var config = new Configuration();
             config.robots = distribution.m_robots;
             config.tasks = distribution.m_tasks;
             config.startX = distribution.m_startX;
@@ -42,113 +48,15 @@ namespace TaskOptimizer.Model
             m_fitness = Int32.MaxValue;
 
             setSequences(distribution.Sequences);
-            
-        }
-        
-        public void setSequences(List<TaskSequence> sequences)
-        {
-            int fitness = m_fitness;
-
-            int robotIndex = 0;
-            foreach(TaskSequence sequence in sequences)
-            {
-                if (sequence != null)
-                {
-                    foreach (Task task in sequence.Tasks)
-                    {
-                        m_taskDistributedRobot[task.Id] = robotIndex;
-                    }
-                }
-                robotIndex++;                    
-            }
-
-            updateDistributedTasksFromDistribution();
-
-            for (int t = 0; t < m_robots.Count; t++)
-            {
-                TaskSequencer.Configuration config = new TaskSequencer.Configuration();
-                config.robot = m_robots[t];
-
-                if (m_distributedTasks[t].Count > 0)
-                {
-                    config.tasks = cloneTaskList((sequences[t]).Tasks);
-                    config.expectedFitness = (sequences[t]).Fitness;
-                    config.orderedTasks = true;
-                }
-                else
-                {
-                    config.tasks = new List<Task>();
-                }
-                config.startX = m_startX;
-                config.startY = m_startY;
-                config.fitnessLevels = m_fitnessLevels;
-               
-                
-                m_sequencers[t].configure(config);
-                
-            }                      
-
-            optimize();            
         }
 
-        public int Id
-        {
-            get
-            {
-                return m_id;
-            }
-
-            set
-            {
-                m_id = value;
-            }
-        }
-
-
-        
-
-        public void generateInitialSolution()
-        {
-            int method = m_rand.Next(10);
-
-            if (method < 1)
-            {
-                generateFixedInitialSolution(m_rand.Next(m_robots.Count));
-            }
-            else if (method < 5)
-            {
-                generateRandomInitialSolution();
-            }
-            else
-            {
-                generateKMeanInitialSolution();
-            }
-        }
-
-        
-
-        /// <summary>
-        /// All tasks for one robot.
-        /// </summary>        
-        public void generateFixedInitialSolution(int robotIndex)
-        {
-            for (int t = 0; t < m_tasks.Count; t++)
-            {
-                m_taskDistributedRobot[t] = robotIndex;
-            }
-
-            afterDistributionChanged();
-        }
-
-        
 
         public bool OptimizeSequences
         {
             set
             {
-        
                 foreach (TaskSequencer sequencer in m_sequencers)
-                {   
+                {
                     if (value)
                     {
                         m_sequencers[0].useOptimalPopulationSize();
@@ -162,74 +70,49 @@ namespace TaskOptimizer.Model
                 m_optimizingSequences = value;
             }
 
-            get
-            {
-                return m_optimizingSequences;
-            }
+            get { return m_optimizingSequences; }
         }
 
         public int NbUsedRobots
         {
-            get
-            {
-                return m_nbUsedRobots;
-            }
+            get { return m_nbUsedRobots; }
         }
 
-
-        public int Fitness
-        {
-            get
-            {
-                return m_fitness;
-            }
-        }
 
         public int TotalTime
         {
-            get
-            {
-                return m_totalTime;
-            }
+            get { return m_totalTime; }
         }
 
         public int TotalCost
         {
-            get
-            {
-                return m_totalCost;
-            }
+            get { return m_totalCost; }
         }
 
         public List<TaskSequence> Sequences
         {
-            get
-            {                
-                return m_sequences;
-            }
+            get { return m_sequences; }
         }
 
-        
+        #region Individual Members
 
-        public void recomputeFitness()
+        public int Id { get; set; }
+
+        public int Fitness
         {
-            foreach (TaskSequencer sequencer in m_sequencers)
-            {
-                sequencer.recomputeFitness();
-            }
-
-            optimize();
+            get { return m_fitness; }
         }
+
 
         public void optimize()
         {
             m_fitness = 0;
             int maxTime = 0;
             int usedRobots = 0;
-            
+
             for (int t = 0; t < m_robots.Count; t++)
             {
-                 m_sequencers[t].optimize();
+                m_sequencers[t].optimize();
 
                 TaskSequence sequence = m_sequencers[t].MinTaskSequence;
                 if (sequence != null)
@@ -250,31 +133,31 @@ namespace TaskOptimizer.Model
                 m_sequences[t] = sequence;
             }
 
-            m_nbUsedRobots = usedRobots;            
+            m_nbUsedRobots = usedRobots;
             m_totalCost = m_fitness;
 
             m_fitness *= m_fitnessLevels.CostMultiplier;
-            m_fitness += maxTime * m_fitnessLevels.TimeMultiplier;
-            
+            m_fitness += maxTime*m_fitnessLevels.TimeMultiplier;
+
 
             m_totalTime = maxTime;
         }
-                
+
         /// <summary>
         /// We become the child of these 2 parent distributions
         /// </summary>        
         public void crossover(Individual parent1, Individual parent2)
         {
-            TaskDistribution p1 = parent1 as TaskDistribution;
-            TaskDistribution p2 = parent2 as TaskDistribution;
-            
+            var p1 = parent1 as TaskDistribution;
+            var p2 = parent2 as TaskDistribution;
+
             bool changed = false;
 
             for (int t = 0; t < m_tasks.Count; t++)
             {
                 int distributedRobotBefore = m_taskDistributedRobot[t];
 
-                if (m_rand.Next() % 2 == 0)
+                if (m_rand.Next()%2 == 0)
                 {
                     m_taskDistributedRobot[t] = p1.m_taskDistributedRobot[t];
                 }
@@ -283,12 +166,12 @@ namespace TaskOptimizer.Model
                     m_taskDistributedRobot[t] = p2.m_taskDistributedRobot[t];
                 }
 
-                if( distributedRobotBefore != m_taskDistributedRobot[t] )
+                if (distributedRobotBefore != m_taskDistributedRobot[t])
                 {
                     changed = true;
-                }            
+                }
             }
-            
+
             if (changed)
             {
                 afterDistributionChanged();
@@ -298,49 +181,21 @@ namespace TaskOptimizer.Model
                 // population surely is very similar... introduce some variations!
                 mutate();
             }
-
-
         }
 
-        public Task findNearestAssignedTask(Task fromTask)
-        {
-            int minDistance = Int32.MaxValue;
-            Task minTask = null;
 
-            foreach (Task task in m_tasks)
-            {
-                // assigned?
-                if (m_taskDistributedRobot[task.Id] != -1 && fromTask.Id != task.Id)
-                {
-                    int distance = task.distanceTo(fromTask);
-                    if (distance < minDistance)
-                    {
-                        minDistance = distance;
-                        minTask = task;
-                    }
-                }
-            }
-
-            
-
-            return minTask;
-
-        }
-
-        
         public void mutate()
-        {           
-            
+        {
             int force = m_distributor.computeMutationForce();
 
-            if( force > 10 )
+            if (force > 10)
             {
                 force = 10;
             }
 
-            int nbMutations = (int)(m_rand.Next(m_tasks.Count/10)*(force/3.0)+1);
+            var nbMutations = (int) (m_rand.Next(m_tasks.Count/10)*(force/3.0) + 1);
             bool changed = false;
-            double nearestTolerance = 1.0 + force / 12.0;
+            double nearestTolerance = 1.0 + force/12.0;
             for (int t = 0; t < nbMutations; t++)
             {
                 int taskIndex = m_rand.Next(m_tasks.Count);
@@ -366,7 +221,119 @@ namespace TaskOptimizer.Model
             }
         }
 
-        private void configure(TaskDistribution.Configuration config)
+        #endregion
+
+        public void setSequences(List<TaskSequence> sequences)
+        {
+            int fitness = m_fitness;
+
+            int robotIndex = 0;
+            foreach (TaskSequence sequence in sequences)
+            {
+                if (sequence != null)
+                {
+                    foreach (Task task in sequence.Tasks)
+                    {
+                        m_taskDistributedRobot[task.Id] = robotIndex;
+                    }
+                }
+                robotIndex++;
+            }
+
+            updateDistributedTasksFromDistribution();
+
+            for (int t = 0; t < m_robots.Count; t++)
+            {
+                var config = new TaskSequencer.Configuration();
+                config.robot = m_robots[t];
+
+                if (m_distributedTasks[t].Count > 0)
+                {
+                    config.tasks = cloneTaskList((sequences[t]).Tasks);
+                    config.expectedFitness = (sequences[t]).Fitness;
+                    config.orderedTasks = true;
+                }
+                else
+                {
+                    config.tasks = new List<Task>();
+                }
+                config.startX = m_startX;
+                config.startY = m_startY;
+                config.fitnessLevels = m_fitnessLevels;
+
+
+                m_sequencers[t].configure(config);
+            }
+
+            optimize();
+        }
+
+        public void generateInitialSolution()
+        {
+            int method = m_rand.Next(10);
+
+            if (method < 1)
+            {
+                generateFixedInitialSolution(m_rand.Next(m_robots.Count));
+            }
+            else if (method < 5)
+            {
+                generateRandomInitialSolution();
+            }
+            else
+            {
+                generateKMeanInitialSolution();
+            }
+        }
+
+
+        /// <summary>
+        /// All tasks for one robot.
+        /// </summary>        
+        public void generateFixedInitialSolution(int robotIndex)
+        {
+            for (int t = 0; t < m_tasks.Count; t++)
+            {
+                m_taskDistributedRobot[t] = robotIndex;
+            }
+
+            afterDistributionChanged();
+        }
+
+        public void recomputeFitness()
+        {
+            foreach (TaskSequencer sequencer in m_sequencers)
+            {
+                sequencer.recomputeFitness();
+            }
+
+            optimize();
+        }
+
+        public Task findNearestAssignedTask(Task fromTask)
+        {
+            int minDistance = Int32.MaxValue;
+            Task minTask = null;
+
+            foreach (Task task in m_tasks)
+            {
+                // assigned?
+                if (m_taskDistributedRobot[task.Id] != -1 && fromTask.Id != task.Id)
+                {
+                    int distance = task.distanceTo(fromTask);
+                    if (distance < minDistance)
+                    {
+                        minDistance = distance;
+                        minTask = task;
+                    }
+                }
+            }
+
+
+            return minTask;
+        }
+
+        private void configure(Configuration config)
         {
             m_rand = new Random(config.randomSeed);
 
@@ -383,7 +350,7 @@ namespace TaskOptimizer.Model
             m_sequencers = new TaskSequencer[m_robots.Count];
             m_distributedTasks = new List<Task>[m_robots.Count];
             m_sequences = new List<TaskSequence>(m_robots.Count);
-           
+
             for (int t = 0; t < m_robots.Count; t++)
             {
                 m_distributedTasks[t] = new List<Task>(m_tasks.Count);
@@ -397,14 +364,14 @@ namespace TaskOptimizer.Model
             }
         }
 
-        private void configureTasks(TaskDistribution.Configuration config)
+        private void configureTasks(Configuration config)
         {
             m_tasks = cloneTaskList(config.tasks);
         }
 
         private List<Task> cloneTaskList(List<Task> tasks)
         {
-            List<Task> clonedTasks = new List<Task>(tasks.Count);
+            var clonedTasks = new List<Task>(tasks.Count);
             foreach (Task task in tasks)
             {
                 clonedTasks.Add(new Task(task));
@@ -416,21 +383,21 @@ namespace TaskOptimizer.Model
 
         private void generateKMeanInitialSolution()
         {
-            if( m_robots.Count < 2 )
+            if (m_robots.Count < 2)
             {
                 // no need to cluster!
                 generateFixedInitialSolution(0);
                 return;
             }
 
-            KMeanCluster clusterEngine = new KMeanCluster();
+            var clusterEngine = new KMeanCluster();
             int nbRobots = m_rand.Next(m_robots.Count*2);
-            if( nbRobots < 2 )
+            if (nbRobots < 2)
             {
                 nbRobots = 2;
             }
 
-            if( nbRobots > m_robots.Count )
+            if (nbRobots > m_robots.Count)
             {
                 nbRobots = m_robots.Count;
             }
@@ -448,16 +415,16 @@ namespace TaskOptimizer.Model
                 return;
             }
 
-            List<Task> remainingTasks = new List<Task>(m_tasks);
+            var remainingTasks = new List<Task>(m_tasks);
 
             int robotIndex = m_rand.Next(m_robots.Count);
 
-            int divisor = m_robots.Count / 3 - 1;
+            int divisor = m_robots.Count/3 - 1;
 
 
-            if (divisor > m_tasks.Count / 1)
+            if (divisor > m_tasks.Count/1)
             {
-                divisor = m_tasks.Count / 1;
+                divisor = m_tasks.Count/1;
             }
 
             if (divisor < 2)
@@ -465,11 +432,10 @@ namespace TaskOptimizer.Model
                 divisor = 2;
             }
 
-            int maxTasksPerRobot = (int)(m_tasks.Count / (double)m_robots.Count);
+            var maxTasksPerRobot = (int) (m_tasks.Count/(double) m_robots.Count);
 
             for (int t = 0; t < m_robots.Count; t++)
             {
-
                 int nbTasks = maxTasksPerRobot;
 
 
@@ -485,7 +451,8 @@ namespace TaskOptimizer.Model
 
                 if (nbTasks > 0)
                 {
-                    TaskSequence sequence = m_nearestInsert.generate(remainingTasks, nbTasks, m_robots[robotIndex], m_startX, m_startY, m_fitnessLevels);
+                    TaskSequence sequence = m_nearestInsert.generate(remainingTasks, nbTasks, m_robots[robotIndex],
+                                                                     m_startX, m_startY, m_fitnessLevels);
 
                     foreach (Task task in sequence.Tasks)
                     {
@@ -493,11 +460,10 @@ namespace TaskOptimizer.Model
                     }
                 }
 
-                robotIndex = (robotIndex + 1) % m_robots.Count;
+                robotIndex = (robotIndex + 1)%m_robots.Count;
             }
 
             afterDistributionChanged();
-
         }
 
         private bool isLastDistributionEqualsNewOne()
@@ -513,19 +479,18 @@ namespace TaskOptimizer.Model
             }
 
             return !changed;
-        }        
+        }
 
         private void afterDistributionChanged()
         {
             if (isLastDistributionEqualsNewOne())
-            {                
+            {
                 return;
             }
 
             updateDistributedTasksFromDistribution();
-            
+
             configureSequencersFromDistribution();
-           
         }
 
         private void updateDistributedTasksFromDistribution()
@@ -551,7 +516,7 @@ namespace TaskOptimizer.Model
         {
             for (int t = 0; t < m_robots.Count; t++)
             {
-                TaskSequencer.Configuration config = new TaskSequencer.Configuration();
+                var config = new TaskSequencer.Configuration();
                 config.robot = m_robots[t];
                 config.tasks = m_distributedTasks[t];
                 config.startX = m_startX;
@@ -563,23 +528,19 @@ namespace TaskOptimizer.Model
             optimize();
         }
 
-        private int[] m_lastTaskDistributedRobot;
+        #region Nested type: Configuration
 
-        private int m_nbUsedRobots = 0;
-        private int m_id;
-        private FitnessLevels m_fitnessLevels;
-        private int m_totalTime, m_totalCost;
-        private int[] m_taskDistributedRobot;
-        private List<Task>[] m_distributedTasks;
-        private List<Robot> m_robots;
-        private List<TaskSequence> m_sequences;
-        private List<Task> m_tasks;
-        private TaskSequencer[] m_sequencers;
-        private Random m_rand;
-        private double m_startX, m_startY;
-        private int m_fitness = 0;
-        private bool m_optimizingSequences = false;
-        private TaskDistributor m_distributor;
-        TaskSequencerNearestInsert m_nearestInsert = new TaskSequencerNearestInsert();
+        public class Configuration
+        {
+            public TaskDistributor distributor;
+            public FitnessLevels fitnessLevels;
+            public int randomSeed;
+            public List<Robot> robots;
+            public double startX;
+            public double startY;
+            public List<Task> tasks;
+        }
+
+        #endregion
     }
 }

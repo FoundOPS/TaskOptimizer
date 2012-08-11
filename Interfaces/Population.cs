@@ -1,11 +1,22 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace TaskOptimizer.Interfaces
 {
     public abstract class Population<IndividualType> where IndividualType : Individual
     {
+        protected int m_bestFitness = Int32.MaxValue;
+        protected IndividualType m_bestIndividual = default(IndividualType);
+        protected int m_cataclysmCountdown;
+        protected int m_curIteration = 0;
+        protected IndividualType[] m_individuals;
+        protected int m_initialCataclysmCountdown = 1000;
+        protected int m_initialMutationRate = 70;
+        protected int m_maxIterationsWithoutImprovements;
+        protected int m_mutationRate;
+        protected int m_nbIterationsWithoutImprovements = 0;
+        protected int m_populationSize = 10;
+        protected Random m_rand = new Random();
+
         public virtual void optimize()
         {
             m_nbIterationsWithoutImprovements++;
@@ -95,19 +106,17 @@ namespace TaskOptimizer.Interfaces
             {
                 m_mutationRate = 1;
             }
-
         }
-
 
 
         protected virtual int computeMaxChildren()
         {
-            return (int)(m_populationSize * 0.03 + 2);
+            return (int) (m_populationSize*0.03 + 2);
         }
 
         protected virtual int computeMaxMutations()
         {
-            return (int)(m_populationSize * 0.03 + 2);
+            return (int) (m_populationSize*0.03 + 2);
         }
 
 
@@ -138,7 +147,6 @@ namespace TaskOptimizer.Interfaces
         protected abstract void regeneratePopulation();
 
 
-
         protected virtual IndividualType selectWeakIndividual()
         {
             int maxFitness = Int32.MinValue;
@@ -156,10 +164,11 @@ namespace TaskOptimizer.Interfaces
             return weakestIndividual;
         }
 
-        protected virtual void selectCrossoverIndividuals(out IndividualType p1, out IndividualType p2, out IndividualType child)
+        protected virtual void selectCrossoverIndividuals(out IndividualType p1, out IndividualType p2,
+                                                          out IndividualType child)
         {
-            p1 = m_individuals[m_rand.Next() % m_populationSize];
-            p2 = m_individuals[m_rand.Next() % m_populationSize];
+            p1 = m_individuals[m_rand.Next()%m_populationSize];
+            p2 = m_individuals[m_rand.Next()%m_populationSize];
             child = selectWeakIndividual();
 
             if (p1.Id == p2.Id || p1.Id == child.Id || p2.Id == child.Id)
@@ -175,13 +184,13 @@ namespace TaskOptimizer.Interfaces
             int curIndex = m_rand.Next(m_populationSize);
             for (int t = 0; t < m_populationSize; t++)
             {
-                IndividualType individual = m_individuals[curIndex % m_populationSize];
+                IndividualType individual = m_individuals[curIndex%m_populationSize];
 
                 if (individual != null)
                 {
                     if (individual.Id != m_bestIndividual.Id)
                     {
-                        int odds = (individual.Fitness * 3 / (m_bestFitness)) + 1;
+                        int odds = (individual.Fitness*3/(m_bestFitness)) + 1;
 
                         int n = m_rand.Next(odds);
 
@@ -197,17 +206,5 @@ namespace TaskOptimizer.Interfaces
 
             return default(IndividualType);
         }
-
-        protected IndividualType[] m_individuals;
-        protected IndividualType m_bestIndividual = default(IndividualType);
-        protected int m_bestFitness = Int32.MaxValue;
-
-        protected int m_populationSize = 10;
-        protected int m_cataclysmCountdown, m_initialCataclysmCountdown = 1000;
-        protected int m_mutationRate, m_initialMutationRate = 70;
-        protected int m_curIteration = 0, m_nbIterationsWithoutImprovements = 0, m_maxIterationsWithoutImprovements;
-        protected Random m_rand = new Random();
-
     }
-
 }

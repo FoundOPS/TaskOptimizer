@@ -1,4 +1,5 @@
 #region History
+
 /***************************************************
  * Written by Mathieu Jacques, september 2006
  * 
@@ -19,14 +20,15 @@
  * February 14, 2007:   - Enhancement performance: Avoid copying the snapshot image to the background image.  
  *                        Now paint the snapshot image manually in the background paint event.
  * *************************************************/
+
 #endregion
 
 using System;
 using System.Drawing;
-using System.Text;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using System.Threading;
-using System.Runtime.InteropServices;       // for DllImport
+
+// for DllImport
 
 namespace MT
 {
@@ -48,24 +50,24 @@ namespace MT
         #region Public Interface
 
         public CurtainForm()
-        {   
+        {
             InitializeComponent();
 
             m_frameDuration = 50;
-            
+
             m_timer.Interval = m_frameDuration;
-            m_timer.Tick += new EventHandler(timer_Tick);
-            this.ShowInTaskbar = false;
-            this.ShowIcon = false;
-            SetStyle(ControlStyles.Selectable, false);            
+            m_timer.Tick += timer_Tick;
+            ShowInTaskbar = false;
+            ShowIcon = false;
+            SetStyle(ControlStyles.Selectable, false);
             UpdateStyles();
-            
-            this.Opacity = 0.00;            
+
+            Opacity = 0.00;
 
             AnimationDuration = 250;
             ClickThrough = true;
-        }       
-        
+        }
+
         /// <summary>
         /// Get/Set the duration of one frame in msec.  This is like the animation quality in frames per second.
         /// Frame duration in msec is 1000/frames per second.   
@@ -86,10 +88,7 @@ namespace MT
                 AnimationDuration = AnimationDuration;
             }
 
-            get
-            {
-                return m_frameDuration;
-            }
+            get { return m_frameDuration; }
         }
 
         /// <summary>
@@ -109,10 +108,7 @@ namespace MT
                 m_animationDuration = value;
             }
 
-            get
-            {
-                return m_animationDuration;
-            }
+            get { return m_animationDuration; }
         }
 
         /// <summary>
@@ -123,15 +119,9 @@ namespace MT
         /// goal of the curtain is to hide what's going on behind.
         public bool ClickThrough
         {
-            set
-            {
-                m_clickThrough = value;
-            }
+            set { m_clickThrough = value; }
 
-            get
-            {
-                return m_clickThrough;
-            }
+            get { return m_clickThrough; }
         }
 
         /// <summary>
@@ -142,12 +132,12 @@ namespace MT
         {
             if (InvokeRequired)
             {
-                MethodInvoker invoker = new MethodInvoker(Show);
+                MethodInvoker invoker = Show;
                 Invoke(invoker);
                 return;
             }
-            
-            Hide();            
+
+            Hide();
             Appear(null);
         }
 
@@ -161,20 +151,20 @@ namespace MT
         {
             if (InvokeRequired)
             {
-                ShowMethodInvoker invoker = new ShowMethodInvoker(Show);
-                Invoke(invoker, new object[] { owner });
+                ShowMethodInvoker invoker = Show;
+                Invoke(invoker, new object[] {owner});
                 return;
-            }            
-            
+            }
+
             Hide();
-            
-            Control control = Control.FromHandle(owner.Handle);
+
+            Control control = FromHandle(owner.Handle);
             if (control != null)
             {
                 BindTo(control);
             }
-            
-            Appear(owner);            
+
+            Appear(owner);
         }
 
         /// <summary>
@@ -184,51 +174,51 @@ namespace MT
         {
             if (InvokeRequired)
             {
-                HideMethodInvoker invoker = new HideMethodInvoker(Hide);
-                Invoke(invoker, new object[] { animation });
+                HideMethodInvoker invoker = Hide;
+                Invoke(invoker, new object[] {animation});
                 return;
             }
 
-            if (!this.Visible)
-            {                
-                return;     // cannot hide the curtain since it is already invisible!
+            if (!Visible)
+            {
+                return; // cannot hide the curtain since it is already invisible!
             }
-            
+
             if (m_isAnimating)
-            {   
+            {
                 return;
             }
-            
+
             m_animation = animation;
 
             animation.Begin(this);
-            
+
             m_curAnimationStep = 0;
-            m_totalAnimationSteps = AnimationDuration / FrameDuration + 1;
+            m_totalAnimationSteps = AnimationDuration/FrameDuration + 1;
             m_isAnimating = true;
             m_timer.Start();
-        }        
+        }
 
         /// <summary>
         /// End the current animation if any and hide the curtain.  Thread safe.
         /// </summary>
         public new void Hide()
-        {            
+        {
             if (InvokeRequired)
             {
-                MethodInvoker invoker = new MethodInvoker(Hide);
+                MethodInvoker invoker = Hide;
                 Invoke(invoker);
                 return;
             }
-            
-            this.Opacity = 0.00;
+
+            Opacity = 0.00;
             m_timer.Stop();
-            m_isAnimating = false;            
-            
+            m_isAnimating = false;
+
             UnBind();
-            base.Hide();            
+            base.Hide();
         }
-        
+
         /// <summary>
         /// Hide the curtain using a smooth fade animation
         /// </summary>
@@ -236,15 +226,15 @@ namespace MT
         {
             Hide(new FadeCurtain());
         }
-        
+
         public new void Close()
         {
             // may be called from a destructor which may be executed
             // in another thread...
             if (InvokeRequired)
             {
-                MethodInvoker invoker = new MethodInvoker(Close);
-                Invoke(invoker);                
+                MethodInvoker invoker = Close;
+                Invoke(invoker);
                 return;
             }
 
@@ -256,6 +246,57 @@ namespace MT
 
         #region Private Implementation
 
+        private const int SW_SHOWNOACTIVATE = 4; // show a window without activating it
+        private const int WM_ACTIVATE = 6;
+        private const int WA_INACTIVE = 0;
+        private const int WM_NCHITTEST = 132;
+        private const int HTTRANSPARENT = -1;
+        private readonly Timer m_timer = new Timer();
+
+        /// <summary>
+        /// The current animation object
+        /// </summary>
+        private CurtainAnimation m_animation;
+
+        /// <summary>
+        /// Total fade duration in msec
+        /// </summary>
+        private int m_animationDuration;
+
+        /// <summary>
+        /// The control under the curtain, so we can track its position etc...
+        /// </summary>
+        private Control m_bindedControl;
+
+        /// <summary>
+        /// Whether the form is click-through
+        /// </summary>
+        private bool m_clickThrough;
+
+        private int m_curAnimationStep;
+
+        /// <summary>
+        /// One frame duration in msec
+        /// </summary>
+        private int m_frameDuration = 50;
+
+        /// <summary>
+        /// Whether the curtain is currently fading
+        /// </summary>
+        private bool m_isAnimating;
+
+        /// <summary>
+        /// The still image displayed 
+        /// </summary>
+        private Bitmap m_screenBmp;
+
+        /// <summary>
+        /// Graphics object linked to the screenBmp
+        /// </summary>
+        private Graphics m_screenGraphics;
+
+        private int m_totalAnimationSteps;
+
         /// <summary>
         /// Override the Opacity get/set to make sure the opacity is always less
         /// than 1.0.  Avoid screen flickering when switching from layered window
@@ -263,10 +304,7 @@ namespace MT
         /// </summary>
         public new double Opacity
         {
-            get
-            {
-                return base.Opacity;
-            }
+            get { return base.Opacity; }
 
             set
             {
@@ -290,26 +328,27 @@ namespace MT
                 UnBind();
             }
 
-            Rectangle bounds = ComputeControlScreenBounds(control);;
-                
+            Rectangle bounds = ComputeControlScreenBounds(control);
+            ;
+
             if (Bounds != bounds)
             {
                 Bounds = bounds;
             }
 
-            control.TopLevelControl.LocationChanged += new EventHandler(bindedControl_LocationChanged);
-            control.TopLevelControl.HandleDestroyed += new EventHandler(bindedControl_HandleDestroyed);            
+            control.TopLevelControl.LocationChanged += bindedControl_LocationChanged;
+            control.TopLevelControl.HandleDestroyed += bindedControl_HandleDestroyed;
 
             // Make sure the window appear on top of its owner...
             if (Owner == null)
             {
                 Owner = control.TopLevelControl as Form;
-                this.BringToFront();
+                BringToFront();
             }
 
             m_bindedControl = control;
         }
-        
+
         /// <summary>
         /// Compute a control screen coordinates 
         /// </summary>        
@@ -336,11 +375,11 @@ namespace MT
             {
                 if (m_bindedControl.TopLevelControl != null)
                 {
-                    m_bindedControl.TopLevelControl.LocationChanged -= new EventHandler(bindedControl_LocationChanged);
-                    m_bindedControl.TopLevelControl.HandleDestroyed -= new EventHandler(bindedControl_HandleDestroyed);
+                    m_bindedControl.TopLevelControl.LocationChanged -= bindedControl_LocationChanged;
+                    m_bindedControl.TopLevelControl.HandleDestroyed -= bindedControl_HandleDestroyed;
                 }
             }
-            
+
             m_bindedControl = null;
         }
 
@@ -348,18 +387,18 @@ namespace MT
         {
             if (m_bindedControl != null)
             {
-                Rectangle bounds = ComputeControlScreenBounds(m_bindedControl);            
+                Rectangle bounds = ComputeControlScreenBounds(m_bindedControl);
                 Left = bounds.X;
                 Top = bounds.Y;
                 Refresh();
             }
         }
 
-        void bindedControl_HandleDestroyed(object sender, EventArgs e)
+        private void bindedControl_HandleDestroyed(object sender, EventArgs e)
         {
             // the control is destroyed... so nothing to hide anymore!
             Close();
-        }       
+        }
 
         protected override void OnResize(EventArgs e)
         {
@@ -368,16 +407,16 @@ namespace MT
 
             // recreate screen buffer to fit the new size...
 
-            CreateCurtainScreenBitmap(this.Bounds);       
-            
+            CreateCurtainScreenBitmap(Bounds);
+
             base.OnResize(e);
         }
-        
+
         private void CreateCurtainScreenBitmap(Rectangle bounds)
         {
             Clear();
 
-            using (Graphics g = this.CreateGraphics())
+            using (Graphics g = CreateGraphics())
             {
                 // create a bitmap large enough to cover the whole curtain...
                 m_screenBmp = new Bitmap(bounds.Width, bounds.Height, g);
@@ -385,9 +424,9 @@ namespace MT
                 // create a graphics linked to the bitmap so when you draw with
                 // the graphics object, you actually modify the bitmap...
                 m_screenGraphics = Graphics.FromImage(m_screenBmp);
-            }        
+            }
         }
-        
+
         /// <summary>
         /// Show the curtain, mirroring the specified region.
         /// </summary>        
@@ -395,17 +434,17 @@ namespace MT
         {
             DisplayStillImage();
 
-            this.Opacity = 0;
+            Opacity = 0;
             m_curAnimationStep = 0;
 
             // show the curtain without stealing focus... 
-            ShowWindow(this.Handle, SW_SHOWNOACTIVATE);                        
+            ShowWindow(Handle, SW_SHOWNOACTIVATE);
 
             // don't wait for the paint message to be processed... paint immediately!
             // This way, if the UI under the curtain changes right away, it will be hidden.            
-            this.Refresh();
-        }       
-        
+            Refresh();
+        }
+
         private void DisplayStillImage()
         {
             try
@@ -417,7 +456,7 @@ namespace MT
                 // buffer may be invalid or not created yet...give it a try!                
                 CreateCurtainScreenBitmap(Bounds);
                 TakeScreenSnapshot();
-            }            
+            }
         }
 
         /// <summary>
@@ -436,45 +475,45 @@ namespace MT
                 Hide();
             }
 
-            m_animation.Animate(this, m_curAnimationStep, m_totalAnimationSteps);            
-            
-            m_curAnimationStep++;           
+            m_animation.Animate(this, m_curAnimationStep, m_totalAnimationSteps);
+
+            m_curAnimationStep++;
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             if (m_screenBmp != null)
-            {              
+            {
                 e.Graphics.DrawImageUnscaled(m_screenBmp, 0, 0);
-            }     
+            }
         }
-        
+
         protected override void OnPaint(PaintEventArgs e)
         {
             if (m_screenBmp != null)
             {
-                if (this.Opacity == 0 && m_curAnimationStep == 0)
+                if (Opacity == 0 && m_curAnimationStep == 0)
                 {
                     // setting the opacity to less than 1.0 avoids screen flicker
-                    this.Opacity = 0.999;
-                }                           
-            }            
-        }       
+                    Opacity = 0.999;
+                }
+            }
+        }
 
         protected override void WndProc(ref Message m)
         {
             switch (m.Msg)
             {
-                // Although ShowWindow doesnt't activate the curtain, the user can still
-                // click while loading, and thus activate it.  
+                    // Although ShowWindow doesnt't activate the curtain, the user can still
+                    // click while loading, and thus activate it.  
                 case WM_ACTIVATE:
                     {
-                        if (((int)m.WParam & 0xFFFF) != WA_INACTIVE)
+                        if (((int) m.WParam & 0xFFFF) != WA_INACTIVE)
                         {
                             if (m.LParam != IntPtr.Zero)
                             {
                                 // re-focus the deactivated control!
-                                Control control = Control.FromHandle(m.LParam);
+                                Control control = FromHandle(m.LParam);
                                 if (control != null)
                                 {
                                     control.Focus();
@@ -484,123 +523,79 @@ namespace MT
                     }
                     break;
 
-                // when fading, the window may be click-through...
+                    // when fading, the window may be click-through...
                 case WM_NCHITTEST:
                     {
-                        if( m_clickThrough && m_isAnimating )
+                        if (m_clickThrough && m_isAnimating)
                         {
-                            m.Result = (IntPtr)HTTRANSPARENT;
+                            m.Result = (IntPtr) HTTRANSPARENT;
                             return;
                         }
                     }
                     break;
-            }          
+            }
 
             base.WndProc(ref m);
-        }        
+        }
 
         /// <summary>
         /// Dispose memory hungry objects
         /// </summary>
         private void Clear()
         {
-            if (m_screenGraphics != null) { m_screenGraphics.Dispose(); }
-            if (m_screenBmp != null) { m_screenBmp.Dispose(); }
+            if (m_screenGraphics != null)
+            {
+                m_screenGraphics.Dispose();
+            }
+            if (m_screenBmp != null)
+            {
+                m_screenBmp.Dispose();
+            }
 
             m_screenGraphics = null;
             m_screenBmp = null;
         }
-        
-        private System.Windows.Forms.Timer m_timer = new System.Windows.Forms.Timer();
-        
-        /// <summary>
-        /// The still image displayed 
-        /// </summary>
-        private Bitmap m_screenBmp = null;              
-        
-        /// <summary>
-        /// Graphics object linked to the screenBmp
-        /// </summary>
-        private Graphics m_screenGraphics = null;               
-       
-        /// <summary>
-        /// The current animation object
-        /// </summary>
-        private CurtainAnimation m_animation = null;
-
-        private int m_curAnimationStep;
-        private int m_totalAnimationSteps;
-
-        /// <summary>
-        /// Total fade duration in msec
-        /// </summary>
-        private int m_animationDuration = 0;                 
-        
-        /// <summary>
-        /// One frame duration in msec
-        /// </summary>
-        private int m_frameDuration = 50;               
-        
-        /// <summary>
-        /// Whether the form is click-through
-        /// </summary>
-        private bool m_clickThrough = false;            
-        
-        /// <summary>
-        /// Whether the curtain is currently fading
-        /// </summary>
-        private bool m_isAnimating = false;             
-
-        /// <summary>
-        /// The control under the curtain, so we can track its position etc...
-        /// </summary>
-        private Control m_bindedControl = null;
-        
-        private delegate void HideMethodInvoker(CurtainAnimation animation);
-        private delegate void ShowMethodInvoker(IWin32Window owner);
 
         [DllImport("user32.dll")]
         private static extern Boolean ShowWindow(IntPtr hWnd, Int32 nCmdShow);
 
-        private const int SW_SHOWNOACTIVATE = 4;        // show a window without activating it
-        private const int WM_ACTIVATE = 6;
-        private const int WA_INACTIVE = 0;
-        private const int WM_NCHITTEST = 132;
-        private const int HTTRANSPARENT = -1;        
+        #region Nested type: HideMethodInvoker
+
+        private delegate void HideMethodInvoker(CurtainAnimation animation);
 
         #endregion
-        
+
+        #region Nested type: ShowMethodInvoker
+
+        private delegate void ShowMethodInvoker(IWin32Window owner);
+
+        #endregion
+
+        #endregion
     }
 
     /// <summary>
     /// Wrap a curtain and automatically close it when the object is out of scope
     /// </summary>
-    class AutoCloseCurtain
+    internal class AutoCloseCurtain
     {
-        public AutoCloseCurtain()
-        {   
-        }
+        private readonly CurtainForm m_curtain = new CurtainForm();
 
         /// <summary>
         /// Get the wrapped curtain
         /// </summary>
         public CurtainForm Curtain
         {
-            get
-            {
-                return m_curtain;
-            }
+            get { return m_curtain; }
         }
 
         ~AutoCloseCurtain()
         {
             m_curtain.Close();
-        }      
-
-        private CurtainForm m_curtain = new CurtainForm();
+        }
     }
 
-    
+
     /// <summary>
     /// Transition animation.  Blend the old content with the new one.
     /// </summary>
@@ -612,7 +607,7 @@ namespace MT
         /// <param name="curtain">the curtain to animate</param>
         /// Don't call curtain.Hide() here!
         void Begin(CurtainForm curtain);
-        
+
         /// <summary>
         /// Called at each step of the animation
         /// </summary>
@@ -621,56 +616,58 @@ namespace MT
         /// <param name="totalSteps">total number of steps for the animation</param>
         /// Call curtain.Hide() to end the animation before the end
         void Animate(CurtainForm curtain, int step, int totalSteps);
-        
+
         /// <summary>
         /// Called at the end of the animation.  
         /// </summary>
         /// <param name="curtain">the curtain to animate</param>
-        void End(CurtainForm curtain);        
+        void End(CurtainForm curtain);
     }
 
     /// <summary>
     /// Hide the curtain immediately without animation.
     /// </summary>
-    class HideCurtain : CurtainAnimation
+    internal class HideCurtain : CurtainAnimation
     {
+        #region CurtainAnimation Members
+
         public void Begin(CurtainForm curtain)
         {
-            
         }
 
         public void Animate(CurtainForm curtain, int step, int totalSteps)
         {
             curtain.Hide();
         }
-        
+
         public void End(CurtainForm curtain)
         {
-
         }
+
+        #endregion
     }
 
     /// <summary>
     /// Fade the curtain away.
     /// </summary>
-    class FadeCurtain : CurtainAnimation
+    internal class FadeCurtain : CurtainAnimation
     {
+        #region CurtainAnimation Members
+
         public void Begin(CurtainForm curtain)
         {
-
         }
 
         public void Animate(CurtainForm curtain, int step, int totalSteps)
         {
-            curtain.Opacity = 1.0 - (step / (double)totalSteps);
+            curtain.Opacity = 1.0 - (step/(double) totalSteps);
         }
 
         public void End(CurtainForm curtain)
         {
             curtain.Opacity = 0.0;
         }
+
+        #endregion
     }
-
-    
-
 }

@@ -1,124 +1,50 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using TaskOptimizer.Interfaces;
 
 namespace TaskOptimizer.Model
 {
     public class TaskSequence : Individual
     {
-
-        public TaskSequence()
-        {
-
-        }
+        private readonly Random m_rand = new Random();
+        private int m_cost = 66666666;
+        private bool[] m_crossoverAddedTasks;
+        private int[] m_crossoverTaskNeighborCount;
+        private bool[][] m_crossoverTaskNeighborMatrix;
+        private Task[][] m_crossoverTaskNeighbors;
+        private int m_fitness = 66666666;
+        private FitnessLevels m_fitnessLevels;
+        private List<Task> m_tasks;
+        private int m_time = 66666666;
 
         public FitnessLevels FitnessLevels
         {
-            set
-            {
-                m_fitnessLevels = value;
-            }
-        }
-                
-        public int Id
-        {
-            get
-            {
-                return m_id;
-            }
-
-            set
-            {
-                m_id = value;
-            }
+            set { m_fitnessLevels = value; }
         }
 
-        public double StartX
-        {
-            get
-            {
-                return m_startX;
-            }
+        public double StartX { get; set; }
 
-            set
-            {
-                m_startX = value;
-            }
-        }
+        public double StartY { get; set; }
 
-        public double StartY
-        {
-            get
-            {
-                return m_startY;
-            }
-
-            set
-            {
-                m_startY = value;
-            }
-        }
-
-        public Robot Robot
-        {
-            get
-            {
-                return m_robot;
-            }
-
-            set
-            {
-                m_robot = value;
-            }
-        }
-
-        public int Fitness
-        {
-            get
-            {
-                return m_fitness;
-            }
-
-            set
-            {
-                m_fitness = value;
-            }
-        }
+        public Robot Robot { get; set; }
 
         public int Cost
         {
-            get
-            {
-                return m_cost;
-            }
+            get { return m_cost; }
 
-            set
-            {
-                m_cost = value;
-            }
+            set { m_cost = value; }
         }
 
         public int Time
         {
-            get
-            {
-                return m_time;
-            }
+            get { return m_time; }
 
-            set
-            {
-                m_time = value;
-            }
+            set { m_time = value; }
         }
 
         public List<Task> Tasks
         {
-            get
-            {
-                return m_tasks;
-            }
+            get { return m_tasks; }
 
             set
             {
@@ -128,18 +54,62 @@ namespace TaskOptimizer.Model
             }
         }
 
-        public TaskSequencer TaskSequencer
-        {
-            set
-            {
-                m_sequencer = value;
-            }
+        public TaskSequencer TaskSequencer { set; get; }
 
-            get
+        #region Individual Members
+
+        public int Id { get; set; }
+
+        public int Fitness
+        {
+            get { return m_fitness; }
+
+            set { m_fitness = value; }
+        }
+
+        public void crossover(Individual parent1, Individual parent2)
+        {
+            var p1 = parent1 as TaskSequence;
+            var p2 = parent2 as TaskSequence;
+
+            int beforeFitness = Fitness;
+
+            computeEdgeRecombinaisonCrossover(p1, p2);
+
+            if (beforeFitness == Fitness)
             {
-                return m_sequencer;
+                // no change? means that the parents are very close, so introduce some variety!
+                mutate();
             }
         }
+
+        public void mutate()
+        {
+            int nbMutations = m_rand.Next(Tasks.Count/5) + 1;
+            for (int t = 0; t < nbMutations; t++)
+            {
+                int t1 = m_rand.Next(Tasks.Count);
+                var range = (int) (m_rand.Next((int) (Tasks.Count*0.3)) - Tasks.Count*0.15 - 1);
+                //int range = (int)(m_rand.Next(5) - 2);
+                int t2 = (t1 + range)%Tasks.Count;
+                if (t2 < 0)
+                {
+                    t2 = Tasks.Count + t2;
+                }
+                Task temp = Tasks[t1];
+                Tasks[t1] = Tasks[t2];
+                Tasks[t2] = temp;
+            }
+
+            updateFitness();
+        }
+
+        public void optimize()
+        {
+            // nothing to do!
+        }
+
+        #endregion
 
         private void configureCrossoverData()
         {
@@ -175,33 +145,15 @@ namespace TaskOptimizer.Model
                 distance += task.distanceTo(fromTask);
                 fromTask = task;
 
-                cost += task.Effort * task.Effort * Robot.WorkCost;
-                time += task.Effort * task.Effort * Robot.WorkTime;
+                cost += task.Effort*task.Effort*Robot.WorkCost;
+                time += task.Effort*task.Effort*Robot.WorkTime;
             }
 
-            cost += distance * Robot.DistanceCost;
+            cost += distance*Robot.DistanceCost;
             Cost = cost;
-            Time = time + distance * Robot.DistanceTime;
+            Time = time + distance*Robot.DistanceTime;
 
-            Fitness = Cost * m_fitnessLevels.CostMultiplier + Time * m_fitnessLevels.TimeMultiplier;
-
-        }
-
-        public void crossover(Individual parent1, Individual parent2)
-        {
-            TaskSequence p1 = parent1 as TaskSequence;
-            TaskSequence p2 = parent2 as TaskSequence;
-
-            int beforeFitness = Fitness;
-
-            computeEdgeRecombinaisonCrossover(p1, p2);
-
-            if (beforeFitness == Fitness)
-            {
-                // no change? means that the parents are very close, so introduce some variety!
-                mutate();
-            }
-
+            Fitness = Cost*m_fitnessLevels.CostMultiplier + Time*m_fitnessLevels.TimeMultiplier;
         }
 
 
@@ -266,7 +218,8 @@ namespace TaskOptimizer.Model
                             m_crossoverTaskNeighborCount[neighbor.UserId]--;
 
                             if (m_crossoverTaskNeighborCount[neighbor.UserId] < minTaskNeighbors ||
-                                (m_crossoverTaskNeighborCount[neighbor.UserId] == minTaskNeighbors && m_rand.Next(2) == 0))
+                                (m_crossoverTaskNeighborCount[neighbor.UserId] == minTaskNeighbors &&
+                                 m_rand.Next(2) == 0))
                             {
                                 minTask = neighbor;
                                 minTaskNeighbors = m_crossoverTaskNeighborCount[neighbor.UserId];
@@ -285,7 +238,9 @@ namespace TaskOptimizer.Model
                 {
                     // find a task not already added...
 
-                    for (int notAddedTaskIndex = 0; notAddedTaskIndex < TaskSequencer.getOriginalTasks().Count; notAddedTaskIndex++)
+                    for (int notAddedTaskIndex = 0;
+                         notAddedTaskIndex < TaskSequencer.getOriginalTasks().Count;
+                         notAddedTaskIndex++)
                     {
                         if (m_crossoverAddedTasks[notAddedTaskIndex] == false)
                         {
@@ -302,8 +257,6 @@ namespace TaskOptimizer.Model
             }
 
             updateFitness();
-
-
         }
 
 
@@ -327,52 +280,10 @@ namespace TaskOptimizer.Model
                         m_crossoverTaskNeighbors[prevTask.UserId][m_crossoverTaskNeighborCount[prevTask.UserId]] = task;
                         m_crossoverTaskNeighborCount[prevTask.UserId]++;
                     }
-
                 }
 
                 prevTask = task;
             }
         }
-
-        public void mutate()
-        {
-            int nbMutations = m_rand.Next(Tasks.Count / 5) + 1;
-            for (int t = 0; t < nbMutations; t++)
-            {
-                int t1 = m_rand.Next(Tasks.Count);
-                int range = (int)(m_rand.Next((int)(Tasks.Count * 0.3)) - Tasks.Count * 0.15 - 1);
-                //int range = (int)(m_rand.Next(5) - 2);
-                int t2 = (t1 + range) % Tasks.Count;
-                if (t2 < 0)
-                {
-                    t2 = Tasks.Count + t2;
-                }
-                Task temp = Tasks[t1];
-                Tasks[t1] = Tasks[t2];
-                Tasks[t2] = temp;
-            }
-
-            updateFitness();
-        }
-
-        public void optimize()
-        {
-            // nothing to do!
-        }
-
-        private int m_id;
-        private Robot m_robot;
-        private FitnessLevels m_fitnessLevels;
-        private int m_fitness = 66666666, m_time = 66666666, m_cost = 66666666;
-        private List<Task> m_tasks;
-        private double m_startX, m_startY;
-        private Random m_rand = new Random();
-
-        private Task[][] m_crossoverTaskNeighbors;
-        private int[] m_crossoverTaskNeighborCount;
-        private bool[][] m_crossoverTaskNeighborMatrix;
-        private bool[] m_crossoverAddedTasks;
-
-        private TaskSequencer m_sequencer = null;
     }
 }
