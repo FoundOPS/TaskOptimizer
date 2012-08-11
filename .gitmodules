@@ -1,6 +1,9 @@
-[submodule "osrm"]
-	path = osrm
-	url = git://github.com/DennisOSRM/Project-OSRM.git
-[submodule "servicestack"]
+﻿[submodule "servicestack"]
 	path = servicestack
 	url = git://github.com/ServiceStack/ServiceStack.git
+[submodule "Project-OSRM"]
+	path = Project-OSRM
+	url = https://github.com/FoundOPS/Project-OSRM.git
+[submodule "osrm"]
+	path = osrm
+	url = https://github.com/FoundOPS/Project-OSRM.git
