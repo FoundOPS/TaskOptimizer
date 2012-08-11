@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Web;
 using System.IO;
-using ServiceStack.ServiceHost;
-using TaskOptimizer;
-using TaskOptimizer.API;
 using System.Net;
+using ServiceStack.ServiceHost;
+using TaskOptimizer.API;
 
 namespace RouteAPI
 {

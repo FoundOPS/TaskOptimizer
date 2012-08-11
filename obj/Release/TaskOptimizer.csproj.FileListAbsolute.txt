@@ -12,3 +12,17 @@ C:\Users\John\pcol\obj\Release\TaskOptimizer.View.PercentProgressForm.resources
 C:\Users\John\pcol\obj\Release\TaskOptimizer.csproj.GenerateResource.Cache
 C:\Users\John\pcol\obj\Release\TaskOptimizer.exe
 C:\Users\John\pcol\obj\Release\TaskOptimizer.pdb
+C:\FoundOPS\MTSP-OSRM\obj\Release\TaskOptimizer.pdb
+C:\FoundOPS\MTSP-OSRM\obj\Release\TaskOptimizer.csprojResolveAssemblyReference.cache
+C:\FoundOPS\MTSP-OSRM\obj\Release\TaskOptimizer.MainForm.resources
+C:\FoundOPS\MTSP-OSRM\obj\Release\TaskOptimizer.Properties.Resources.resources
+C:\FoundOPS\MTSP-OSRM\obj\Release\MT.CurtainForm.resources
+C:\FoundOPS\MTSP-OSRM\obj\Release\TaskOptimizer.View.GraphView.resources
+C:\FoundOPS\MTSP-OSRM\obj\Release\TaskOptimizer.View.NewForm.resources
+C:\FoundOPS\MTSP-OSRM\obj\Release\TaskOptimizer.View.PercentProgressForm.resources
+C:\FoundOPS\MTSP-OSRM\obj\Release\TaskOptimizer.csproj.GenerateResource.Cache
+C:\FoundOPS\MTSP-OSRM\bin\Release\TaskOptimizer.dll.config
+C:\FoundOPS\MTSP-OSRM\bin\Release\TaskOptimizer.dll
+C:\FoundOPS\MTSP-OSRM\bin\Release\TaskOptimizer.pdb
+C:\FoundOPS\MTSP-OSRM\bin\Release\Mono.Security.dll
+C:\FoundOPS\MTSP-OSRM\obj\Release\TaskOptimizer.dll
