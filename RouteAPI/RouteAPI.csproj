@@ -38,72 +38,48 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="protobuf-net">
-      <HintPath>..\pcol\servicestack\lib\protobuf-net.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack">
-      <HintPath>..\pcol\lib\ServiceStack.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Common, Version=3.9.4.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="ServiceStack, Version=3.9.3.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\pcol\lib\ServiceStack.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.FluentValidation.Mvc3">
-      <HintPath>..\pcol\lib\ServiceStack.FluentValidation.Mvc3.dll</HintPath>
+      <HintPath>Lib\ServiceStack.dll</HintPath>
     </Reference>
     <Reference Include="ServiceStack.Interfaces, Version=3.9.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\pcol\lib\ServiceStack.Interfaces.dll</HintPath>
+      <HintPath>Lib\ServiceStack.Interfaces.dll</HintPath>
     </Reference>
-    <Reference Include="ServiceStack.OrmLite, Version=3.9.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\pcol\lib\ServiceStack.OrmLite.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.OrmLite.SqlServer, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\pcol\lib\ServiceStack.OrmLite.SqlServer.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Plugins.ProtoBuf">
-      <HintPath>..\pcol\lib\ServiceStack.Plugins.ProtoBuf.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Razor">
-      <HintPath>..\pcol\lib\ServiceStack.Razor.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Redis, Version=3.9.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\pcol\lib\ServiceStack.Redis.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.ServiceInterface">
-      <HintPath>..\pcol\lib\ServiceStack.ServiceInterface.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Text, Version=3.9.4.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\pcol\lib\ServiceStack.Text.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web.DynamicData" />
-    <Reference Include="System.Web.Entity" />
-    <Reference Include="System.Web.ApplicationServices" />
-    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System" />
-    <Reference Include="System.Data" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Web.Extensions" />
-    <Reference Include="System.Web.Razor, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\pcol\servicestack\lib\System.Web.Razor.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Web.Services" />
-    <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Global.asax" />
+    <Content Include="Lib\ServiceStack.Common.dll" />
+    <Content Include="Lib\ServiceStack.Common.pdb" />
+    <Content Include="Lib\ServiceStack.Common.xml" />
+    <Content Include="Lib\ServiceStack.dll" />
+    <Content Include="Lib\ServiceStack.FluentValidation.Mvc3.dll" />
+    <Content Include="Lib\ServiceStack.FluentValidation.Mvc3.pdb" />
+    <Content Include="Lib\ServiceStack.Interfaces.dll" />
+    <Content Include="Lib\ServiceStack.Interfaces.pdb" />
+    <Content Include="Lib\ServiceStack.Interfaces.xml" />
+    <Content Include="Lib\ServiceStack.OrmLite.dll" />
+    <Content Include="Lib\ServiceStack.OrmLite.pdb" />
+    <Content Include="Lib\ServiceStack.OrmLite.Sqlite.dll" />
+    <Content Include="Lib\ServiceStack.OrmLite.SqlServer.dll" />
+    <Content Include="Lib\ServiceStack.OrmLite.SqlServer.pdb" />
+    <Content Include="Lib\ServiceStack.pdb" />
+    <Content Include="Lib\ServiceStack.Plugins.ProtoBuf.dll" />
+    <Content Include="Lib\ServiceStack.Plugins.ProtoBuf.pdb" />
+    <Content Include="Lib\ServiceStack.Razor.dll" />
+    <Content Include="Lib\ServiceStack.Razor.pdb" />
+    <Content Include="Lib\ServiceStack.Redis.dll" />
+    <Content Include="Lib\ServiceStack.Redis.pdb" />
+    <Content Include="Lib\ServiceStack.Redis.xml" />
+    <Content Include="Lib\ServiceStack.ServiceInterface.dll" />
+    <Content Include="Lib\ServiceStack.ServiceInterface.pdb" />
+    <Content Include="Lib\ServiceStack.Text.dll" />
+    <Content Include="Lib\ServiceStack.Text.pdb" />
+    <Content Include="Lib\ServiceStack.Text.xml" />
+    <Content Include="Lib\ServiceStack.xml" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
