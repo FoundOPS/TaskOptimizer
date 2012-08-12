@@ -5,7 +5,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskOptimizer", "TaskOptimi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteAPI", "RouteAPI\RouteAPI.csproj", "{C47553BB-C906-4891-BA3E-0E9367F9472C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskOptimizer.Tests", "..\TaskOptimizer.Tests\TaskOptimizer.Tests.csproj", "{0B82D577-71D3-4700-8A5B-59948DFF3B83}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskOptimizer.Tests", "Tests\TaskOptimizer.Tests.csproj", "{0B82D577-71D3-4700-8A5B-59948DFF3B83}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
