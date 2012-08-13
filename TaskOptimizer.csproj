@@ -6,10 +6,10 @@
     <ProductVersion>8.0.50727</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{104B3898-0185-4D53-A71D-715D744843CF}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>TaskOptimizer</RootNamespace>
-    <AssemblyName>TaskOptimizer</AssemblyName>
+    <AssemblyName>RouteAPI</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -53,11 +53,12 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>TaskOptimizer.Precomp</StartupObject>
+    <StartupObject>
+    </StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Mono.Security">
-      <HintPath>lib\Mono.Security.dll</HintPath>
+    <Reference Include="Mono.Posix">
+      <HintPath>..\..\..\Program Files\Mono-2.10.8\lib\mono\4.0\Mono.Posix.dll</HintPath>
     </Reference>
     <Reference Include="Npgsql">
       <HintPath>lib\Npgsql.dll</HintPath>

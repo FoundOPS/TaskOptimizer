@@ -1,8 +1,3 @@
-C:\Users\John\pcol\bin\Release\TaskOptimizer.exe.config
-C:\Users\John\pcol\bin\Release\TaskOptimizer.exe
-C:\Users\John\pcol\bin\Release\TaskOptimizer.pdb
-C:\Users\John\pcol\bin\Release\Mono.Security.dll
-C:\Users\John\pcol\bin\Release\Npgsql.dll
 C:\Users\John\pcol\obj\Release\TaskOptimizer.MainForm.resources
 C:\Users\John\pcol\obj\Release\TaskOptimizer.Properties.Resources.resources
 C:\Users\John\pcol\obj\Release\MT.CurtainForm.resources
@@ -10,5 +5,12 @@ C:\Users\John\pcol\obj\Release\TaskOptimizer.View.GraphView.resources
 C:\Users\John\pcol\obj\Release\TaskOptimizer.View.NewForm.resources
 C:\Users\John\pcol\obj\Release\TaskOptimizer.View.PercentProgressForm.resources
 C:\Users\John\pcol\obj\Release\TaskOptimizer.csproj.GenerateResource.Cache
-C:\Users\John\pcol\obj\Release\TaskOptimizer.exe
-C:\Users\John\pcol\obj\Release\TaskOptimizer.pdb
+C:\Users\John\pcol\bin\Release\RouteAPI.dll.config
+C:\Users\John\pcol\bin\Release\RouteAPI.dll
+C:\Users\John\pcol\bin\Release\RouteAPI.pdb
+C:\Users\John\pcol\bin\Release\Mono.Posix.dll
+C:\Users\John\pcol\bin\Release\Mono.Security.dll
+C:\Users\John\pcol\bin\Release\Npgsql.dll
+C:\Users\John\pcol\obj\Release\RouteAPI.dll
+C:\Users\John\pcol\obj\Release\RouteAPI.pdb
+C:\Users\John\pcol\obj\Release\TaskOptimizer.csprojResolveAssemblyReference.cache

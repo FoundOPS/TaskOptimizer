@@ -18,6 +18,7 @@ namespace TaskOptimizer
     {
         
         public static NpgsqlConnection pgsql = new NpgsqlConnection("Server=127.0.0.1;Port=5432;Database=osmroutes;User Id=postgres;Password=14oaI29qa6up");
+        /*
         public static void Main()
         {
             var s = getCSV(new FileInfo(@"C:\LatLon.csv"));
@@ -36,7 +37,7 @@ namespace TaskOptimizer
            
             
             pgsql.Open();
-             */
+             
           List<Coordinate> stops = new List<Coordinate>();
                     Random r = new Random();
                     while (stops.Count < 10)
@@ -57,6 +58,7 @@ namespace TaskOptimizer
 
                     Console.WriteLine(route.Route_Geometry);
         }
+*/
         public static void reCompute(ICollection<Coordinate> coords)
         {
             List<Coordinate> res_list = new List<Coordinate>();
@@ -158,6 +160,7 @@ namespace TaskOptimizer
         }
         public static HttpWebResponse getRawRoute(List<Coordinate> stops)
         {
+            Console.WriteLine("did it get here?");
             List<Coordinate> resolved = new List<Coordinate>();
             foreach (Coordinate c in stops)
             {
@@ -191,6 +194,7 @@ namespace TaskOptimizer
             optConf.fitnessLevels = fl;
             optConf.startX = 37.222421;
             optConf.startY = -121.984476;
+            Console.WriteLine("Making optimizer");
             Optimizer o = new Optimizer(optConf);
             System.Threading.Thread.Sleep(1000);
             
@@ -209,7 +213,7 @@ namespace TaskOptimizer
         }
         public static String makeRequest(ICollection<Coordinate> coords)
         {
-            String requestString = "http://192.168.2.102:5050/viaroute?";
+            String requestString = "http://127.0.0.1:5050/viaroute?";
             foreach (Coordinate c in coords){
                 requestString += "loc="+c.lat+","+c.lon+"&";
             }
@@ -244,7 +248,7 @@ namespace TaskOptimizer
         {
             try
             {
-                HttpWebRequest request = WebRequest.Create("http://192.168.2.102:5050/nearest?loc="+a.lat+","+a.lon) as HttpWebRequest;
+                HttpWebRequest request = WebRequest.Create("http://127.0.0.1:5050/nearest?loc="+a.lat+","+a.lon) as HttpWebRequest;
                 using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
@@ -385,7 +389,7 @@ namespace TaskOptimizer
         {
              try
             {
-                HttpWebRequest request = WebRequest.Create("http://192.168.2.102:5050/distance?loc="+a.ToString()+"&loc="+b.ToString()) as HttpWebRequest;
+                HttpWebRequest request = WebRequest.Create("http://127.0.0.1:5050/distance?loc="+a.ToString()+"&loc="+b.ToString()) as HttpWebRequest;
                 using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
