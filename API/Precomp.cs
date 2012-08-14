@@ -38,7 +38,6 @@ namespace TaskOptimizer.API
             var truck = new Robot();
             optConf.robots = new List<Robot> {truck};
             optConf.nbDistributors = 1;
-            optConf.progress = new nullProgress();
             optConf.randomSeed = 777777;
             var fl = new FitnessLevels();
             fl.CostMultiplier = 1;

@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskOptimizer", "TaskOptimizer.csproj", "{104B3898-0185-4D53-A71D-715D744843CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApplication2", "RouteAPI\ConsoleApplication2.csproj", "{3B10FB27-5D63-4613-A698-875DBC5AF2AA}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskOptimizer.Tests", "Tests\TaskOptimizer.Tests.csproj", "{0B82D577-71D3-4700-8A5B-59948DFF3B83}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RouteAPI", "RouteAPI\RouteAPI.csproj", "{3B10FB27-5D63-4613-A698-875DBC5AF2AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -64,7 +64,7 @@ namespace TaskOptimizer.Model
         private void create(Configuration config)
         {
             Console.WriteLine("Creating?");
-            config.progress.onWorkProgress("Creating arrays...", 0);
+            
             m_rand = new Random(config.randomSeed);
 
             m_distributors = new TaskDistributor[config.nbDistributors];
@@ -78,18 +78,11 @@ namespace TaskOptimizer.Model
             taskDistributorConfiguration.startY = config.startY;
             taskDistributorConfiguration.fitnessLevels = config.fitnessLevels;
             taskDistributorConfiguration.optimizer = this;
-            taskDistributorConfiguration.progress = config.progress;
 
             for (int t = 0; t < config.nbDistributors; t++)
             {
                 Console.WriteLine(t);
-                if (config.progress.WorkCancelled)
-                {
-                    config.progress.onWorkEnd();
-                    return;
-                }
-
-                config.progress.onWorkProgress("Generating distributors...", t*100/config.nbDistributors);
+                
                 Console.WriteLine("Generating distributors");
                 taskDistributorConfiguration.randomSeed = m_rand.Next();
                 taskDistributorConfiguration.startProgressPercent = t*100/config.nbDistributors;
@@ -100,11 +93,11 @@ namespace TaskOptimizer.Model
                 m_threads[t] = new Thread(optimizeThread);
             }
 
-            config.progress.onWorkProgress("Starting...", 100);
+           
 
             start();
 
-            config.progress.onWorkEnd();
+            
         }
 
         public void recomputeFitness()
@@ -179,7 +172,6 @@ namespace TaskOptimizer.Model
         {
             public FitnessLevels fitnessLevels;
             public int nbDistributors;
-            public WorkProgress progress;
             public int randomSeed;
             public List<Robot> robots;
             public double startX, startY;

@@ -127,12 +127,12 @@ namespace TaskOptimizer.Model
             m_startY = config.startY;
             m_optimizer = config.optimizer;
 
-            configureTaskDistributions(config.fitnessLevels, config.progress, config.startProgressPercent,
+            configureTaskDistributions(config.fitnessLevels, config.startProgressPercent,
                                        config.endProgressPercent);
         }
 
 
-        private void configureTaskDistributions(FitnessLevels fitnessLevels, WorkProgress progress,
+        private void configureTaskDistributions(FitnessLevels fitnessLevels,
                                                 int startProgressPercent, int endProgressPercent)
         {
             configurePopulationSize();
@@ -149,14 +149,9 @@ namespace TaskOptimizer.Model
 
             for (int t = 0; t < m_populationSize; t++)
             {
-                if (progress.WorkCancelled)
-                {
-                    return;
-                }
 
-                progress.onWorkProgress("",
-                                        startProgressPercent +
-                                        t*(endProgressPercent - startProgressPercent)/m_populationSize);
+
+                
 
                 taskDistributionConfiguration.randomSeed = m_rand.Next();
                 m_individuals[t] = new TaskDistribution(taskDistributionConfiguration);
@@ -272,7 +267,6 @@ namespace TaskOptimizer.Model
             public int endProgressPercent;
             public FitnessLevels fitnessLevels;
             public Optimizer optimizer;
-            public WorkProgress progress;
             public int randomSeed;
             public List<Robot> robots;
             public int startProgressPercent;

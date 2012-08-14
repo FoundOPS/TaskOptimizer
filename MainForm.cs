@@ -59,7 +59,6 @@ namespace TaskOptimizer
             config.fitnessLevels = m_fitnessLevels;
             config.nbDistributors = Environment.ProcessorCount*3 - 1;
             config.randomSeed = (int) DateTime.Now.Ticks;
-            config.progress = form;
 
             m_optimizer = new Optimizer(config);
             form.ShowDialog(this);
