@@ -105,7 +105,7 @@ namespace TaskOptimizer.Model
                 // no change!
                 return;
             }
-
+            Console.WriteLine("Is it null?: " + (individual == null));
             var copy = new TaskDistribution(individual);
             if (copy.Fitness != individual.Fitness)
             {

@@ -46,7 +46,7 @@ namespace TaskOptimizer.Model
             configure(config);
 
             m_fitness = Int32.MaxValue;
-
+            Console.WriteLine("is distribution.sequences null?: " + (distribution.Sequences == null));
             setSequences(distribution.Sequences);
         }
 
@@ -226,7 +226,7 @@ namespace TaskOptimizer.Model
         public void setSequences(List<TaskSequence> sequences)
         {
             int fitness = m_fitness;
-
+            Console.WriteLine("SPOT 1");
             int robotIndex = 0;
             foreach (TaskSequence sequence in sequences)
             {
@@ -239,16 +239,19 @@ namespace TaskOptimizer.Model
                 }
                 robotIndex++;
             }
-
+            Console.WriteLine("SPOT 2");
             updateDistributedTasksFromDistribution();
-
+            Console.WriteLine("SPOT 2.5");
             for (int t = 0; t < m_robots.Count; t++)
             {
                 var config = new TaskSequencer.Configuration();
                 config.robot = m_robots[t];
-
-                if (m_distributedTasks[t].Count > 0)
+                Console.WriteLine("SPOT 2.5.1");
+                Console.WriteLine("Is m.distributedTasks[t] null?: " + (m_distributedTasks[t] == null));
+                if (m_distributedTasks[t].Count > 0 && sequences[t]!=null)
                 {
+                    Console.WriteLine("Is sequences[t] null?: " + (sequences[t] == null));
+                    Console.WriteLine("Is sequences[t].Tasks null?: " + (sequences[t].Tasks == null));
                     config.tasks = cloneTaskList((sequences[t]).Tasks);
                     config.expectedFitness = (sequences[t]).Fitness;
                     config.orderedTasks = true;
@@ -260,11 +263,12 @@ namespace TaskOptimizer.Model
                 config.startX = m_startX;
                 config.startY = m_startY;
                 config.fitnessLevels = m_fitnessLevels;
-
+                Console.WriteLine("SPOT 2.5.2");
 
                 m_sequencers[t].configure(config);
+                Console.WriteLine("SPOT 2.5.3");
             }
-
+            Console.WriteLine("SPOT 3");
             optimize();
         }
 

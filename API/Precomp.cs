@@ -6,11 +6,13 @@ using System.Runtime.Serialization.Json;
 using System.Threading;
 using TaskOptimizer.Model;
 using TaskOptimizer.View;
+using ServiceStack.Redis;
 
 namespace TaskOptimizer.API
 {
     public class Precomp
     {
+        static RedisClient rc = new RedisClient("127.0.0.1");
         public static HttpWebResponse getRawRoute(List<Coordinate> stops)
         {
             var resolved = new List<Coordinate>();
@@ -43,8 +45,8 @@ namespace TaskOptimizer.API
             fl.CostMultiplier = 1;
             fl.TimeMultiplier = 1;
             optConf.fitnessLevels = fl;
-            optConf.startX = 37.222421;
-            optConf.startY = -121.984476;
+            optConf.startX = optConf.tasks[0].lat;
+            optConf.startY = optConf.tasks[0].lon;
             var o = new Optimizer(optConf);
             Thread.Sleep(1000);
 
@@ -54,17 +56,84 @@ namespace TaskOptimizer.API
             }
             Console.WriteLine(o.m_creationThread.ThreadState);
             var routeList = new List<Coordinate>();
-            foreach (Task t in o.MinSequences[0].Tasks)
-            {
-                var rp = new Coordinate(t.X, t.Y);
-                routeList.Add(rp);
-            }
+
+                foreach (Task t in o.MinSequences[0].Tasks)
+                {
+                    var rp = new Coordinate(t.X, t.Y);
+                    routeList.Add(rp);
+                }
             return getRaw(makeRequest(routeList));
         }
+        public static String getMultiRoute(ICollection<Coordinate> coords, int numTrucks)
+        {
+            var resolved = new List<Coordinate>();
+            foreach (Coordinate c in coords)
+            {
+                Coordinate r = closestPoint(c);
+                if (!resolved.Contains(r))
+                {
+                    resolved.Add(r);
+                }
+            }
+            var stopTasks = new List<Task>();
+            foreach (Coordinate r in resolved)
+            {
+                var t = new Task(resolved.IndexOf(r), resolved.Count);
+                t.lat = r.lat;
+                t.lon = r.lon;
+                t.X = r.lat;
+                t.Y = r.lon;
+                t.Effort = 0;
+                stopTasks.Add(t);
+            }
+            var optConf = new Optimizer.Configuration();
+            optConf.tasks = stopTasks;
+            var truck = new Robot();
+            optConf.robots = new List<Robot> ();
+            for (int t = 0; t < numTrucks; t++)
+            {
+                optConf.robots.Add(truck);
+            }
+            optConf.nbDistributors = (stopTasks.Count/250)+1;
+            optConf.randomSeed = 777777;
+            var fl = new FitnessLevels();
+            fl.CostMultiplier = 1;
+            fl.TimeMultiplier = 1;
+            optConf.fitnessLevels = fl;
+            optConf.startX = optConf.tasks[0].lat;
+            optConf.startY = optConf.tasks[0].lon;
+            var o = new Optimizer(optConf);
+            while (o.stillInit())
+            {
+                Thread.Sleep(1000);
+            }
+            
+            var response = "{";
+            int cont = 0;
+            for (int r = 0; r < o.MinSequences.Count; r++)
+            {
+                if (o.MinSequences[r] == null)
+                {
+                    cont++;
+                    continue;
+                }
+                response += "\""+((r + 1) - cont)+"\"" + ": ";
+                var routeList = new List<Coordinate>();
 
+                foreach (Task t in o.MinSequences[r].Tasks)
+                {
+                    var rp = new Coordinate(t.X, t.Y);
+                    routeList.Add(rp);
+                }
+                var sr = new StreamReader(getRaw(makeRequest(routeList)).GetResponseStream());
+                response += sr.ReadToEnd()+",";
+            }
+            response = response.Substring(0, response.Length - 1);
+            return response+"}";
+        }
         public static String makeRequest(ICollection<Coordinate> coords)
         {
-            String requestString = "http://192.168.2.102:5050/viaroute?";
+            String requestString = "http://127.0.0.1:5050/viaroute?";
             foreach (Coordinate c in coords)
             {
                 requestString += "loc=" + c.lat + "," + c.lon + "&";
@@ -83,7 +152,7 @@ namespace TaskOptimizer.API
             try
             {
                 var request =
-                    WebRequest.Create("http://192.168.2.102:5050/nearest?loc=" + a.lat + "," + a.lon) as HttpWebRequest;
+                    WebRequest.Create("http://127.0.0.1:5050/nearest?loc=" + a.lat + "," + a.lon) as HttpWebRequest;
                 using (var response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
@@ -230,10 +299,15 @@ namespace TaskOptimizer.API
 
         public static int getDistance(Coordinate a, Coordinate b)
         {
+            var lookupString = a.ToString() + "$" + b.ToString();
+            if (rc.Exists(lookupString)>0)
+            {
+                return Int32.Parse(rc.GetValue(lookupString));
+            }
             try
             {
-                var request =
-                    WebRequest.Create("http://192.168.2.102:5050/distance?loc=" + a + "&loc=" + b) as HttpWebRequest;
+                
+                var request = WebRequest.Create("http://127.0.0.1:5050/distance?loc=" + a + "&loc=" + b) as HttpWebRequest;
                 using (var response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
@@ -242,7 +316,9 @@ namespace TaskOptimizer.API
                             response.StatusCode,
                             response.StatusDescription));
                     var sr = new StreamReader(response.GetResponseStream());
-                    return Int32.Parse(sr.ReadToEnd());
+                    var distance = Int32.Parse(sr.ReadToEnd());
+                    rc.SetEntry(lookupString, distance + "");
+                    return distance;
                 }
             }
             catch (Exception e)

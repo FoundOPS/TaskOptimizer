@@ -56,8 +56,7 @@ namespace TaskOptimizer.Model
 
         public Boolean stillInit()
         {
-            if (m_creationThread.ThreadState == ThreadState.Running ||
-                m_creationThread.ThreadState == ThreadState.WaitSleepJoin) return true;
+            if (m_creationThread.ThreadState != ThreadState.Stopped) return true;
             return false;
         }
 

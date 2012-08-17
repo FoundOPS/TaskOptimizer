@@ -66,18 +66,35 @@ namespace RouteAPI
     {
         protected override object Run(RouteAPI request)
         {
+            int numTrucks=1;
             List<Coordinate> coords = new List<Coordinate>();
             String[] splitCoords = request.Loc.Split('$');
+            try
+            {
+                int t = Int32.Parse(splitCoords[0]);
+                if (t > 0) numTrucks = t;
+            }
+            catch { }
             foreach (String c in splitCoords)
             {
-                String[] split = c.Split(',');
-                coords.Add(new Coordinate(Double.Parse(split[0]), Double.Parse(split[1])));
+                try
+                {
+                    String[] split = c.Split(',');
+                    coords.Add(new Coordinate(Double.Parse(split[0]), Double.Parse(split[1])));
+                }
+                catch { continue; }
             }
-            HttpWebResponse resp = Precomp.getRawRoute(coords);
             String retString = "";
-            StreamReader sr = new StreamReader(resp.GetResponseStream());
-            retString += sr.ReadToEnd();
-
+            if (numTrucks == 1)
+            {
+                HttpWebResponse resp = Precomp.getRawRoute(coords);
+                StreamReader sr = new StreamReader(resp.GetResponseStream());
+                retString += sr.ReadToEnd();
+            }
+            if (numTrucks > 1)
+            {
+                retString = Precomp.getMultiRoute(coords,numTrucks);
+            }
             return retString;
         }
     } 
