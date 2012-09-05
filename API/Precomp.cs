@@ -12,7 +12,7 @@ namespace TaskOptimizer.API
 {
     public class Precomp
     {
-        static RedisClient rc = new RedisClient("127.0.0.1");
+        static RedisClient rc = new RedisClient("192.168.2.102");
         public static HttpWebResponse getRawRoute(List<Coordinate> stops)
         {
             var resolved = new List<Coordinate>();
@@ -39,7 +39,6 @@ namespace TaskOptimizer.API
             optConf.tasks = stopTasks;
             var truck = new Robot();
             optConf.robots = new List<Robot> {truck};
-            optConf.nbDistributors = 1;
             optConf.randomSeed = 777777;
             var fl = new FitnessLevels();
             fl.CostMultiplier = 1;
@@ -47,14 +46,9 @@ namespace TaskOptimizer.API
             optConf.fitnessLevels = fl;
             optConf.startX = optConf.tasks[0].lat;
             optConf.startY = optConf.tasks[0].lon;
+            optConf.nbDistributors = 1;
             var o = new Optimizer(optConf);
-            Thread.Sleep(1000);
-
-            while (o.stillInit() || o.MinSequences == null)
-            {
-                Console.WriteLine(o.m_creationThread.ThreadState.ToString());
-            }
-            Console.WriteLine(o.m_creationThread.ThreadState);
+            while (o.m_minDistributor.m_nbIterationsWithoutImprovements < 10000) { }
             var routeList = new List<Coordinate>();
 
                 foreach (Task t in o.MinSequences[0].Tasks)
@@ -94,7 +88,6 @@ namespace TaskOptimizer.API
             {
                 optConf.robots.Add(truck);
             }
-            optConf.nbDistributors = (stopTasks.Count/250)+1;
             optConf.randomSeed = 777777;
             var fl = new FitnessLevels();
             fl.CostMultiplier = 1;
@@ -102,12 +95,11 @@ namespace TaskOptimizer.API
             optConf.fitnessLevels = fl;
             optConf.startX = optConf.tasks[0].lat;
             optConf.startY = optConf.tasks[0].lon;
+            optConf.nbDistributors = (optConf.tasks.Count / 100) + 1;
             var o = new Optimizer(optConf);
-            while (o.stillInit())
-            {
-                Thread.Sleep(1000);
-            }
-            
+            while (o.m_minDistributor.m_nbIterationsWithoutImprovements<10000)
+            {  }
+            o.stop();
             var response = "{";
             int cont = 0;
             for (int r = 0; r < o.MinSequences.Count; r++)
@@ -125,7 +117,7 @@ namespace TaskOptimizer.API
                     var rp = new Coordinate(t.X, t.Y);
                     routeList.Add(rp);
                 }
-                var sr = new StreamReader(getRaw(makeRequest(routeList)).GetResponseStream());
+                var sr = new StreamReader(getRaw(makeRequest(routeList)).GetResponseStream());               
                 response += sr.ReadToEnd()+",";
             }
             response = response.Substring(0, response.Length - 1);
@@ -133,7 +125,7 @@ namespace TaskOptimizer.API
         }
         public static String makeRequest(ICollection<Coordinate> coords)
         {
-            String requestString = "http://127.0.0.1:5050/viaroute?";
+            String requestString = "http://192.168.2.102:5050/viaroute?";
             foreach (Coordinate c in coords)
             {
                 requestString += "loc=" + c.lat + "," + c.lon + "&";
@@ -152,7 +144,7 @@ namespace TaskOptimizer.API
             try
             {
                 var request =
-                    WebRequest.Create("http://127.0.0.1:5050/nearest?loc=" + a.lat + "," + a.lon) as HttpWebRequest;
+                    WebRequest.Create("http://192.168.2.102:5050/nearest?loc=" + a.lat + "," + a.lon) as HttpWebRequest;
                 using (var response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
@@ -307,7 +299,7 @@ namespace TaskOptimizer.API
             try
             {
                 
-                var request = WebRequest.Create("http://127.0.0.1:5050/distance?loc=" + a + "&loc=" + b) as HttpWebRequest;
+                var request = WebRequest.Create("http://192.168.2.102:5050/distance?loc=" + a + "&loc=" + b) as HttpWebRequest;
                 using (var response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
@@ -326,6 +318,24 @@ namespace TaskOptimizer.API
                 Console.WriteLine(e.Message);
                 return 0;
             }
+        }
+        public static int getCost(Coordinate a, Coordinate b)
+        {
+            var lookupString = a.ToString() + "$" + b.ToString() + "$cost";
+            if (rc.Exists(lookupString) > 0)
+            {
+                return Int32.Parse(rc.GetValue(lookupString));
+            }
+            var cost = getCost(MakeTransaction(a, b));
+            rc.SetEntry(lookupString, (int)cost + "");
+            return cost;
+        }
+        public static int getCost(OSMResponse routeInfo)
+        {
+            var timeCost = (routeInfo.Route_Summary.Total_Time / 90.00);
+            var distCost = (routeInfo.Route_Summary.Total_Distance /1287.00);
+            var cost = (timeCost + distCost) * 100;
+            return (int)cost;
         }
     }
 }

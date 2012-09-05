@@ -13,7 +13,7 @@ namespace TaskOptimizer.Interfaces
         protected int m_initialMutationRate = 70;
         protected int m_maxIterationsWithoutImprovements;
         protected int m_mutationRate;
-        protected int m_nbIterationsWithoutImprovements = 0;
+        public int m_nbIterationsWithoutImprovements = 0;
         protected int m_populationSize = 10;
         protected Random m_rand = new Random();
 
@@ -21,7 +21,7 @@ namespace TaskOptimizer.Interfaces
         {
             m_nbIterationsWithoutImprovements++;
             m_curIteration++;
-
+            
             computeCrossovers();
             computeMutations();
             computeCataclysms();
@@ -72,6 +72,7 @@ namespace TaskOptimizer.Interfaces
         protected virtual void onNewBestIndividual(IndividualType individual)
         {
             // really a new best?
+          
             if (individual.Fitness < m_bestFitness)
             {
                 m_mutationRate = m_initialMutationRate;

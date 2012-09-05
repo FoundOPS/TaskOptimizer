@@ -59,7 +59,7 @@ namespace TaskOptimizer.Model
             }
             if (m_distances[task.Id] == 0)
             {
-                m_distances[task.Id] = Precomp.getDistance(new Coordinate(X, Y), new Coordinate(task.X, task.Y));
+                m_distances[task.Id] = Precomp.getCost(new Coordinate(X, Y), new Coordinate(task.X, task.Y));
             }
             return m_distances[task.Id];
         }

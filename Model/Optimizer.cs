@@ -11,7 +11,7 @@ namespace TaskOptimizer.Model
         private int m_curIteration;
         private TaskDistributor[] m_distributors;
         private bool m_endOptimizeThread;
-        private TaskDistributor m_minDistributor;
+        public TaskDistributor m_minDistributor;
         private int m_minDistributorFitness = Int32.MaxValue;
         private Random m_rand;
         private bool[] m_recomputeFitnesses;
@@ -19,9 +19,7 @@ namespace TaskOptimizer.Model
 
         public Optimizer(Configuration config)
         {
-            ThreadStart start = delegate { create(config); };
-            m_creationThread = new Thread(start);
-            m_creationThread.Start();
+            create(config);
         }
 
         public int TotalTime
@@ -62,11 +60,12 @@ namespace TaskOptimizer.Model
 
         private void create(Configuration config)
         {
-            Console.WriteLine("Creating?");
+          
             
             m_rand = new Random(config.randomSeed);
 
             m_distributors = new TaskDistributor[config.nbDistributors];
+           
             m_threads = new Thread[config.nbDistributors];
             m_recomputeFitnesses = new bool[config.nbDistributors];
 
@@ -77,17 +76,18 @@ namespace TaskOptimizer.Model
             taskDistributorConfiguration.startY = config.startY;
             taskDistributorConfiguration.fitnessLevels = config.fitnessLevels;
             taskDistributorConfiguration.optimizer = this;
-
+           
             for (int t = 0; t < config.nbDistributors; t++)
             {
                 Console.WriteLine(t);
                 
-                Console.WriteLine("Generating distributors");
+               
                 taskDistributorConfiguration.randomSeed = m_rand.Next();
                 taskDistributorConfiguration.startProgressPercent = t*100/config.nbDistributors;
                 taskDistributorConfiguration.endProgressPercent = taskDistributorConfiguration.startProgressPercent +
                                                                   100/config.nbDistributors;
                 m_distributors[t] = new TaskDistributor(taskDistributorConfiguration);
+               
                 m_recomputeFitnesses[t] = false;
                 m_threads[t] = new Thread(optimizeThread);
             }

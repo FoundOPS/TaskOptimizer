@@ -12,6 +12,9 @@ using TaskOptimizer;
 using TaskOptimizer.API;
 using Mono.Unix;
 using Mono.Unix.Native;
+using ServiceStack.Logging;
+using ServiceStack.Logging.Support;
+using System.Windows.Forms;
 
 namespace RouteAPI
 {
@@ -20,24 +23,34 @@ namespace RouteAPI
         public static void Main(string[] args)
         {
               //Initialize app host
-            var appHost = new RouteAPIHost();
-            appHost.Init();
-            appHost.Start("http://*:8081/");
-
-            UnixSignal[] signals = new UnixSignal[] { 
-				new UnixSignal(Signum.SIGINT), 
-				new UnixSignal(Signum.SIGTERM), 
-			};
-
-            // Wait for a unix signal
-            for (bool exit = false; !exit; )
+            try
             {
-                int id = UnixSignal.WaitAny(signals);
+            
+                var appHost = new RouteAPIHost();
+                appHost.Init();
+                appHost.Start("http://*:8081/");
+                /*
+                UnixSignal[] signals = new UnixSignal[] { 
+                    new UnixSignal(Signum.SIGINT), 
+                    new UnixSignal(Signum.SIGTERM), 
+                };
 
-                if (id >= 0 && id < signals.Length)
+                // Wait for a unix signal
+                for (bool exit = false; !exit; )
                 {
-                    if (signals[id].IsSet) exit = true;
+                    int id = UnixSignal.WaitAny(signals);
+
+                    if (id >= 0 && id < signals.Length)
+                    {
+                        if (signals[id].IsSet) exit = true;
+                    }
                 }
+                 */
+                while (true) { }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
             }
         }
     }
