@@ -12,7 +12,7 @@ namespace TaskOptimizer.API
 {
     public class Precomp
     {
-        static RedisClient rc = new RedisClient("192.168.2.102");
+        static RedisClient rc = new RedisClient("127.0.0.1");
         public static HttpWebResponse getRawRoute(List<Coordinate> stops)
         {
             var resolved = new List<Coordinate>();
@@ -46,7 +46,7 @@ namespace TaskOptimizer.API
             optConf.fitnessLevels = fl;
             optConf.startX = optConf.tasks[0].lat;
             optConf.startY = optConf.tasks[0].lon;
-            optConf.nbDistributors = 1;
+            optConf.nbDistributors = Environment.ProcessorCount*3;
             var o = new Optimizer(optConf);
             while (o.m_minDistributor.m_nbIterationsWithoutImprovements < 10000) { }
             var routeList = new List<Coordinate>();
@@ -91,11 +91,11 @@ namespace TaskOptimizer.API
             optConf.randomSeed = 777777;
             var fl = new FitnessLevels();
             fl.CostMultiplier = 1;
-            fl.TimeMultiplier = 1;
+            fl.TimeMultiplier = 100;
             optConf.fitnessLevels = fl;
             optConf.startX = optConf.tasks[0].lat;
             optConf.startY = optConf.tasks[0].lon;
-            optConf.nbDistributors = (optConf.tasks.Count / 100) + 1;
+            optConf.nbDistributors = Environment.ProcessorCount*3;
             var o = new Optimizer(optConf);
             while (o.m_minDistributor.m_nbIterationsWithoutImprovements<10000)
             {  }
@@ -109,6 +109,7 @@ namespace TaskOptimizer.API
                     cont++;
                     continue;
                 }
+                Console.WriteLine(o.MinSequences[r].Tasks.Count);
                 response += "\""+((r + 1) - cont)+"\"" + ": ";
                 var routeList = new List<Coordinate>();
 
@@ -125,7 +126,7 @@ namespace TaskOptimizer.API
         }
         public static String makeRequest(ICollection<Coordinate> coords)
         {
-            String requestString = "http://192.168.2.102:5050/viaroute?";
+            String requestString = "http://127.0.0.1:5050/viaroute?";
             foreach (Coordinate c in coords)
             {
                 requestString += "loc=" + c.lat + "," + c.lon + "&";
@@ -144,7 +145,7 @@ namespace TaskOptimizer.API
             try
             {
                 var request =
-                    WebRequest.Create("http://192.168.2.102:5050/nearest?loc=" + a.lat + "," + a.lon) as HttpWebRequest;
+                    WebRequest.Create("http://127.0.0.1:5050/nearest?loc=" + a.lat + "," + a.lon) as HttpWebRequest;
                 using (var response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)
@@ -299,7 +300,7 @@ namespace TaskOptimizer.API
             try
             {
                 
-                var request = WebRequest.Create("http://192.168.2.102:5050/distance?loc=" + a + "&loc=" + b) as HttpWebRequest;
+                var request = WebRequest.Create("http://127.0.0.1:5050/distance?loc=" + a + "&loc=" + b) as HttpWebRequest;
                 using (var response = request.GetResponse() as HttpWebResponse)
                 {
                     if (response.StatusCode != HttpStatusCode.OK)

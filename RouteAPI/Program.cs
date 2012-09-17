@@ -29,7 +29,7 @@ namespace RouteAPI
                 var appHost = new RouteAPIHost();
                 appHost.Init();
                 appHost.Start("http://*:8081/");
-                /*
+                
                 UnixSignal[] signals = new UnixSignal[] { 
                     new UnixSignal(Signum.SIGINT), 
                     new UnixSignal(Signum.SIGTERM), 
@@ -45,7 +45,7 @@ namespace RouteAPI
                         if (signals[id].IsSet) exit = true;
                     }
                 }
-                 */
+                 
                 while (true) { }
             }
             catch (Exception e)
@@ -80,6 +80,7 @@ namespace RouteAPI
         protected override object Run(RouteAPI request)
         {
             int numTrucks=1;
+            Console.WriteLine(request.Loc);
             List<Coordinate> coords = new List<Coordinate>();
             String[] splitCoords = request.Loc.Split('$');
             try

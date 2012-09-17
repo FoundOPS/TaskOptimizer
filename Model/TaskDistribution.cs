@@ -259,7 +259,7 @@ namespace TaskOptimizer.Model
 
             m_fitness *= m_fitnessLevels.CostMultiplier;
             m_fitness += maxTime * m_fitnessLevels.TimeMultiplier;
-
+            m_fitness /= m_nbUsedRobots;
 
             m_totalTime = maxTime;
         }
