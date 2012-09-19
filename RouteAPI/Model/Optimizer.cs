@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using TaskOptimizer.Interfaces;
 
 namespace TaskOptimizer.Model
 {
@@ -60,12 +59,10 @@ namespace TaskOptimizer.Model
 
         private void create(Configuration config)
         {
-          
-            
             m_rand = new Random(config.randomSeed);
 
             m_distributors = new TaskDistributor[config.nbDistributors];
-           
+
             m_threads = new Thread[config.nbDistributors];
             m_recomputeFitnesses = new bool[config.nbDistributors];
 
@@ -76,27 +73,24 @@ namespace TaskOptimizer.Model
             taskDistributorConfiguration.startY = config.startY;
             taskDistributorConfiguration.fitnessLevels = config.fitnessLevels;
             taskDistributorConfiguration.optimizer = this;
-           
+
             for (int t = 0; t < config.nbDistributors; t++)
             {
                 Console.WriteLine(t);
-                
-               
+
+
                 taskDistributorConfiguration.randomSeed = m_rand.Next();
                 taskDistributorConfiguration.startProgressPercent = t*100/config.nbDistributors;
                 taskDistributorConfiguration.endProgressPercent = taskDistributorConfiguration.startProgressPercent +
                                                                   100/config.nbDistributors;
                 m_distributors[t] = new TaskDistributor(taskDistributorConfiguration);
-               
+
                 m_recomputeFitnesses[t] = false;
                 m_threads[t] = new Thread(optimizeThread);
             }
 
-           
 
             start();
-
-            
         }
 
         public void recomputeFitness()

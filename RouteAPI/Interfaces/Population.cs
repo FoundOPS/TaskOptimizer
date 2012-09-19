@@ -21,7 +21,7 @@ namespace TaskOptimizer.Interfaces
         {
             m_nbIterationsWithoutImprovements++;
             m_curIteration++;
-            
+
             computeCrossovers();
             computeMutations();
             computeCataclysms();
@@ -72,7 +72,7 @@ namespace TaskOptimizer.Interfaces
         protected virtual void onNewBestIndividual(IndividualType individual)
         {
             // really a new best?
-          
+
             if (individual.Fitness < m_bestFitness)
             {
                 m_mutationRate = m_initialMutationRate;

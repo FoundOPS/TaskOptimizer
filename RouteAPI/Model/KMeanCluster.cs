@@ -111,12 +111,11 @@ namespace TaskOptimizer.Model
             m_means.Clear();
 
             m_overallDistanceToMeans = 0;
-            int minTotalDistance = 0;
-            Task minTask = null;
 
             foreach (var tasks in m_meanTasks)
             {
-                minTask = findCentroidTask(tasks, out minTotalDistance);
+                int minTotalDistance = 0;
+                Task minTask = findCentroidTask(tasks, out minTotalDistance);
 
                 m_overallDistanceToMeans += minTotalDistance;
 

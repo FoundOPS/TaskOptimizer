@@ -7,8 +7,8 @@
     <ProjectGuid>{3B10FB27-5D63-4613-A698-875DBC5AF2AA}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ConsoleApplication2</RootNamespace>
-    <AssemblyName>ConsoleApplication2</AssemblyName>
+    <RootNamespace>TaskOptimizer</RootNamespace>
+    <AssemblyName>TaskOptimizer</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -33,7 +33,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>RouteAPI.Program</StartupObject>
+    <StartupObject>TaskOptimizer.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net">
@@ -42,12 +42,6 @@
     <Reference Include="Mono.Posix">
       <HintPath>..\lib\Mono.Posix.dll</HintPath>
     </Reference>
-    <Reference Include="Mono.Security">
-      <HintPath>..\lib\Mono.Security.dll</HintPath>
-    </Reference>
-    <Reference Include="Npgsql">
-      <HintPath>..\lib\Npgsql.dll</HintPath>
-    </Reference>
     <Reference Include="ServiceStack">
       <HintPath>..\lib\ServiceStack.dll</HintPath>
     </Reference>
@@ -55,27 +49,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\ServiceStack.Common.3.9.5\lib\net35\ServiceStack.Common.dll</HintPath>
     </Reference>
-    <Reference Include="ServiceStack.FluentValidation.Mvc3">
-      <HintPath>..\lib\ServiceStack.FluentValidation.Mvc3.dll</HintPath>
-    </Reference>
     <Reference Include="ServiceStack.Interfaces, Version=3.9.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\ServiceStack.Common.3.9.5\lib\net35\ServiceStack.Interfaces.dll</HintPath>
+      <HintPath>..\lib\ServiceStack.Interfaces.dll</HintPath>
     </Reference>
     <Reference Include="ServiceStack.Logging.Log4Net">
       <HintPath>..\packages\ServiceStack.Logging.Log4Net.1.0.3.0\lib\net35\ServiceStack.Logging.Log4Net.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.OrmLite">
-      <HintPath>..\lib\ServiceStack.OrmLite.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.OrmLite.SqlServer">
-      <HintPath>..\lib\ServiceStack.OrmLite.SqlServer.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Plugins.ProtoBuf">
-      <HintPath>..\lib\ServiceStack.Plugins.ProtoBuf.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Razor">
-      <HintPath>..\lib\ServiceStack.Razor.dll</HintPath>
     </Reference>
     <Reference Include="ServiceStack.Redis">
       <HintPath>..\lib\ServiceStack.Redis.dll</HintPath>
@@ -89,26 +68,33 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\OSMContract.cs" />
+    <Compile Include="API\Precomp.cs" />
+    <Compile Include="Interfaces\Individual.cs" />
+    <Compile Include="Interfaces\Population.cs" />
+    <Compile Include="Interfaces\WorkProgress.cs" />
+    <Compile Include="Model\FitnessLevels.cs" />
+    <Compile Include="Model\KMeanCluster.cs" />
+    <Compile Include="Model\Optimizer.cs" />
+    <Compile Include="Model\Robot.cs" />
+    <Compile Include="Model\Task.cs" />
+    <Compile Include="Model\TaskDistribution.cs" />
+    <Compile Include="Model\TaskDistributor.cs" />
+    <Compile Include="Model\TaskGenerator.cs" />
+    <Compile Include="Model\TaskSequence.cs" />
+    <Compile Include="Model\TaskSequencer.cs" />
+    <Compile Include="Model\TaskSequencerNearestInsert.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\TaskOptimizer.csproj">
-      <Project>{104b3898-0185-4d53-a71d-715d744843cf}</Project>
-      <Name>TaskOptimizer</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

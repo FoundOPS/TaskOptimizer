@@ -38,7 +38,7 @@ namespace TaskOptimizer.Model
 
         private int computeDistance(double x, double y, Task task)
         {
-            return (int)Precomp.getCost(new Coordinate(x, y), new Coordinate(task.X, task.Y));
+            return Precomp.getCost(new Coordinate(x, y), new Coordinate(task.X, task.Y));
         }
 
         private Task generateTask(int id, int nbTasks, bool randomTaskSizes)

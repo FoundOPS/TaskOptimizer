@@ -1,42 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using ServiceStack.WebHost.Endpoints;
-using ServiceStack.ServiceHost;
-using ServiceStack.ServiceInterface;
-using System.Net;
-using TaskOptimizer;
-using TaskOptimizer.API;
+﻿using Funq;
 using Mono.Unix;
 using Mono.Unix.Native;
-using ServiceStack.Logging;
-using ServiceStack.Logging.Support;
-using System.Windows.Forms;
+using ServiceStack.ServiceInterface;
+using ServiceStack.WebHost.Endpoints;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net;
+using TaskOptimizer.API;
 
-namespace RouteAPI
+namespace TaskOptimizer
 {
     public class Program
     {
         public static void Main(string[] args)
         {
-              //Initialize app host
+            //Initialize app host
             try
             {
-            
                 var appHost = new RouteAPIHost();
                 appHost.Init();
                 appHost.Start("http://*:8081/");
-                
-                UnixSignal[] signals = new UnixSignal[] { 
-                    new UnixSignal(Signum.SIGINT), 
-                    new UnixSignal(Signum.SIGTERM), 
-                };
+
+                var signals = new[]
+                    {
+                        new UnixSignal(Signum.SIGINT),
+                        new UnixSignal(Signum.SIGTERM),
+                    };
 
                 // Wait for a unix signal
-                for (bool exit = false; !exit; )
+                for (bool exit = false; !exit;)
                 {
                     int id = UnixSignal.WaitAny(signals);
 
@@ -45,8 +38,10 @@ namespace RouteAPI
                         if (signals[id].IsSet) exit = true;
                     }
                 }
-                 
-                while (true) { }
+
+                while (true)
+                {
+                }
             }
             catch (Exception e)
             {
@@ -54,43 +49,49 @@ namespace RouteAPI
             }
         }
     }
+
     public class RouteAPIHost : AppHostHttpListenerBase
     {
         //Tell Service Stack the name of your application and where to find your web services
-        public RouteAPIHost() : base("Routing API", typeof(RouteAPIService).Assembly) { }
+        public RouteAPIHost() : base("Routing API", typeof (RouteAPIService).Assembly)
+        {
+        }
 
-        public override void Configure(Funq.Container container)
+        public override void Configure(Container container)
         {
             //register user-defined REST-ful urls
             Routes
-              .Add<RouteAPI>("/route")
-              .Add<RouteAPI>("/route/{Loc}");
-            
-            
+                .Add<RouteAPI>("/route")
+                .Add<RouteAPI>("/route/{Loc}");
         }
     }
+
     public class RouteAPI
     {
         public string Loc { get; set; }
     }
+
     public class APIResponse
     {
         public string Result { get; set; }
     }
+
     public class RouteAPIService : ServiceBase<RouteAPI>
     {
         protected override object Run(RouteAPI request)
         {
-            int numTrucks=1;
+            int numTrucks = 1;
             Console.WriteLine(request.Loc);
-            List<Coordinate> coords = new List<Coordinate>();
+            var coords = new List<Coordinate>();
             String[] splitCoords = request.Loc.Split('$');
             try
             {
                 int t = Int32.Parse(splitCoords[0]);
                 if (t > 0) numTrucks = t;
             }
-            catch { }
+            catch
+            {
+            }
             foreach (String c in splitCoords)
             {
                 try
@@ -98,20 +99,23 @@ namespace RouteAPI
                     String[] split = c.Split(',');
                     coords.Add(new Coordinate(Double.Parse(split[0]), Double.Parse(split[1])));
                 }
-                catch { continue; }
+                catch
+                {
+                    continue;
+                }
             }
             String retString = "";
             if (numTrucks == 1)
             {
                 HttpWebResponse resp = Precomp.getRawRoute(coords);
-                StreamReader sr = new StreamReader(resp.GetResponseStream());
+                var sr = new StreamReader(resp.GetResponseStream());
                 retString += sr.ReadToEnd();
             }
             if (numTrucks > 1)
             {
-                retString = Precomp.getMultiRoute(coords,numTrucks);
+                retString = Precomp.getMultiRoute(coords, numTrucks);
             }
             return retString;
         }
-    } 
+    }
 }

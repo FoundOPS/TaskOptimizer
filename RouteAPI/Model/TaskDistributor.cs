@@ -16,7 +16,6 @@ namespace TaskOptimizer.Model
 
         public TaskDistributor(Configuration config)
         {
-
             configure(config);
         }
 
@@ -57,13 +56,11 @@ namespace TaskOptimizer.Model
 
         public void recomputeFitness()
         {
-          
             int bestFitness = Int32.MaxValue;
             TaskDistribution bestDistribution = null;
             foreach (TaskDistribution distribution in m_individuals)
-            
+
             {
-                
                 distribution.recomputeFitness();
                 if (distribution.Fitness < bestFitness)
                 {
@@ -109,9 +106,9 @@ namespace TaskOptimizer.Model
                 // no change!
                 return;
             }
-            
+
             var copy = new TaskDistribution(individual);
-          
+
             if (copy.Fitness != individual.Fitness)
             {
                 //throw new Exception("Fitness mismatch when cloning task distribution");
@@ -131,7 +128,7 @@ namespace TaskOptimizer.Model
             m_startX = config.startX;
             m_startY = config.startY;
             m_optimizer = config.optimizer;
-          
+
             configureTaskDistributions(config.fitnessLevels, config.startProgressPercent,
                                        config.endProgressPercent);
         }
@@ -141,7 +138,7 @@ namespace TaskOptimizer.Model
                                                 int startProgressPercent, int endProgressPercent)
         {
             configurePopulationSize();
-           
+
             m_individuals = new TaskDistribution[m_populationSize];
 
             var taskDistributionConfiguration = new TaskDistribution.Configuration();
@@ -154,9 +151,6 @@ namespace TaskOptimizer.Model
 
             for (int t = 0; t < m_populationSize; t++)
             {
-
-
-
                 taskDistributionConfiguration.randomSeed = m_rand.Next();
                 m_individuals[t] = new TaskDistribution(taskDistributionConfiguration);
                 m_individuals[t].Id = t;
