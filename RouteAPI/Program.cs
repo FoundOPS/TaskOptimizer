@@ -65,6 +65,8 @@ namespace RouteAPI
             Routes
               .Add<RouteAPI>("/route")
               .Add<RouteAPI>("/route/{Loc}");
+            
+            
         }
     }
     public class RouteAPI
