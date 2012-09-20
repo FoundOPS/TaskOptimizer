@@ -36,35 +36,25 @@
     <StartupObject>TaskOptimizer.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net">
-      <HintPath>..\packages\log4net.1.2.10\lib\2.0\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Posix">
-      <HintPath>..\lib\Mono.Posix.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack">
-      <HintPath>..\lib\ServiceStack.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Common, Version=3.9.4.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Mono.Posix, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\ServiceStack.Common.3.9.5\lib\net35\ServiceStack.Common.dll</HintPath>
+      <HintPath>Lib\mono\Mono.Posix.dll</HintPath>
     </Reference>
-    <Reference Include="ServiceStack.Interfaces, Version=3.9.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="ServiceStack, Version=3.9.9.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\ServiceStack.Interfaces.dll</HintPath>
+      <HintPath>Lib\ServiceStack\ServiceStack.dll</HintPath>
     </Reference>
-    <Reference Include="ServiceStack.Logging.Log4Net">
-      <HintPath>..\packages\ServiceStack.Logging.Log4Net.1.0.3.0\lib\net35\ServiceStack.Logging.Log4Net.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Redis">
-      <HintPath>..\lib\ServiceStack.Redis.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.ServiceInterface">
-      <HintPath>..\lib\ServiceStack.ServiceInterface.dll</HintPath>
-    </Reference>
-    <Reference Include="ServiceStack.Text, Version=3.9.5.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="ServiceStack.Interfaces, Version=3.9.9.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\ServiceStack.Text.3.9.5\lib\net35\ServiceStack.Text.dll</HintPath>
+      <HintPath>Lib\ServiceStack\ServiceStack.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.Redis, Version=3.9.9.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\ServiceStack\ServiceStack.Redis.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.ServiceInterface, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\ServiceStack\ServiceStack.ServiceInterface.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -94,44 +84,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Lib\ServiceStack.Razor.dll.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Lib\Mono.Posix.dll" />
-    <Content Include="Lib\Mono.Security.dll" />
-    <Content Include="Lib\MonoPosixHelper.dll" />
-    <Content Include="Lib\Npgsql.dll" />
-    <Content Include="Lib\protobuf-net.dll" />
-    <Content Include="Lib\RouteAPI.exe" />
-    <Content Include="Lib\ServiceStack.Common.dll" />
-    <Content Include="Lib\ServiceStack.Common.pdb" />
-    <Content Include="Lib\ServiceStack.Common.xml" />
-    <Content Include="Lib\ServiceStack.dll" />
-    <Content Include="Lib\ServiceStack.FluentValidation.Mvc3.dll" />
-    <Content Include="Lib\ServiceStack.FluentValidation.Mvc3.pdb" />
-    <Content Include="Lib\ServiceStack.Interfaces.dll" />
-    <Content Include="Lib\ServiceStack.Interfaces.pdb" />
-    <Content Include="Lib\ServiceStack.Interfaces.xml" />
-    <Content Include="Lib\ServiceStack.OrmLite.dll" />
-    <Content Include="Lib\ServiceStack.OrmLite.pdb" />
-    <Content Include="Lib\ServiceStack.OrmLite.Sqlite.dll" />
-    <Content Include="Lib\ServiceStack.OrmLite.SqlServer.dll" />
-    <Content Include="Lib\ServiceStack.OrmLite.SqlServer.pdb" />
-    <Content Include="Lib\ServiceStack.pdb" />
-    <Content Include="Lib\ServiceStack.Plugins.ProtoBuf.dll" />
-    <Content Include="Lib\ServiceStack.Plugins.ProtoBuf.pdb" />
-    <Content Include="Lib\ServiceStack.Razor.dll" />
-    <Content Include="Lib\ServiceStack.Razor.pdb" />
-    <Content Include="Lib\ServiceStack.Redis.dll" />
-    <Content Include="Lib\ServiceStack.Redis.pdb" />
-    <Content Include="Lib\ServiceStack.Redis.xml" />
-    <Content Include="Lib\ServiceStack.ServiceInterface.dll" />
-    <Content Include="Lib\ServiceStack.ServiceInterface.pdb" />
-    <Content Include="Lib\ServiceStack.Text.dll" />
-    <Content Include="Lib\ServiceStack.Text.pdb" />
-    <Content Include="Lib\ServiceStack.Text.xml" />
-    <Content Include="Lib\ServiceStack.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

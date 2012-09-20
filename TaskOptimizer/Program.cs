@@ -1,5 +1,4 @@
-﻿using Funq;
-using Mono.Unix;
+﻿using Mono.Unix;
 using Mono.Unix.Native;
 using ServiceStack.ServiceInterface;
 using ServiceStack.WebHost.Endpoints;
@@ -8,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using TaskOptimizer.API;
+using Container = Funq.Container;
 
 namespace TaskOptimizer
 {
@@ -57,6 +57,8 @@ namespace TaskOptimizer
         {
         }
 
+        #region Overrides of HttpListenerBase
+
         public override void Configure(Container container)
         {
             //register user-defined REST-ful urls
@@ -64,6 +66,8 @@ namespace TaskOptimizer
                 .Add<RouteAPI>("/route")
                 .Add<RouteAPI>("/route/{Loc}");
         }
+
+        #endregion
     }
 
     public class RouteAPI
