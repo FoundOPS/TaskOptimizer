@@ -51,7 +51,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RouteAPI\TaskOptimizer.csproj">
+    <ProjectReference Include="..\TaskOptimizer\TaskOptimizer.csproj">
       <Project>{3B10FB27-5D63-4613-A698-875DBC5AF2AA}</Project>
       <Name>TaskOptimizer</Name>
     </ProjectReference>
