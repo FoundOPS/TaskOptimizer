@@ -46,7 +46,12 @@ namespace TaskOptimizer.Calculator
                 {
                     var route = OSRM.CalculateRoute(a, b);
                     distanceTime = route.Route_Summary.Total_Distance + "$" + route.Route_Summary.Total_Time;
-                    redisClient.SetEntry(lookupString, distanceTime);
+
+                    //cache if there is a redis client
+                    if (redisClient != null)
+                    {
+                        redisClient.SetEntry(lookupString, distanceTime);
+                    }
                 }
 
                 var values = distanceTime.Split('$');

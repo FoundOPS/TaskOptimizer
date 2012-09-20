@@ -1,8 +1,5 @@
-using ServiceStack.Redis;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
 using TaskOptimizer.API;
 using TaskOptimizer.Model;
 
@@ -12,93 +9,44 @@ namespace TaskOptimizer.Calculator
     {
         //private static readonly PooledRedisClientManager rc = new PooledRedisClientManager();
 
-        public static string getRawRoute(List<Coordinate> stops)
+        /// <summary>
+        /// Calculates the best distribution/organization for a number of trucks and destinations
+        /// </summary>
+        /// <param name="destinations">The destinations to service</param>
+        /// <param name="trucks">The number of trucks</param>
+        /// <returns></returns>
+        public static String Calculate(ICollection<Coordinate> destinations, int trucks)
         {
             var resolved = new List<Coordinate>();
-            foreach (Coordinate c in stops)
+            foreach (var c in destinations)
             {
-                Coordinate r = OSRM.FindNearest(c);
+                var r = OSRM.FindNearest(c);
                 if (!resolved.Contains(r))
-                {
                     resolved.Add(r);
-                }
             }
 
             var stopTasks = new List<Task>();
-            foreach (Coordinate r in resolved)
+            foreach (var r in resolved)
             {
-                var t = new Task(resolved.IndexOf(r), resolved.Count);
-                t.lat = r.lat;
-                t.lon = r.lon;
-                t.X = r.lat;
-                t.Y = r.lon;
-                t.Effort = 0;
+                var t = new Task(resolved.IndexOf(r), resolved.Count) { lat = r.lat, lon = r.lon, X = r.lat, Y = r.lon, Effort = 0 };
                 stopTasks.Add(t);
             }
-            var optConf = new Optimizer.Configuration {tasks = stopTasks};
-            var truck = new Robot();
-            optConf.robots = new List<Robot> {truck};
-            optConf.randomSeed = 777777;
 
-            var fl = new FitnessLevels {CostMultiplier = 1, TimeMultiplier = 1};
-            optConf.fitnessLevels = fl;
-            optConf.startX = optConf.tasks[0].lat;
-            optConf.startY = optConf.tasks[0].lon;
-            optConf.nbDistributors = Environment.ProcessorCount*3;
-            var o = new Optimizer(optConf);
-            while (o.m_minDistributor.m_nbIterationsWithoutImprovements < 10000)
-            {
-            }
+            var optConf = new Optimizer.Configuration { tasks = stopTasks };
 
-            var routeList = new List<Coordinate>();
-
-            foreach (Task t in o.MinSequences[0].Tasks)
-            {
-                var rp = new Coordinate(t.X, t.Y);
-                routeList.Add(rp);
-            }
-            
-            return OSRM.CalculateRouteRaw(routeList);
-        }
-
-        public static String getMultiRoute(ICollection<Coordinate> coords, int numTrucks)
-        {
-            var resolved = new List<Coordinate>();
-            foreach (Coordinate c in coords)
-            {
-                Coordinate r = OSRM.FindNearest(c);
-                if (!resolved.Contains(r))
-                {
-                    resolved.Add(r);
-                }
-            }
-            var stopTasks = new List<Task>();
-            foreach (Coordinate r in resolved)
-            {
-                var t = new Task(resolved.IndexOf(r), resolved.Count);
-                t.lat = r.lat;
-                t.lon = r.lon;
-                t.X = r.lat;
-                t.Y = r.lon;
-                t.Effort = 0;
-                stopTasks.Add(t);
-            }
-            var optConf = new Optimizer.Configuration();
-            optConf.tasks = stopTasks;
             var truck = new Robot();
             optConf.robots = new List<Robot>();
-            for (int t = 0; t < numTrucks; t++)
+            for (int t = 0; t < trucks; t++)
             {
                 optConf.robots.Add(truck);
             }
             optConf.randomSeed = 777777;
-            var fl = new FitnessLevels();
-            fl.CostMultiplier = 1;
-            fl.TimeMultiplier = 100;
-            optConf.fitnessLevels = fl;
+
+            optConf.fitnessLevels = new FitnessLevels { CostMultiplier = 1, TimeMultiplier = 100 };
             optConf.startX = optConf.tasks[0].lat;
             optConf.startY = optConf.tasks[0].lon;
-            optConf.nbDistributors = Environment.ProcessorCount*3;
+            optConf.nbDistributors = Environment.ProcessorCount * 3;
+
             var o = new Optimizer(optConf);
             while (o.m_minDistributor.m_nbIterationsWithoutImprovements < 10000)
             {

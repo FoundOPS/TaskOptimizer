@@ -4,8 +4,6 @@ using ServiceStack.ServiceInterface;
 using ServiceStack.WebHost.Endpoints;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
 using TaskOptimizer.API;
 using TaskOptimizer.Calculator;
 using Container = Funq.Container;
@@ -30,7 +28,7 @@ namespace TaskOptimizer
                     };
 
                 // Wait for a unix signal
-                for (bool exit = false; !exit;)
+                for (bool exit = false; !exit; )
                 {
                     int id = UnixSignal.WaitAny(signals);
 
@@ -54,7 +52,8 @@ namespace TaskOptimizer
     public class RouteAPIHost : AppHostHttpListenerBase
     {
         //Tell Service Stack the name of your application and where to find your web services
-        public RouteAPIHost() : base("Routing API", typeof (RouteAPIService).Assembly)
+        public RouteAPIHost()
+            : base("Routing API", typeof(RouteAPIService).Assembly)
         {
         }
 
@@ -97,6 +96,7 @@ namespace TaskOptimizer
             catch
             {
             }
+
             foreach (String c in splitCoords)
             {
                 try
@@ -109,15 +109,8 @@ namespace TaskOptimizer
                     continue;
                 }
             }
-            String retString = "";
-            if (numTrucks == 1)
-            {
-                retString += Problem.getRawRoute(coords);
-            }
-            if (numTrucks > 1)
-            {
-                retString = Problem.getMultiRoute(coords, numTrucks);
-            }
+
+            var retString = Problem.Calculate(coords, numTrucks);
             return retString;
         }
     }

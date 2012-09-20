@@ -47,8 +47,10 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="UnitTest1.cs" />
+    <Compile Include="DependencyTests.cs" />
+    <Compile Include="ProblemTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tools.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TaskOptimizer\TaskOptimizer.csproj">
@@ -60,6 +62,7 @@
     <Reference Include="ServiceStack.Interfaces">
       <HintPath>..\TaskOptimizer\Lib\ServiceStack\ServiceStack.Interfaces.dll</HintPath>
     </Reference>
+    <Reference Include="System" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">

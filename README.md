@@ -14,7 +14,7 @@ Licensed under the GNU AFFERO GENERAL PUBLIC LICENSE
 
 ####Download OSM [files](http://download.geofabrik.de/osm/)*####
 
-*Merge multiple files them with [osmconvert](https://raw.github.com/FoundOPS/TaskOptimizer/master/Tools/osmconvert.c)
+*Merge multiple files them with [osmconvert](https://github.com/FoundOPS/TaskOptimizer/raw/master/Tools/osmconvert.c)
 
 Download and compile osmconvert
 

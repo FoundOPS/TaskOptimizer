@@ -70,9 +70,9 @@ namespace TaskOptimizer.API
         {
             Instruction_Type = objs[0] as String;
             Road_Name = objs[1] as String;
-            Instruction_Duration = (int) objs[2];
-            Position = (int) objs[3];
-            Time_Elapsed = (int) objs[4];
+            Instruction_Duration = (int)objs[2];
+            Position = (int)objs[3];
+            Time_Elapsed = (int)objs[4];
             Distance_Elapsed = objs[5] as String;
             Direction = objs[6] as String;
             Azimuth = Convert.ToDouble(objs[7]);
@@ -145,20 +145,21 @@ namespace TaskOptimizer.API
 
         public int CompareTo(object o)
         {
-            if (!(o.GetType() == typeof (Coordinate)))
-            {
+            var other = o as Coordinate;
+            if (other == null)
                 throw new Exception("Not a coordinate!");
-            }
-            else if (((Coordinate) o).lat != lat)
+
+            var latDifference = other.lat - lat;
+            var lonDifference = other.lon - lon;
+
+            if (Math.Abs(latDifference) > 0.0000001 || Math.Abs(lonDifference) > 0.0000001)
             {
-                if (((Coordinate) o).lat > lat) return 1;
+                if (latDifference < 0 || lonDifference < 0)
+                    return 1;
+
                 return -1;
             }
-            else if (((Coordinate) o).lon != lon)
-            {
-                if (((Coordinate) o).lon > lon) return 1;
-                else return -1;
-            }
+
             return 0;
         }
 
@@ -168,7 +169,7 @@ namespace TaskOptimizer.API
 
         public bool Equals(Coordinate other)
         {
-            return (lat == other.lat && lon == other.lon);
+            return CompareTo(other) == 0;
         }
 
         #endregion
