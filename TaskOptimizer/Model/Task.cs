@@ -1,4 +1,5 @@
 using TaskOptimizer.API;
+using TaskOptimizer.Calculator;
 
 namespace TaskOptimizer.Model
 {
@@ -59,7 +60,8 @@ namespace TaskOptimizer.Model
             }
             if (m_distances[task.Id] == 0)
             {
-                m_distances[task.Id] = Precomp.getCost(new Coordinate(X, Y), new Coordinate(task.X, task.Y));
+                //TODO add cacher
+                m_distances[task.Id] = Cost.Calculate(new Coordinate(X, Y), new Coordinate(task.X, task.Y));
             }
             return m_distances[task.Id];
         }

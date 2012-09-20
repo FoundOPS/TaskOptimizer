@@ -64,7 +64,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\OSMContract.cs" />
-    <Compile Include="API\Precomp.cs" />
+    <Compile Include="Calculator\Problem.cs" />
+    <Compile Include="Calculator\Cost.cs" />
+    <Compile Include="Calculator\OSRM.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Interfaces\Individual.cs" />
     <Compile Include="Interfaces\Population.cs" />
     <Compile Include="Interfaces\WorkProgress.cs" />

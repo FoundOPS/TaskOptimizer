@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using TaskOptimizer.API;
+using TaskOptimizer.Calculator;
 using Container = Funq.Container;
 
 namespace TaskOptimizer
@@ -111,13 +112,11 @@ namespace TaskOptimizer
             String retString = "";
             if (numTrucks == 1)
             {
-                HttpWebResponse resp = Precomp.getRawRoute(coords);
-                var sr = new StreamReader(resp.GetResponseStream());
-                retString += sr.ReadToEnd();
+                retString += Problem.getRawRoute(coords);
             }
             if (numTrucks > 1)
             {
-                retString = Precomp.getMultiRoute(coords, numTrucks);
+                retString = Problem.getMultiRoute(coords, numTrucks);
             }
             return retString;
         }

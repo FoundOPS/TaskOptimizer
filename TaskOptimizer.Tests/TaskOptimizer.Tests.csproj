@@ -56,6 +56,11 @@
       <Name>TaskOptimizer</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ServiceStack.Interfaces">
+      <HintPath>..\TaskOptimizer\Lib\ServiceStack\ServiceStack.Interfaces.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

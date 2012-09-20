@@ -1,18 +1,20 @@
-**An Open Source MTSP Implemenation**
+**An Open Source MTSP Implemenation for Task Optimization**
 
-This is based off [planetcolonizer](http:// "http://code.google.com/p/planetcolonizer/") and uses [OSRM](https://github.com/DennisOSRM/Project-OSRM) for the routing calculations.
+This is based off [planetcolonizer](http:// "http://code.google.com/p/planetcolonizer/") and uses [OSRM](https://github.com/DennisOSRM/Project-OSRM) for the route calculations.
 
 The API runs through [ServiceStack](https://github.com/ServiceStack/ServiceStack) and the project is built to run on linux with [mono](https://github.com/mono/mono.git).
 
-Distance caching is done with [redis](https://github.com/antirez/redis) and uses the [ServiceStack.Redis](https://github.com/ServiceStack/ServiceStack.Redis) client.
+Caching is done with [redis](https://github.com/antirez/redis) and uses the [ServiceStack.Redis](https://github.com/ServiceStack/ServiceStack.Redis) client.
+
+Othodromic distance calculator from [here](https://github.com/lmaslanka/Orthodromic-Distance-Calculator).
 
 Licensed under the GNU AFFERO GENERAL PUBLIC LICENSE
 
-### Running MTSP-OSRM (Linux) ###
+### Running Task Optimizer (Linux) ###
 
 ####Download OSM [files](http://download.geofabrik.de/osm/)*####
 
-*Merge multiple files them with [osmconvert](link to repo)
+*Merge multiple files them with [osmconvert](https://raw.github.com/FoundOPS/TaskOptimizer/master/Tools/osmconvert.c)
 
 Download and compile osmconvert
 
@@ -27,6 +29,5 @@ Merge files
 ####Setup Redis Server####
 
 `sudo apt-get install redis-server`
-
 
 

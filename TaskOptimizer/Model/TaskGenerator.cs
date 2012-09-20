@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using TaskOptimizer.API;
+using TaskOptimizer.Calculator;
 
 namespace TaskOptimizer.Model
 {
@@ -38,7 +39,8 @@ namespace TaskOptimizer.Model
 
         private int computeDistance(double x, double y, Task task)
         {
-            return Precomp.getCost(new Coordinate(x, y), new Coordinate(task.X, task.Y));
+            //TODO add redis cacher
+            return Cost.Calculate(new Coordinate(x, y), new Coordinate(task.X, task.Y));
         }
 
         private Task generateTask(int id, int nbTasks, bool randomTaskSizes)
