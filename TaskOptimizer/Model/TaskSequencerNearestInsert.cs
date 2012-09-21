@@ -38,8 +38,7 @@ namespace TaskOptimizer.Model
 
                         for (int t1 = 0; t1 < orderedTasks.Count - 1; t1++)
                         {
-                            int cost = FindCheapestInsert(orderedTasks[t1], orderedTasks[t1 + 1], remainingTasks,
-                                                          out task);
+                            int cost = FindCheapestInsert(orderedTasks[t1], orderedTasks[t1 + 1], remainingTasks, out task);
                             if (cost < minCost)
                             {
                                 minCost = cost;
@@ -59,16 +58,16 @@ namespace TaskOptimizer.Model
             sequence.Tasks = orderedTasks;
         }
 
-        public TaskSequence Generate(List<Task> remainingTasks, int nbTasksInSequence, Worker worker, FitnessLevels fitnessLevels)
+        public TaskSequence Generate(List<Task> remainingTasks, int nbTasksInSequence, Worker worker)
         {
-            var sequence = new TaskSequence { Worker = worker, FitnessLevels = fitnessLevels };
+            var sequence = new TaskSequence{ Worker = worker};
 
             Generate(remainingTasks, nbTasksInSequence, sequence);
 
             return sequence;
         }
 
-        private static int FindCheapestInsert(Task t1, Task t2, List<Task> remainingTasks, out Task newTask)
+        private int FindCheapestInsert(Task t1, Task t2, IEnumerable<Task> remainingTasks, out Task newTask)
         {
             int minCost = Int32.MaxValue;
             int constantCost = t1.DistanceTo(t2);

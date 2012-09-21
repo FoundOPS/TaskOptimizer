@@ -13,15 +13,15 @@ namespace TaskOptimizer.Calculator
     /// </summary>
     public static class OSRM
     {
+        private static readonly PooledRedisClientManager RedisClientManager = new PooledRedisClientManager(Constants.RedisServer);
 
         /// <summary>
         /// Get the distance (in meters) and time (in seconds) between two coordinates
         /// </summary>
         /// <param name="a">First coordinate</param>
         /// <param name="b">Second coordinate</param>
-        /// <param name="redisClient">(Optional) If passed, it will use the redis client as a cache</param>
         /// <returns>An array {distance, time}</returns>
-        public static int[] GetDistanceTime(Coordinate a, Coordinate b, IRedisClient redisClient = null)
+        public static int[] GetDistanceTime(Coordinate a, Coordinate b)
         {
             //meters
             int distance;
@@ -30,25 +30,30 @@ namespace TaskOptimizer.Calculator
 
             try
             {
-                var lookupString = a + "$" + b + "$dt";
+                string lookupString = a.CompareTo(b) < 0
+                                          ? a + "$" + b + "$dt"
+                                          : b + "$" + a + "$dt";
 
                 string distanceTime;
 
-                //try to get the time and distance from the redis cache
-                if (redisClient != null && redisClient.ContainsKey(lookupString))
+                using (var client = RedisClientManager.GetClient())
                 {
-                    distanceTime = redisClient.GetValue(lookupString);
-                }
-                //otherwise get it from OSRM
-                else
-                {
-                    var route = OSRM.CalculateRoute(a, b);
-                    distanceTime = route.Route_Summary.Total_Distance + "$" + route.Route_Summary.Total_Time;
+                    //try to get the time and distance from the redis cache
+                    distanceTime = client.Get<string>(lookupString);
 
-                    //if there is a redis client, cache the distance and time
-                    if (redisClient != null)
+                    //otherwise get it from OSRM
+                    if (String.IsNullOrEmpty(distanceTime))
                     {
-                        redisClient.SetEntry(lookupString, distanceTime);
+                        var route = CalculateRoute(a, b);
+                        distanceTime = route.Route_Summary.Total_Distance + "$" + route.Route_Summary.Total_Time;
+
+                        //if there is a redis client, cache the distance and time
+                        client.SetEntry(lookupString, distanceTime);
+                        client.Save();
+                    }
+                    else
+                    {
+
                     }
                 }
 
@@ -65,6 +70,7 @@ namespace TaskOptimizer.Calculator
                 //TODO some calculation for time from a straight distance
                 time = distance * 1;
             }
+
 
             return new[] { distance, time };
         }

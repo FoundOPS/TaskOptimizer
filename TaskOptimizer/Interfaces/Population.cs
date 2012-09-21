@@ -72,7 +72,6 @@ namespace TaskOptimizer.Interfaces
         protected virtual void OnNewBestIndividual(IndividualType individual)
         {
             // really a new best?
-
             if (individual.Fitness < BestFitness)
             {
                 MutationRate = InitialMutationRate;

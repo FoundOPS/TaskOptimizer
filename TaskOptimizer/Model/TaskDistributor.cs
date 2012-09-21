@@ -6,7 +6,7 @@ namespace TaskOptimizer.Model
 {
     public class TaskDistributor : Population<TaskDistribution>
     {
-        private TaskDistribution _bestIndividualCopy;
+        private TaskDistribution _bestIndividual;
         private bool _isOptimizingSequences;
         private int _nbSequenceOptimizationIterations;
         private Optimizer _optimizer;
@@ -18,16 +18,6 @@ namespace TaskOptimizer.Model
             Configure(config);
         }
 
-        public int TotalTime
-        {
-            get { return _bestIndividualCopy.TotalTime; }
-        }
-
-        public int TotalCost
-        {
-            get { return _bestIndividualCopy.TotalCost; }
-        }
-
         public int CurrentIteration
         {
             get { return CurIteration; }
@@ -35,12 +25,12 @@ namespace TaskOptimizer.Model
 
         public List<TaskSequence> MinSequences
         {
-            get { return _bestIndividualCopy.Sequences; }
+            get { return _bestIndividual.Sequences; }
         }
 
         public int Fitness
         {
-            get { return _bestIndividualCopy.Fitness; }
+            get { return _bestIndividual.Fitness; }
         }
 
         public void RecomputeFitness()
@@ -48,7 +38,6 @@ namespace TaskOptimizer.Model
             int bestFitness = Int32.MaxValue;
             TaskDistribution bestDistribution = null;
             foreach (TaskDistribution distribution in Individuals)
-
             {
                 distribution.RecomputeFitness();
                 if (distribution.Fitness < bestFitness)
@@ -87,7 +76,7 @@ namespace TaskOptimizer.Model
 
         protected override void OnNewBestIndividual(TaskDistribution individual)
         {
-            if (_bestIndividualCopy != null && _bestIndividualCopy.Fitness == individual.Fitness)
+            if (_bestIndividual != null && _bestIndividual.Fitness == individual.Fitness)
             {
                 // no change!
                 return;
@@ -101,7 +90,7 @@ namespace TaskOptimizer.Model
             }
 
 
-            _bestIndividualCopy = copy;
+            _bestIndividual = copy;
             base.OnNewBestIndividual(individual);
         }
 
@@ -113,23 +102,21 @@ namespace TaskOptimizer.Model
             _workers = config.Workers;
             _optimizer = config.Optimizer;
 
-            ConfigureTaskDistributions(config.FitnessLevels);
+            ConfigureTaskDistributions();
         }
 
 
-        private void ConfigureTaskDistributions(FitnessLevels fitnessLevels)
+        private void ConfigureTaskDistributions()
         {
             ConfigurePopulationSize();
 
             Individuals = new TaskDistribution[_populationSize];
 
-            var taskDistributionConfiguration = new TaskDistribution.Configuration {Workers = _workers, Tasks = _tasks, FitnessLevels = fitnessLevels, Distributor = this};
+            var taskDistributionConfiguration = new TaskDistribution.Configuration(_workers, _tasks, this, Rand.Next());
 
             for (int t = 0; t < _populationSize; t++)
             {
-                taskDistributionConfiguration.RandomSeed = Rand.Next();
-                Individuals[t] = new TaskDistribution(taskDistributionConfiguration);
-                Individuals[t].Id = t;
+                Individuals[t] = new TaskDistribution(taskDistributionConfiguration) {Id = t};
                 if (t < _workers.Count)
                 {
                     Individuals[t].GenerateFixedInitialSolution(t);
@@ -145,15 +132,15 @@ namespace TaskOptimizer.Model
 
         private void ConfigurePopulationSize()
         {
-            int problemComplexity = _tasks.Count*_workers.Count;
-            _populationSize = (int) (10*Math.Log10(problemComplexity)/Math.Log10(Math.E));
+            int problemComplexity = _tasks.Count * _workers.Count;
+            _populationSize = (int)(10 * Math.Log10(problemComplexity) / Math.Log10(Math.E));
 
-            InitialMutationRate = (int) (1.5*_populationSize);
+            InitialMutationRate = (int)(1.5 * _populationSize);
             MutationRate = InitialMutationRate;
-            InitialCataclysmCountdown = InitialMutationRate*10;
+            InitialCataclysmCountdown = InitialMutationRate * 10;
             CataclysmCountdown = InitialCataclysmCountdown;
 
-            MaxIterationsWithoutImprovements = InitialCataclysmCountdown*10;
+            MaxIterationsWithoutImprovements = InitialCataclysmCountdown * 10;
 
             if (_workers.Count == 1)
             {
@@ -165,7 +152,7 @@ namespace TaskOptimizer.Model
 
         public int ComputeMutationForce()
         {
-            return (int) ((InitialMutationRate - MutationRate)/(double) InitialMutationRate*10);
+            return (int)((InitialMutationRate - MutationRate) / (double)InitialMutationRate * 10);
         }
 
         protected override int ComputeMaxMutations()
@@ -181,7 +168,7 @@ namespace TaskOptimizer.Model
             for (int t = 0; t < _populationSize; t++)
             {
                 // keep the best distribution...
-                if (Individuals[t].Id != bestIndividual.Id)
+                if (Individuals[t].Id != _bestIndividual.Id)
                 {
                     if (t != 0)
                     {
@@ -190,7 +177,7 @@ namespace TaskOptimizer.Model
                     else
                     {
                         // import a solution from another population?
-                        if (_optimizer.Fitness != Fitness && _optimizer.Fitness < Fitness*1.1 && Rand.Next(2) == 0)
+                        if (_optimizer.Fitness != Fitness && _optimizer.Fitness < Fitness * 1.1 && Rand.Next(2) == 0)
                         {
                             Individuals[t].SetSequences(_optimizer.MinSequences);
                         }
@@ -219,7 +206,7 @@ namespace TaskOptimizer.Model
                 _nbSequenceOptimizationIterations++;
             }
             else if (_workers.Count > 1 && _isOptimizingSequences &&
-                     NbIterationsWithoutImprovements > 2*MaxIterationsWithoutImprovements)
+                     NbIterationsWithoutImprovements > 2 * MaxIterationsWithoutImprovements)
             {
                 // distribution found! restart distribution optimization!
                 foreach (TaskDistribution distribution in Individuals)
@@ -237,8 +224,7 @@ namespace TaskOptimizer.Model
         {
             public List<Task> Tasks { get; set; }
             public List<Worker> Workers { get; set; }
-            
-            public FitnessLevels FitnessLevels { get; set; }
+
             public Optimizer Optimizer { get; set; }
             public int RandomSeed { get; set; }
 

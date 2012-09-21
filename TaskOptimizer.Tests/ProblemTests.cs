@@ -25,7 +25,7 @@ namespace TaskOptimizer.Tests
             var stops = Tools.GetCoordinates();
 
             DateTime startTime = DateTime.Now;
-            var result = Problem.Calculate(stops, 3);
+            var result = Problem.Calculate(stops, 2);
 
             Trace.WriteLine(String.Format("Total Seconds {0}", DateTime.Now.Subtract(startTime).TotalSeconds));
         }

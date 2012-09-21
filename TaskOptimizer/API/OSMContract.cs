@@ -128,7 +128,7 @@ namespace TaskOptimizer.API
     }
 
     [DataContract]
-    public class Coordinate : IComparable, IEquatable<Coordinate>
+    public class Coordinate : IComparable, IComparable<Coordinate>, IEquatable<Coordinate>
     {
         public Coordinate(double x, double y)
         {
@@ -145,7 +145,7 @@ namespace TaskOptimizer.API
         public double latRad { get { return GeoTools.DegreeToRadian(lat); } }
         public double lonRad { get { return GeoTools.DegreeToRadian(lon); } }
 
-        #region IComparable Members
+        #region IComparable/IEquatable<Coordinate> Members
 
         public int CompareTo(object o)
         {
@@ -167,9 +167,10 @@ namespace TaskOptimizer.API
             return 0;
         }
 
-        #endregion
-
-        #region IEquatable<Coordinate> Members
+        public int CompareTo(Coordinate other)
+        {
+            return CompareTo((object)other);
+        }
 
         public bool Equals(Coordinate other)
         {

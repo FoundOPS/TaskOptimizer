@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using ServiceStack.Redis;
 
 namespace TaskOptimizer.Model
 {
@@ -20,16 +21,6 @@ namespace TaskOptimizer.Model
         public Optimizer(Configuration config)
         {
             Create(config);
-        }
-
-        public int TotalTime
-        {
-            get { return MinDistributor.TotalTime; }
-        }
-
-        public int TotalCost
-        {
-            get { return MinDistributor.TotalCost; }
         }
 
         public int CurrentIteration
@@ -62,7 +53,7 @@ namespace TaskOptimizer.Model
             _threads = new Thread[config.NumberDistributors];
             _recomputeFitnesses = new bool[config.NumberDistributors];
 
-            var taskDistributorConfiguration = new TaskDistributor.Configuration {Workers = config.Workers, Tasks = config.Tasks, FitnessLevels = config.FitnessLevels, Optimizer = this};
+            var taskDistributorConfiguration = new TaskDistributor.Configuration {Workers = config.Workers, Tasks = config.Tasks, Optimizer = this};
 
             for (int t = 0; t < config.NumberDistributors; t++)
             {
@@ -147,7 +138,6 @@ namespace TaskOptimizer.Model
 
         public class Configuration
         {
-            public FitnessLevels FitnessLevels { get; set; }
             public int NumberDistributors { get; set; }
             public int RandomSeed { get; set; }
             public List<Worker> Workers { get; set; }

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ServiceStack.Redis;
+using System.Threading;
 using TaskOptimizer.API;
 using TaskOptimizer.Model;
 
@@ -8,8 +8,6 @@ namespace TaskOptimizer.Calculator
 {
     public class Problem
     {
-        private static readonly PooledRedisClientManager RedisClientManager = new PooledRedisClientManager(Constants.RedisServer);
-
         /// <summary>
         /// Calculates the best distribution/organization for a number of trucks and destinations
         /// </summary>
@@ -27,9 +25,10 @@ namespace TaskOptimizer.Calculator
             }
 
             var stopTasks = new List<Task>();
-            foreach (var r in resolved)
+            for (int i = 0; i < resolved.Count; i++ )
             {
-                var t = new Task(resolved.IndexOf(r), resolved.Count) { Lat = r.lat, Lon = r.lon, Effort = 0 };
+                var c = resolved[i];
+                var t = new Task(i, resolved.Count) { Lat = c.lat, Lon = c.lon, Effort = 0 };
                 stopTasks.Add(t);
             }
 
@@ -43,12 +42,12 @@ namespace TaskOptimizer.Calculator
             }
             optConf.RandomSeed = 777777;
 
-            optConf.FitnessLevels = new FitnessLevels { CostMultiplier = 1, TimeMultiplier = 100 };
             optConf.NumberDistributors = Environment.ProcessorCount * 3;
 
             var o = new Optimizer(optConf);
             while (o.MinDistributor.NbIterationsWithoutImprovements < 10000)
             {
+                Thread.Sleep(250);
             }
             o.Stop();
             string response = "{";

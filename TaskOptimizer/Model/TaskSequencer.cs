@@ -6,9 +6,8 @@ namespace TaskOptimizer.Model
 {
     public class TaskSequencer : Population<TaskSequence>
     {
-        private readonly int _maxPopulationSize = 25;
         private readonly TaskSequencerNearestInsert _nearestInsert = new TaskSequencerNearestInsert();
-        private FitnessLevels _fitnessLevels;
+
         private Worker _worker;
         private List<Task> _tasks;
 
@@ -45,7 +44,7 @@ namespace TaskOptimizer.Model
                 regeneratePopulation(true);
             }
         }
-
+        private readonly int _maxPopulationSize = 25;
         public int MaxPopulationSize
         {
             get { return _maxPopulationSize; }
@@ -59,26 +58,23 @@ namespace TaskOptimizer.Model
                 {
                     return null;
                 }
-                else
-                {
-                    return bestIndividual;
-                }
+
+                return bestIndividual;
             }
         }
 
-        public void configure(Configuration config)
+        public void Configure(Configuration config)
         {
-            if (!config.OrderedTasks && !isConfigurationChanged(config))
+            if (!config.OrderedTasks && !IsConfigurationChanged(config))
             {
                 return;
             }
 
-            _fitnessLevels = config.FitnessLevels;
             _worker = config.Worker;
             _tasks = new List<Task>(config.Tasks);
 
-            configureMutationParameters();
-            configureTaskUserIds();
+            ConfigureMutationParameters();
+            ConfigureTaskUserIds();
 
             bool keepBest = false;
 
@@ -86,9 +82,7 @@ namespace TaskOptimizer.Model
             {
                 if (bestIndividual == null)
                 {
-                    var sequence = new TaskSequence();
-                    sequence.Id = 0;
-                    sequence.TaskSequencer = this;
+                    var sequence = new TaskSequence {Id = 0, TaskSequencer = this};
 
                     bestIndividual = sequence;
                     Individuals[0] = bestIndividual;
@@ -96,7 +90,6 @@ namespace TaskOptimizer.Model
 
 
                 bestIndividual.Worker = _worker;
-                bestIndividual.FitnessLevels = _fitnessLevels;
                 bestIndividual.Tasks = new List<Task>(_tasks);
 
                 keepBest = true;
@@ -106,7 +99,7 @@ namespace TaskOptimizer.Model
             regeneratePopulation(keepBest);
         }
 
-        public void useOptimalPopulationSize()
+        public void UseOptimalPopulationSize()
         {
             PopulationSize = computeOptimalPopulationSize(_tasks.Count);
         }
@@ -126,7 +119,7 @@ namespace TaskOptimizer.Model
             return (int) (Math.Log10(nbTasks)*10) + 1;
         }
 
-        private bool isConfigurationChanged(Configuration config)
+        private bool IsConfigurationChanged(Configuration config)
         {
             if (bestIndividual != null && bestIndividual.Tasks.Count == config.Tasks.Count)
             {
@@ -152,7 +145,7 @@ namespace TaskOptimizer.Model
             return true;
         }
 
-        private void configureMutationParameters()
+        private void ConfigureMutationParameters()
         {
             InitialMutationRate = (int) (2.5*computeOptimalPopulationSize(_tasks.Count));
             MutationRate = InitialMutationRate;
@@ -160,7 +153,7 @@ namespace TaskOptimizer.Model
             CataclysmCountdown = InitialCataclysmCountdown;
         }
 
-        private void configureTaskUserIds()
+        private void ConfigureTaskUserIds()
         {
             for (int t = 0; t < _tasks.Count; t++)
             {
@@ -199,7 +192,7 @@ namespace TaskOptimizer.Model
             {
                 if (Individuals[t] == null)
                 {
-                    Individuals[t] = generateInitialSequenceUsingCheapestInsert();
+                    Individuals[t] = GenerateInitialSequenceUsingCheapestInsert();
                 }
                 else
                 {
@@ -215,7 +208,7 @@ namespace TaskOptimizer.Model
                 Individuals[t].Id = t;
             }
 
-            computeMinSequence();
+            ComputeMinSequence();
 
             if (keepBest && BestFitness > bestFitness)
             {
@@ -240,7 +233,7 @@ namespace TaskOptimizer.Model
             return 0;
         }
 
-        private void computeMinSequence()
+        private void ComputeMinSequence()
         {
             int bestFitness = Int32.MaxValue;
             TaskSequence bestIndividual = null;
@@ -257,7 +250,7 @@ namespace TaskOptimizer.Model
             OnNewBestIndividual(bestIndividual);
         }
 
-        public void recomputeFitness()
+        public void RecomputeFitness()
         {
             int bestFitness = Int32.MaxValue;
             TaskSequence bestIndividual = null;
@@ -279,14 +272,14 @@ namespace TaskOptimizer.Model
             OnNewBestIndividual(bestIndividual);
         }
 
-        public List<Task> getOriginalTasks()
+        public List<Task> GetOriginalTasks()
         {
             return _tasks;
         }
 
-        private TaskSequence generateInitialSequenceUsingCheapestInsert()
+        private TaskSequence GenerateInitialSequenceUsingCheapestInsert()
         {
-            TaskSequence sequence = _nearestInsert.Generate(new List<Task>(_tasks), _tasks.Count, _worker, _fitnessLevels);
+            TaskSequence sequence = _nearestInsert.Generate(new List<Task>(_tasks), _tasks.Count, _worker);
             sequence.TaskSequencer = this;
             return sequence;
         }
@@ -295,13 +288,21 @@ namespace TaskOptimizer.Model
 
         public class Configuration
         {
-            public int ExpectedFitness { get; set; }
-            public FitnessLevels FitnessLevels { get; set; }
-            
-            public bool OrderedTasks = false;
+            public int ExpectedFitness { get; private set; }
 
-            public List<Task> Tasks { get; set; }
-            public Worker Worker { get; set; }
+            public bool OrderedTasks { get; private set; }
+
+            public List<Task> Tasks { get; private set; }
+            public Worker Worker { get; private set; }
+
+            public Configuration(Worker worker, List<Task> tasks, int expectedFitness = 0, bool orderedTasks = false)
+            {
+                Worker = worker;
+                Tasks = tasks;
+
+                ExpectedFitness = expectedFitness;
+                OrderedTasks = orderedTasks;
+            }
         }
 
         #endregion

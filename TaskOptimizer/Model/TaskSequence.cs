@@ -7,37 +7,14 @@ namespace TaskOptimizer.Model
     public class TaskSequence : Individual
     {
         private readonly Random _rand = new Random();
-        private int _cost = 66666666;
         private bool[] _crossoverAddedTasks;
         private int[] _crossoverTaskNeighborCount;
         private bool[][] _crossoverTaskNeighborMatrix;
         private Task[][] _crossoverTaskNeighbors;
-        private int _fitness = 66666666;
-        private FitnessLevels _fitnessLevels;
-        private List<Task> _tasks;
-        private int _time = 66666666;
-
-        public FitnessLevels FitnessLevels
-        {
-            set { _fitnessLevels = value; }
-        }
 
         public Worker Worker { get; set; }
-
-        public int Cost
-        {
-            get { return _cost; }
-
-            set { _cost = value; }
-        }
-
-        public int Time
-        {
-            get { return _time; }
-
-            set { _time = value; }
-        }
-
+  
+        private List<Task> _tasks;
         public List<Task> Tasks
         {
             get { return _tasks; }
@@ -56,6 +33,7 @@ namespace TaskOptimizer.Model
 
         public int Id { get; set; }
 
+        private int _fitness = 66666666;
         public int Fitness
         {
             get { return _fitness; }
@@ -81,13 +59,13 @@ namespace TaskOptimizer.Model
 
         public void Mutate()
         {
-            int nbMutations = _rand.Next(Tasks.Count/5) + 1;
+            int nbMutations = _rand.Next(Tasks.Count / 5) + 1;
             for (int t = 0; t < nbMutations; t++)
             {
                 int t1 = _rand.Next(Tasks.Count);
-                var range = (int) (_rand.Next((int) (Tasks.Count*0.3)) - Tasks.Count*0.15 - 1);
+                var range = (int)(_rand.Next((int)(Tasks.Count * 0.3)) - Tasks.Count * 0.15 - 1);
                 //int range = (int)(_rand.Next(5) - 2);
-                int t2 = (t1 + range)%Tasks.Count;
+                int t2 = (t1 + range) % Tasks.Count;
                 if (t2 < 0)
                 {
                     t2 = Tasks.Count + t2;
@@ -128,40 +106,31 @@ namespace TaskOptimizer.Model
             }
         }
 
-
         public void UpdateFitness()
         {
             int distance = 0;
-            int time = 0;
-            int cost = 0;
             Task fromTask = null;
 
             foreach (var task in Tasks)
             {
                 distance += task.DistanceTo(fromTask);
                 fromTask = task;
-
-                cost += task.Effort*task.Effort*Worker.WorkCost;
-                time += task.Effort*task.Effort*Worker.WorkTime;
             }
 
-            cost += distance*Worker.DistanceCost;
+            //TODO Update cost function
+            int cost = distance + 1;
 
-            Cost = cost;
-            Time = time + distance*Worker.DistanceTime;
-
-            Fitness = Cost*_fitnessLevels.CostMultiplier + Time*_fitnessLevels.TimeMultiplier;
+            Fitness = cost;
         }
-
 
         private void ComputeEdgeRecombinaisonCrossover(TaskSequence p1, TaskSequence p2)
         {
             // use the Edge recombination operator 
             // see: http://en.wikipedia.org/wiki/Edge_recombination_operator
             //_rand = new Random(11);
-            for (int t = 0; t < TaskSequencer.getOriginalTasks().Count; t++)
+            for (int t = 0; t < TaskSequencer.GetOriginalTasks().Count; t++)
             {
-                for (int t2 = 0; t2 < TaskSequencer.getOriginalTasks().Count; t2++)
+                for (int t2 = 0; t2 < TaskSequencer.GetOriginalTasks().Count; t2++)
                 {
                     _crossoverTaskNeighborMatrix[t][t2] = false;
                 }
@@ -189,7 +158,7 @@ namespace TaskOptimizer.Model
                 task = p2.Tasks[0];
             }
 
-            for (int i = 0; i < TaskSequencer.getOriginalTasks().Count; i++)
+            for (int i = 0; i < TaskSequencer.GetOriginalTasks().Count; i++)
             {
                 Tasks.Add(task);
                 _crossoverAddedTasks[task.UserId] = true;
@@ -236,12 +205,12 @@ namespace TaskOptimizer.Model
                     // find a task not already added...
 
                     for (int notAddedTaskIndex = 0;
-                         notAddedTaskIndex < TaskSequencer.getOriginalTasks().Count;
+                         notAddedTaskIndex < TaskSequencer.GetOriginalTasks().Count;
                          notAddedTaskIndex++)
                     {
                         if (_crossoverAddedTasks[notAddedTaskIndex] == false)
                         {
-                            task = TaskSequencer.getOriginalTasks()[notAddedTaskIndex];
+                            task = TaskSequencer.GetOriginalTasks()[notAddedTaskIndex];
                             if (task == null)
                             {
                                 throw new Exception("null task");

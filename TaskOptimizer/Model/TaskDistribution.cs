@@ -7,11 +7,10 @@ namespace TaskOptimizer.Model
     public class TaskDistribution : Individual
     {
         private Random _rand;
-        
-        private readonly TaskSequencerNearestInsert _nearestInsert = new TaskSequencerNearestInsert();
+
+        private readonly TaskSequencerNearestInsert _nearestInsert;
         private List<Task>[] _distributedTasks;
         private TaskDistributor _distributor;
-        private FitnessLevels _fitnessLevels;
         private int[] _lastTaskDistributedWorker;
 
         private bool _optimizingSequences = false;
@@ -22,19 +21,17 @@ namespace TaskOptimizer.Model
 
         public TaskDistribution(Configuration config)
         {
+            _nearestInsert = new TaskSequencerNearestInsert();
             Configure(config);
         }
 
         public TaskDistribution(TaskDistribution distribution)
         {
-            var config = new Configuration { Workers = distribution._workers };
+            _nearestInsert = new TaskSequencerNearestInsert();
+
+            var config = new Configuration(distribution._workers, distribution._tasks, distribution._distributor, distribution._rand.Next());
 
             Console.WriteLine(config.Workers.Count);
-            config.Tasks = distribution._tasks;
-            config.FitnessLevels = distribution._fitnessLevels;
-            config.RandomSeed = distribution._rand.Next();
-            config.Distributor = distribution._distributor;
-
             Id = distribution.Id;
 
             Configure(config);
@@ -53,7 +50,7 @@ namespace TaskOptimizer.Model
                     if (value)
                     {
                         //TODO check if this is correct logic
-                        _sequencers[0].useOptimalPopulationSize();
+                        _sequencers[0].UseOptimalPopulationSize();
                     }
                     else
                     {
@@ -70,9 +67,6 @@ namespace TaskOptimizer.Model
 
         public int NbUsedWorkers { get; private set; }
 
-        public int TotalTime { get; private set; }
-        public int TotalCost { get; private set; }
-
         public List<TaskSequence> Sequences { get; private set; }
 
         #region Individual Members
@@ -84,7 +78,6 @@ namespace TaskOptimizer.Model
         public void Optimize()
         {
             Fitness = 0;
-            int maxTime = 0;
             int usedWorkers = 0;
 
             for (int t = 0; t < _workers.Count; t++)
@@ -94,12 +87,7 @@ namespace TaskOptimizer.Model
                 TaskSequence sequence = _sequencers[t].MinTaskSequence;
                 if (sequence != null)
                 {
-                    Fitness += sequence.Cost;
-
-                    if (sequence.Time > maxTime)
-                    {
-                        maxTime = sequence.Time;
-                    }
+                    Fitness += sequence.Fitness;
 
                     if (sequence.Tasks.Count > 0)
                     {
@@ -111,13 +99,8 @@ namespace TaskOptimizer.Model
             }
 
             NbUsedWorkers = usedWorkers;
-            TotalCost = Fitness;
 
-            Fitness *= _fitnessLevels.CostMultiplier;
-            Fitness += maxTime * _fitnessLevels.TimeMultiplier;
             Fitness /= NbUsedWorkers;
-
-            TotalTime = maxTime;
         }
 
         /// <summary>
@@ -219,23 +202,20 @@ namespace TaskOptimizer.Model
 
             for (int t = 0; t < _workers.Count; t++)
             {
-                var config = new TaskSequencer.Configuration();
-                config.Worker = _workers[t];
+                TaskSequencer.Configuration config;
+
                 if (_distributedTasks[t].Count > 0 & sequences[t] != null)
                 {
-                    config.Tasks = CloneTaskList(sequences[t].Tasks);
+                    var tasks = CloneTaskList(sequences[t].Tasks);
 
-                    config.ExpectedFitness = (sequences[t]).Fitness;
-                    config.OrderedTasks = true;
+                    config = new TaskSequencer.Configuration(_workers[t], tasks, (sequences[t]).Fitness, true);
                 }
                 else
                 {
-                    config.Tasks = new List<Task>();
+                    config = new TaskSequencer.Configuration(_workers[t], new List<Task>());
                 }
-                config.FitnessLevels = _fitnessLevels;
 
-
-                _sequencers[t].configure(config);
+                _sequencers[t].Configure(config);
             }
 
             Optimize();
@@ -277,7 +257,7 @@ namespace TaskOptimizer.Model
         {
             foreach (TaskSequencer sequencer in _sequencers)
             {
-                sequencer.recomputeFitness();
+                sequencer.RecomputeFitness();
             }
 
             Optimize();
@@ -312,7 +292,6 @@ namespace TaskOptimizer.Model
 
             ConfigureTasks(config);
 
-            _fitnessLevels = config.FitnessLevels;
             _workers = config.Workers;
             _distributor = config.Distributor;
 
@@ -407,7 +386,7 @@ namespace TaskOptimizer.Model
 
                 if (nbTasks > 0)
                 {
-                    TaskSequence sequence = _nearestInsert.Generate(remainingTasks, nbTasks, _workers[workerIndex], _fitnessLevels);
+                    TaskSequence sequence = _nearestInsert.Generate(remainingTasks, nbTasks, _workers[workerIndex]);
 
                     foreach (Task task in sequence.Tasks)
                     {
@@ -472,8 +451,8 @@ namespace TaskOptimizer.Model
         {
             for (int t = 0; t < _workers.Count; t++)
             {
-                var config = new TaskSequencer.Configuration {Worker = _workers[t], Tasks = _distributedTasks[t], FitnessLevels = _fitnessLevels};
-                _sequencers[t].configure(config);
+                var config = new TaskSequencer.Configuration( _workers[t], _distributedTasks[t]);
+                _sequencers[t].Configure(config);
             }
 
             Optimize();
@@ -483,12 +462,20 @@ namespace TaskOptimizer.Model
 
         public class Configuration
         {
-            public List<Task> Tasks { get; set; }
-            public List<Worker> Workers { get; set; }
+            public List<Task> Tasks { get; private set; }
+            public List<Worker> Workers { get; private set; }
 
-            public TaskDistributor Distributor { get; set; }
-            public FitnessLevels FitnessLevels { get; set; }
-            public int RandomSeed { get; set; }
+            public TaskDistributor Distributor { get; private set; }
+            public int RandomSeed { get; private set; }
+
+            public Configuration(List<Worker> workers, List<Task> tasks = null, TaskDistributor distributor = null, int randomSeed = 0)
+            {
+                Tasks = tasks;
+                Workers = workers;
+
+                Distributor = distributor;
+                RandomSeed = randomSeed;
+            }
         }
 
         #endregion

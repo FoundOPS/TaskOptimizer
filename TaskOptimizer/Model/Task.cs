@@ -1,4 +1,3 @@
-using ServiceStack.Redis;
 using TaskOptimizer.API;
 using TaskOptimizer.Calculator;
 
@@ -21,6 +20,8 @@ namespace TaskOptimizer.Model
             Id = task.Id;
             _mDistances = task._mDistances;
             _mStraightDistances = task._mStraightDistances;
+            Lat = task.Lat;
+            Lon = task.Lon;
 
             UserId = task.UserId;
             Effort = task.Effort;
@@ -72,7 +73,7 @@ namespace TaskOptimizer.Model
 
             return straightDistance;
         }
-        public int DistanceTo(Task task, IRedisClient cache = null)
+        public int DistanceTo(Task task)
         {
             if (task == null || task == this)
             {
@@ -82,7 +83,7 @@ namespace TaskOptimizer.Model
             if (_mDistances[task.Id] == 0)
             {
                 //cache the calculation in memory
-                _mDistances[task.Id] = OSRM.GetDistanceTime(new Coordinate(Lat, Lon), new Coordinate(Lat, Lon), cache)[0];
+                _mDistances[task.Id] = OSRM.GetDistanceTime(new Coordinate(Lat, Lon), new Coordinate(task.Lat, task.Lon))[0];
             }
             return _mDistances[task.Id];
         }

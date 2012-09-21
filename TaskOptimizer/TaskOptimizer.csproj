@@ -73,7 +73,6 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Interfaces\Individual.cs" />
     <Compile Include="Interfaces\Population.cs" />
-    <Compile Include="Model\FitnessLevels.cs" />
     <Compile Include="Model\KMeanCluster.cs" />
     <Compile Include="Model\Optimizer.cs" />
     <Compile Include="Model\Worker.cs" />
