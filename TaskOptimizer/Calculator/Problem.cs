@@ -36,7 +36,7 @@ namespace TaskOptimizer.Calculator
 
             var truck = new Worker();
             optConf.Workers = new List<Worker>();
-            for (int t = 0; t < trucks; t++)
+            for (int t = 0; t < 1; t++)
             {
                 optConf.Workers.Add(truck);
             }
@@ -45,9 +45,10 @@ namespace TaskOptimizer.Calculator
             optConf.NumberDistributors = Environment.ProcessorCount * 3;
 
             var o = new Optimizer(optConf);
+            //TODO figure out new stopping logic, this only works for 1 truck
             while (o.MinDistributor.NbIterationsWithoutImprovements < 10000)
             {
-                Thread.Sleep(250);
+                Thread.Sleep(1000);
             }
             o.Stop();
             string response = "{";

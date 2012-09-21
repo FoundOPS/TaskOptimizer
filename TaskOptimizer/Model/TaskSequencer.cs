@@ -41,7 +41,7 @@ namespace TaskOptimizer.Model
                 }
 
                 _populationSize = value;
-                regeneratePopulation(true);
+                RegeneratePopulation(true);
             }
         }
         private readonly int _maxPopulationSize = 25;
@@ -96,7 +96,7 @@ namespace TaskOptimizer.Model
             }
 
 
-            regeneratePopulation(keepBest);
+            RegeneratePopulation(keepBest);
         }
 
         public void UseOptimalPopulationSize()
@@ -164,7 +164,7 @@ namespace TaskOptimizer.Model
         /// <summary>
         /// Regenerate new sequences but keep the current best
         /// </summary>
-        private void regeneratePopulation(bool keepBest)
+        private void RegeneratePopulation(bool keepBest)
         {
             int bestFitness = Int32.MaxValue;
 
@@ -219,7 +219,7 @@ namespace TaskOptimizer.Model
 
         protected override void RegeneratePopulation()
         {
-            regeneratePopulation(true);
+            RegeneratePopulation(true);
         }
 
 
