@@ -6,62 +6,51 @@ namespace TaskOptimizer.Model
 {
     public class TaskDistributor : Population<TaskDistribution>
     {
-        private TaskDistribution m_bestIndividualCopy;
-        private bool m_isOptimizingSequences;
-        private int m_nbSequenceOptimizationIterations;
-        private Optimizer m_optimizer;
-        private List<Robot> m_robots;
-        private double m_startX, m_startY;
-        private List<Task> m_tasks;
+        private TaskDistribution _bestIndividualCopy;
+        private bool _isOptimizingSequences;
+        private int _nbSequenceOptimizationIterations;
+        private Optimizer _optimizer;
+        private List<Worker> _workers;
+        private List<Task> _tasks;
 
         public TaskDistributor(Configuration config)
         {
-            configure(config);
+            Configure(config);
         }
-
-
-/******************************************************
- * Attributes */
 
         public int TotalTime
         {
-            get { return m_bestIndividualCopy.TotalTime; }
+            get { return _bestIndividualCopy.TotalTime; }
         }
 
         public int TotalCost
         {
-            get { return m_bestIndividualCopy.TotalCost; }
+            get { return _bestIndividualCopy.TotalCost; }
         }
-
 
         public int CurrentIteration
         {
-            get { return m_curIteration; }
+            get { return CurIteration; }
         }
 
         public List<TaskSequence> MinSequences
         {
-            get { return m_bestIndividualCopy.Sequences; }
+            get { return _bestIndividualCopy.Sequences; }
         }
 
         public int Fitness
         {
-            get { return m_bestIndividualCopy.Fitness; }
+            get { return _bestIndividualCopy.Fitness; }
         }
 
-        public int NbUsedRobots
-        {
-            get { return m_bestIndividualCopy.NbUsedRobots; }
-        }
-
-        public void recomputeFitness()
+        public void RecomputeFitness()
         {
             int bestFitness = Int32.MaxValue;
             TaskDistribution bestDistribution = null;
-            foreach (TaskDistribution distribution in m_individuals)
+            foreach (TaskDistribution distribution in Individuals)
 
             {
-                distribution.recomputeFitness();
+                distribution.RecomputeFitness();
                 if (distribution.Fitness < bestFitness)
                 {
                     bestDistribution = distribution;
@@ -69,21 +58,21 @@ namespace TaskOptimizer.Model
                 }
             }
 
-            onNewBestIndividual(bestDistribution);
+            OnNewBestIndividual(bestDistribution);
         }
 
-        public override void optimize()
+        public override void Optimize()
         {
-            computeOptimizationMode();
+            ComputeOptimizationMode();
 
             DateTime start = DateTime.Now;
 
-            base.optimize();
+            base.Optimize();
 
-            if (m_isOptimizingSequences)
+            if (_isOptimizingSequences)
             {
                 // make sure to update the best copy if has changed...
-                onNewBestIndividual(m_bestIndividual);
+                OnNewBestIndividual(bestIndividual);
             }
 
             DateTime end = DateTime.Now;
@@ -96,12 +85,9 @@ namespace TaskOptimizer.Model
             }
         }
 
-/******************************************************
- * Private */
-
-        protected override void onNewBestIndividual(TaskDistribution individual)
+        protected override void OnNewBestIndividual(TaskDistribution individual)
         {
-            if (m_bestIndividualCopy != null && m_bestIndividualCopy.Fitness == individual.Fitness)
+            if (_bestIndividualCopy != null && _bestIndividualCopy.Fitness == individual.Fitness)
             {
                 // no change!
                 return;
@@ -115,145 +101,133 @@ namespace TaskOptimizer.Model
             }
 
 
-            m_bestIndividualCopy = copy;
-            base.onNewBestIndividual(individual);
+            _bestIndividualCopy = copy;
+            base.OnNewBestIndividual(individual);
         }
 
-        private void configure(Configuration config)
+        private void Configure(Configuration config)
         {
-            m_rand = new Random(config.randomSeed);
+            Rand = new Random(config.RandomSeed);
 
-            m_tasks = config.tasks;
-            m_robots = config.robots;
-            m_startX = config.startX;
-            m_startY = config.startY;
-            m_optimizer = config.optimizer;
+            _tasks = config.Tasks;
+            _workers = config.Workers;
+            _optimizer = config.Optimizer;
 
-            configureTaskDistributions(config.fitnessLevels, config.startProgressPercent,
-                                       config.endProgressPercent);
+            ConfigureTaskDistributions(config.FitnessLevels);
         }
 
 
-        private void configureTaskDistributions(FitnessLevels fitnessLevels,
-                                                int startProgressPercent, int endProgressPercent)
+        private void ConfigureTaskDistributions(FitnessLevels fitnessLevels)
         {
-            configurePopulationSize();
+            ConfigurePopulationSize();
 
-            m_individuals = new TaskDistribution[m_populationSize];
+            Individuals = new TaskDistribution[_populationSize];
 
-            var taskDistributionConfiguration = new TaskDistribution.Configuration();
-            taskDistributionConfiguration.robots = m_robots;
-            taskDistributionConfiguration.tasks = m_tasks;
-            taskDistributionConfiguration.startX = m_startX;
-            taskDistributionConfiguration.startY = m_startY;
-            taskDistributionConfiguration.fitnessLevels = fitnessLevels;
-            taskDistributionConfiguration.distributor = this;
+            var taskDistributionConfiguration = new TaskDistribution.Configuration {Workers = _workers, Tasks = _tasks, FitnessLevels = fitnessLevels, Distributor = this};
 
-            for (int t = 0; t < m_populationSize; t++)
+            for (int t = 0; t < _populationSize; t++)
             {
-                taskDistributionConfiguration.randomSeed = m_rand.Next();
-                m_individuals[t] = new TaskDistribution(taskDistributionConfiguration);
-                m_individuals[t].Id = t;
-                if (t < m_robots.Count)
+                taskDistributionConfiguration.RandomSeed = Rand.Next();
+                Individuals[t] = new TaskDistribution(taskDistributionConfiguration);
+                Individuals[t].Id = t;
+                if (t < _workers.Count)
                 {
-                    m_individuals[t].generateFixedInitialSolution(t);
+                    Individuals[t].GenerateFixedInitialSolution(t);
                 }
                 else
                 {
-                    m_individuals[t].generateInitialSolution();
+                    Individuals[t].GenerateInitialSolution();
                 }
             }
 
-            recomputeFitness();
+            RecomputeFitness();
         }
 
-        private void configurePopulationSize()
+        private void ConfigurePopulationSize()
         {
-            int problemComplexity = m_tasks.Count*m_robots.Count;
-            m_populationSize = (int) (10*Math.Log10(problemComplexity)/Math.Log10(Math.E));
+            int problemComplexity = _tasks.Count*_workers.Count;
+            _populationSize = (int) (10*Math.Log10(problemComplexity)/Math.Log10(Math.E));
 
-            m_initialMutationRate = (int) (1.5*m_populationSize);
-            m_mutationRate = m_initialMutationRate;
-            m_initialCataclysmCountdown = m_initialMutationRate*10;
-            m_cataclysmCountdown = m_initialCataclysmCountdown;
+            InitialMutationRate = (int) (1.5*_populationSize);
+            MutationRate = InitialMutationRate;
+            InitialCataclysmCountdown = InitialMutationRate*10;
+            CataclysmCountdown = InitialCataclysmCountdown;
 
-            m_maxIterationsWithoutImprovements = m_initialCataclysmCountdown*10;
+            MaxIterationsWithoutImprovements = InitialCataclysmCountdown*10;
 
-            if (m_robots.Count == 1)
+            if (_workers.Count == 1)
             {
                 // no need to distribute tasks!
-                m_populationSize = 1;
-                m_maxIterationsWithoutImprovements = -1;
+                _populationSize = 1;
+                MaxIterationsWithoutImprovements = -1;
             }
         }
 
-
-        public int computeMutationForce()
+        public int ComputeMutationForce()
         {
-            return (int) ((m_initialMutationRate - m_mutationRate)/(double) m_initialMutationRate*10);
+            return (int) ((InitialMutationRate - MutationRate)/(double) InitialMutationRate*10);
         }
 
-
-        protected override int computeMaxMutations()
+        protected override int ComputeMaxMutations()
         {
             return 0;
         }
 
-        protected override void regeneratePopulation()
+        protected override void RegeneratePopulation()
         {
             TaskDistribution bestIndividual = null;
             int bestFitness = Int32.MaxValue;
 
-            for (int t = 0; t < m_populationSize; t++)
+            for (int t = 0; t < _populationSize; t++)
             {
                 // keep the best distribution...
-                if (m_individuals[t].Id != m_bestIndividual.Id)
+                if (Individuals[t].Id != bestIndividual.Id)
                 {
                     if (t != 0)
                     {
-                        m_individuals[t].generateInitialSolution();
+                        Individuals[t].GenerateInitialSolution();
                     }
                     else
                     {
                         // import a solution from another population?
-                        if (m_optimizer.Fitness != Fitness && m_optimizer.Fitness < Fitness*1.1 && m_rand.Next(2) == 0)
+                        if (_optimizer.Fitness != Fitness && _optimizer.Fitness < Fitness*1.1 && Rand.Next(2) == 0)
                         {
-                            m_individuals[t].setSequences(m_optimizer.MinSequences);
+                            Individuals[t].SetSequences(_optimizer.MinSequences);
                         }
                     }
                 }
 
-                if (m_individuals[t].Fitness < bestFitness)
+                if (Individuals[t].Fitness < bestFitness)
                 {
-                    bestFitness = m_individuals[t].Fitness;
-                    bestIndividual = m_individuals[t];
+                    bestFitness = Individuals[t].Fitness;
+                    bestIndividual = Individuals[t];
                 }
             }
 
-            onNewBestIndividual(bestIndividual);
+            OnNewBestIndividual(bestIndividual);
         }
 
-        private void computeOptimizationMode()
+        private void ComputeOptimizationMode()
         {
-            if (!m_isOptimizingSequences && m_nbIterationsWithoutImprovements > m_maxIterationsWithoutImprovements)
+            if (!_isOptimizingSequences && NbIterationsWithoutImprovements > MaxIterationsWithoutImprovements)
             {
                 // we've found a possible good distribution solution... so now, optimize the sequences
-                m_bestIndividual.OptimizeSequences = true;
-                m_nbSequenceOptimizationIterations = 0;
+                bestIndividual.OptimizeSequences = true;
+                _nbSequenceOptimizationIterations = 0;
 
-                m_isOptimizingSequences = true;
-                m_nbSequenceOptimizationIterations++;
+                _isOptimizingSequences = true;
+                _nbSequenceOptimizationIterations++;
             }
-            else if (m_robots.Count > 1 && m_isOptimizingSequences &&
-                     m_nbIterationsWithoutImprovements > 2*m_maxIterationsWithoutImprovements)
+            else if (_workers.Count > 1 && _isOptimizingSequences &&
+                     NbIterationsWithoutImprovements > 2*MaxIterationsWithoutImprovements)
             {
                 // distribution found! restart distribution optimization!
-                foreach (TaskDistribution distribution in m_individuals)
+                foreach (TaskDistribution distribution in Individuals)
                 {
                     distribution.OptimizeSequences = false;
                 }
-                m_nbIterationsWithoutImprovements = 0;
-                m_isOptimizingSequences = false;
+                NbIterationsWithoutImprovements = 0;
+                _isOptimizingSequences = false;
             }
         }
 
@@ -261,15 +235,15 @@ namespace TaskOptimizer.Model
 
         public class Configuration
         {
-            public int endProgressPercent;
-            public FitnessLevels fitnessLevels;
-            public Optimizer optimizer;
-            public int randomSeed;
-            public List<Robot> robots;
-            public int startProgressPercent;
-            public double startX;
-            public double startY;
-            public List<Task> tasks;
+            public List<Task> Tasks { get; set; }
+            public List<Worker> Workers { get; set; }
+            
+            public FitnessLevels FitnessLevels { get; set; }
+            public Optimizer Optimizer { get; set; }
+            public int RandomSeed { get; set; }
+
+            public int StartProgressPercent { get; set; }
+            public int EndProgressPercent { get; set; }
         }
 
         #endregion

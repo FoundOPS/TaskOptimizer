@@ -6,51 +6,47 @@ namespace TaskOptimizer.Model
 {
     public class TaskSequence : Individual
     {
-        private readonly Random m_rand = new Random();
-        private int m_cost = 66666666;
-        private bool[] m_crossoverAddedTasks;
-        private int[] m_crossoverTaskNeighborCount;
-        private bool[][] m_crossoverTaskNeighborMatrix;
-        private Task[][] m_crossoverTaskNeighbors;
-        private int m_fitness = 66666666;
-        private FitnessLevels m_fitnessLevels;
-        private List<Task> m_tasks;
-        private int m_time = 66666666;
+        private readonly Random _rand = new Random();
+        private int _cost = 66666666;
+        private bool[] _crossoverAddedTasks;
+        private int[] _crossoverTaskNeighborCount;
+        private bool[][] _crossoverTaskNeighborMatrix;
+        private Task[][] _crossoverTaskNeighbors;
+        private int _fitness = 66666666;
+        private FitnessLevels _fitnessLevels;
+        private List<Task> _tasks;
+        private int _time = 66666666;
 
         public FitnessLevels FitnessLevels
         {
-            set { m_fitnessLevels = value; }
+            set { _fitnessLevels = value; }
         }
 
-        public double StartX { get; set; }
-
-        public double StartY { get; set; }
-
-        public Robot Robot { get; set; }
+        public Worker Worker { get; set; }
 
         public int Cost
         {
-            get { return m_cost; }
+            get { return _cost; }
 
-            set { m_cost = value; }
+            set { _cost = value; }
         }
 
         public int Time
         {
-            get { return m_time; }
+            get { return _time; }
 
-            set { m_time = value; }
+            set { _time = value; }
         }
 
         public List<Task> Tasks
         {
-            get { return m_tasks; }
+            get { return _tasks; }
 
             set
             {
-                m_tasks = value;
-                configureCrossoverData();
-                updateFitness();
+                _tasks = value;
+                ConfigureCrossoverData();
+                UpdateFitness();
             }
         }
 
@@ -62,35 +58,35 @@ namespace TaskOptimizer.Model
 
         public int Fitness
         {
-            get { return m_fitness; }
+            get { return _fitness; }
 
-            set { m_fitness = value; }
+            set { _fitness = value; }
         }
 
-        public void crossover(Individual parent1, Individual parent2)
+        public void Crossover(Individual parent1, Individual parent2)
         {
             var p1 = parent1 as TaskSequence;
             var p2 = parent2 as TaskSequence;
 
             int beforeFitness = Fitness;
 
-            computeEdgeRecombinaisonCrossover(p1, p2);
+            ComputeEdgeRecombinaisonCrossover(p1, p2);
 
             if (beforeFitness == Fitness)
             {
                 // no change? means that the parents are very close, so introduce some variety!
-                mutate();
+                Mutate();
             }
         }
 
-        public void mutate()
+        public void Mutate()
         {
-            int nbMutations = m_rand.Next(Tasks.Count/5) + 1;
+            int nbMutations = _rand.Next(Tasks.Count/5) + 1;
             for (int t = 0; t < nbMutations; t++)
             {
-                int t1 = m_rand.Next(Tasks.Count);
-                var range = (int) (m_rand.Next((int) (Tasks.Count*0.3)) - Tasks.Count*0.15 - 1);
-                //int range = (int)(m_rand.Next(5) - 2);
+                int t1 = _rand.Next(Tasks.Count);
+                var range = (int) (_rand.Next((int) (Tasks.Count*0.3)) - Tasks.Count*0.15 - 1);
+                //int range = (int)(_rand.Next(5) - 2);
                 int t2 = (t1 + range)%Tasks.Count;
                 if (t2 < 0)
                 {
@@ -101,89 +97,90 @@ namespace TaskOptimizer.Model
                 Tasks[t2] = temp;
             }
 
-            updateFitness();
+            UpdateFitness();
         }
 
-        public void optimize()
+        public void Optimize()
         {
             // nothing to do!
         }
 
         #endregion
 
-        private void configureCrossoverData()
+        private void ConfigureCrossoverData()
         {
-            int maxTasks = m_tasks.Count;
+            int maxTasks = _tasks.Count;
 
-            if (m_crossoverAddedTasks != null && m_crossoverAddedTasks.Length >= maxTasks)
+            if (_crossoverAddedTasks != null && _crossoverAddedTasks.Length >= maxTasks)
             {
                 // enough space!
                 return;
             }
 
-            m_crossoverAddedTasks = new bool[maxTasks];
-            m_crossoverTaskNeighborMatrix = new bool[maxTasks][];
-            m_crossoverTaskNeighbors = new Task[maxTasks][];
-            m_crossoverTaskNeighborCount = new int[maxTasks];
+            _crossoverAddedTasks = new bool[maxTasks];
+            _crossoverTaskNeighborMatrix = new bool[maxTasks][];
+            _crossoverTaskNeighbors = new Task[maxTasks][];
+            _crossoverTaskNeighborCount = new int[maxTasks];
             for (int t = 0; t < maxTasks; t++)
             {
-                m_crossoverTaskNeighborMatrix[t] = new bool[maxTasks];
-                m_crossoverTaskNeighbors[t] = new Task[4];
+                _crossoverTaskNeighborMatrix[t] = new bool[maxTasks];
+                _crossoverTaskNeighbors[t] = new Task[4];
             }
         }
 
 
-        public void updateFitness()
+        public void UpdateFitness()
         {
             int distance = 0;
             int time = 0;
             int cost = 0;
             Task fromTask = null;
 
-            foreach (Task task in Tasks)
+            foreach (var task in Tasks)
             {
-                distance += task.distanceTo(fromTask);
+                distance += task.DistanceTo(fromTask);
                 fromTask = task;
 
-                cost += task.Effort*task.Effort*Robot.WorkCost;
-                time += task.Effort*task.Effort*Robot.WorkTime;
+                cost += task.Effort*task.Effort*Worker.WorkCost;
+                time += task.Effort*task.Effort*Worker.WorkTime;
             }
 
-            cost += distance*Robot.DistanceCost;
-            Cost = cost;
-            Time = time + distance*Robot.DistanceTime;
+            cost += distance*Worker.DistanceCost;
 
-            Fitness = Cost*m_fitnessLevels.CostMultiplier + Time*m_fitnessLevels.TimeMultiplier;
+            Cost = cost;
+            Time = time + distance*Worker.DistanceTime;
+
+            Fitness = Cost*_fitnessLevels.CostMultiplier + Time*_fitnessLevels.TimeMultiplier;
         }
 
 
-        private void computeEdgeRecombinaisonCrossover(TaskSequence p1, TaskSequence p2)
+        private void ComputeEdgeRecombinaisonCrossover(TaskSequence p1, TaskSequence p2)
         {
             // use the Edge recombination operator 
             // see: http://en.wikipedia.org/wiki/Edge_recombination_operator
-            //m_rand = new Random(11);
+            //_rand = new Random(11);
             for (int t = 0; t < TaskSequencer.getOriginalTasks().Count; t++)
             {
                 for (int t2 = 0; t2 < TaskSequencer.getOriginalTasks().Count; t2++)
                 {
-                    m_crossoverTaskNeighborMatrix[t][t2] = false;
+                    _crossoverTaskNeighborMatrix[t][t2] = false;
                 }
-                m_crossoverAddedTasks[t] = false;
-                m_crossoverTaskNeighborCount[t] = 0;
+                _crossoverAddedTasks[t] = false;
+                _crossoverTaskNeighborCount[t] = 0;
 
-                m_crossoverTaskNeighbors[t][0] = null;
-                m_crossoverTaskNeighbors[t][1] = null;
-                m_crossoverTaskNeighbors[t][2] = null;
-                m_crossoverTaskNeighbors[t][3] = null;
+                _crossoverTaskNeighbors[t][0] = null;
+                _crossoverTaskNeighbors[t][1] = null;
+                _crossoverTaskNeighbors[t][2] = null;
+                _crossoverTaskNeighbors[t][3] = null;
             }
 
             Tasks.Clear();
 
-            addNeighborsToCrossoverList(p1);
-            addNeighborsToCrossoverList(p2);
+            AddNeighborsToCrossoverList(p1);
+            AddNeighborsToCrossoverList(p2);
             Task task = null;
 
-            if (m_rand.Next(2) == 0)
+            if (_rand.Next(2) == 0)
             {
                 task = p1.Tasks[0];
             }
@@ -195,9 +192,9 @@ namespace TaskOptimizer.Model
             for (int i = 0; i < TaskSequencer.getOriginalTasks().Count; i++)
             {
                 Tasks.Add(task);
-                m_crossoverAddedTasks[task.UserId] = true;
+                _crossoverAddedTasks[task.UserId] = true;
 
-                int nbNeighbors = m_crossoverTaskNeighborCount[task.UserId];
+                int nbNeighbors = _crossoverTaskNeighborCount[task.UserId];
 
                 if (nbNeighbors > 0)
                 {
@@ -209,20 +206,20 @@ namespace TaskOptimizer.Model
                     // remove the task from its neighbors...
                     for (int t = 0; t < 4; t++)
                     {
-                        Task neighbor = m_crossoverTaskNeighbors[task.UserId][t];
+                        Task neighbor = _crossoverTaskNeighbors[task.UserId][t];
 
-                        if (neighbor != null && m_crossoverTaskNeighborMatrix[task.UserId][neighbor.UserId])
+                        if (neighbor != null && _crossoverTaskNeighborMatrix[task.UserId][neighbor.UserId])
                         {
-                            m_crossoverTaskNeighborMatrix[neighbor.UserId][task.UserId] = false;
-                            m_crossoverTaskNeighborMatrix[task.UserId][neighbor.UserId] = false;
-                            m_crossoverTaskNeighborCount[neighbor.UserId]--;
+                            _crossoverTaskNeighborMatrix[neighbor.UserId][task.UserId] = false;
+                            _crossoverTaskNeighborMatrix[task.UserId][neighbor.UserId] = false;
+                            _crossoverTaskNeighborCount[neighbor.UserId]--;
 
-                            if (m_crossoverTaskNeighborCount[neighbor.UserId] < minTaskNeighbors ||
-                                (m_crossoverTaskNeighborCount[neighbor.UserId] == minTaskNeighbors &&
-                                 m_rand.Next(2) == 0))
+                            if (_crossoverTaskNeighborCount[neighbor.UserId] < minTaskNeighbors ||
+                                (_crossoverTaskNeighborCount[neighbor.UserId] == minTaskNeighbors &&
+                                 _rand.Next(2) == 0))
                             {
                                 minTask = neighbor;
-                                minTaskNeighbors = m_crossoverTaskNeighborCount[neighbor.UserId];
+                                minTaskNeighbors = _crossoverTaskNeighborCount[neighbor.UserId];
                             }
                         }
                     }
@@ -242,7 +239,7 @@ namespace TaskOptimizer.Model
                          notAddedTaskIndex < TaskSequencer.getOriginalTasks().Count;
                          notAddedTaskIndex++)
                     {
-                        if (m_crossoverAddedTasks[notAddedTaskIndex] == false)
+                        if (_crossoverAddedTasks[notAddedTaskIndex] == false)
                         {
                             task = TaskSequencer.getOriginalTasks()[notAddedTaskIndex];
                             if (task == null)
@@ -256,29 +253,28 @@ namespace TaskOptimizer.Model
                 }
             }
 
-            updateFitness();
+            UpdateFitness();
         }
 
-
-        private void addNeighborsToCrossoverList(TaskSequence sequence)
+        private void AddNeighborsToCrossoverList(TaskSequence sequence)
         {
             Task prevTask = null;
             foreach (Task task in sequence.Tasks)
             {
                 if (prevTask != null)
                 {
-                    if (m_crossoverTaskNeighborMatrix[task.UserId][prevTask.UserId] == false)
+                    if (_crossoverTaskNeighborMatrix[task.UserId][prevTask.UserId] == false)
                     {
-                        m_crossoverTaskNeighborMatrix[task.UserId][prevTask.UserId] = true;
-                        m_crossoverTaskNeighbors[task.UserId][m_crossoverTaskNeighborCount[task.UserId]] = prevTask;
-                        m_crossoverTaskNeighborCount[task.UserId]++;
+                        _crossoverTaskNeighborMatrix[task.UserId][prevTask.UserId] = true;
+                        _crossoverTaskNeighbors[task.UserId][_crossoverTaskNeighborCount[task.UserId]] = prevTask;
+                        _crossoverTaskNeighborCount[task.UserId]++;
                     }
 
-                    if (m_crossoverTaskNeighborMatrix[prevTask.UserId][task.UserId] == false)
+                    if (_crossoverTaskNeighborMatrix[prevTask.UserId][task.UserId] == false)
                     {
-                        m_crossoverTaskNeighborMatrix[prevTask.UserId][task.UserId] = true;
-                        m_crossoverTaskNeighbors[prevTask.UserId][m_crossoverTaskNeighborCount[prevTask.UserId]] = task;
-                        m_crossoverTaskNeighborCount[prevTask.UserId]++;
+                        _crossoverTaskNeighborMatrix[prevTask.UserId][task.UserId] = true;
+                        _crossoverTaskNeighbors[prevTask.UserId][_crossoverTaskNeighborCount[prevTask.UserId]] = task;
+                        _crossoverTaskNeighborCount[prevTask.UserId]++;
                     }
                 }
 

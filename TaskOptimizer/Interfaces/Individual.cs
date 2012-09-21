@@ -5,8 +5,8 @@ namespace TaskOptimizer.Interfaces
         int Id { get; }
         int Fitness { get; }
 
-        void optimize();
-        void crossover(Individual parent1, Individual parent2);
-        void mutate();
+        void Optimize();
+        void Crossover(Individual parent1, Individual parent2);
+        void Mutate();
     }
 }

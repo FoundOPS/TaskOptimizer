@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ServiceStack.Redis;
 using TaskOptimizer.API;
 using TaskOptimizer.Model;
 
@@ -7,7 +8,7 @@ namespace TaskOptimizer.Calculator
 {
     public class Problem
     {
-        //private static readonly PooledRedisClientManager rc = new PooledRedisClientManager();
+        private static readonly PooledRedisClientManager RedisClientManager = new PooledRedisClientManager(Constants.RedisServer);
 
         /// <summary>
         /// Calculates the best distribution/organization for a number of trucks and destinations
@@ -28,30 +29,28 @@ namespace TaskOptimizer.Calculator
             var stopTasks = new List<Task>();
             foreach (var r in resolved)
             {
-                var t = new Task(resolved.IndexOf(r), resolved.Count) { lat = r.lat, lon = r.lon, X = r.lat, Y = r.lon, Effort = 0 };
+                var t = new Task(resolved.IndexOf(r), resolved.Count) { Lat = r.lat, Lon = r.lon, Effort = 0 };
                 stopTasks.Add(t);
             }
 
-            var optConf = new Optimizer.Configuration { tasks = stopTasks };
+            var optConf = new Optimizer.Configuration { Tasks = stopTasks };
 
-            var truck = new Robot();
-            optConf.robots = new List<Robot>();
+            var truck = new Worker();
+            optConf.Workers = new List<Worker>();
             for (int t = 0; t < trucks; t++)
             {
-                optConf.robots.Add(truck);
+                optConf.Workers.Add(truck);
             }
-            optConf.randomSeed = 777777;
+            optConf.RandomSeed = 777777;
 
-            optConf.fitnessLevels = new FitnessLevels { CostMultiplier = 1, TimeMultiplier = 100 };
-            optConf.startX = optConf.tasks[0].lat;
-            optConf.startY = optConf.tasks[0].lon;
-            optConf.nbDistributors = Environment.ProcessorCount * 3;
+            optConf.FitnessLevels = new FitnessLevels { CostMultiplier = 1, TimeMultiplier = 100 };
+            optConf.NumberDistributors = Environment.ProcessorCount * 3;
 
             var o = new Optimizer(optConf);
-            while (o.m_minDistributor.m_nbIterationsWithoutImprovements < 10000)
+            while (o.MinDistributor.NbIterationsWithoutImprovements < 10000)
             {
             }
-            o.stop();
+            o.Stop();
             string response = "{";
             int cont = 0;
             for (int r = 0; r < o.MinSequences.Count; r++)
@@ -67,7 +66,7 @@ namespace TaskOptimizer.Calculator
 
                 foreach (Task t in o.MinSequences[r].Tasks)
                 {
-                    var rp = new Coordinate(t.X, t.Y);
+                    var rp = new Coordinate(t.Lat, t.Lon);
                     routeList.Add(rp);
                 }
 

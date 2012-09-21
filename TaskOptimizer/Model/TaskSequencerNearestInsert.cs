@@ -5,11 +5,11 @@ namespace TaskOptimizer.Model
 {
     internal class TaskSequencerNearestInsert
     {
-        private readonly Random m_rand = new Random(10);
+        private readonly Random _rand = new Random(10);
 
-        public void generate(List<Task> remainingTasks, int nbTasksInSequence, TaskSequence sequence)
+        public void Generate(List<Task> remainingTasks, int nbTasksInSequence, TaskSequence sequence)
         {
-            var ordered_tasks = new List<Task>(nbTasksInSequence);
+            var orderedTasks = new List<Task>(nbTasksInSequence);
 
             if (nbTasksInSequence > remainingTasks.Count)
             {
@@ -18,17 +18,17 @@ namespace TaskOptimizer.Model
 
             if (remainingTasks.Count > 0)
             {
-                Task task = findAlmostNearestTask(null, remainingTasks, 1.0);
+                var task = FindAlmostNearestTask(null, remainingTasks, 1.0);
                 remainingTasks.Remove(task);
-                ordered_tasks.Add(task);
+                orderedTasks.Add(task);
 
                 if (remainingTasks.Count > 0)
                 {
-                    task = findAlmostNearestTask(task, remainingTasks, 1.0);
+                    task = FindAlmostNearestTask(task, remainingTasks, 1.0);
                     remainingTasks.Remove(task);
-                    ordered_tasks.Add(task);
+                    orderedTasks.Add(task);
 
-                    ordered_tasks.Add(null);
+                    orderedTasks.Add(null);
 
                     for (int t = 0; t < nbTasksInSequence - 2; t++)
                     {
@@ -36,9 +36,9 @@ namespace TaskOptimizer.Model
                         Task minTask = null;
                         int minInsertPos = -1;
 
-                        for (int t1 = 0; t1 < ordered_tasks.Count - 1; t1++)
+                        for (int t1 = 0; t1 < orderedTasks.Count - 1; t1++)
                         {
-                            int cost = findCheapestInsert(ordered_tasks[t1], ordered_tasks[t1 + 1], remainingTasks,
+                            int cost = FindCheapestInsert(orderedTasks[t1], orderedTasks[t1 + 1], remainingTasks,
                                                           out task);
                             if (cost < minCost)
                             {
@@ -49,40 +49,34 @@ namespace TaskOptimizer.Model
                         }
 
                         remainingTasks.Remove(minTask);
-                        ordered_tasks.Insert(minInsertPos + 1, minTask);
+                        orderedTasks.Insert(minInsertPos + 1, minTask);
                     }
 
-                    ordered_tasks.RemoveAt(ordered_tasks.Count - 1);
+                    orderedTasks.RemoveAt(orderedTasks.Count - 1);
                 }
             }
 
-            sequence.Tasks = ordered_tasks;
+            sequence.Tasks = orderedTasks;
         }
 
-        public TaskSequence generate(List<Task> remainingTasks, int nbTasksInSequence, Robot robot, double startX,
-                                     double startY, FitnessLevels fitnessLevels)
+        public TaskSequence Generate(List<Task> remainingTasks, int nbTasksInSequence, Worker worker, FitnessLevels fitnessLevels)
         {
-            var sequence = new TaskSequence();
+            var sequence = new TaskSequence { Worker = worker, FitnessLevels = fitnessLevels };
 
-            sequence.Robot = robot;
-            sequence.StartX = startX;
-            sequence.StartY = startY;
-            sequence.FitnessLevels = fitnessLevels;
-
-            generate(remainingTasks, nbTasksInSequence, sequence);
+            Generate(remainingTasks, nbTasksInSequence, sequence);
 
             return sequence;
         }
 
-        private int findCheapestInsert(Task t1, Task t2, List<Task> remainingTasks, out Task newTask)
+        private static int FindCheapestInsert(Task t1, Task t2, List<Task> remainingTasks, out Task newTask)
         {
             int minCost = Int32.MaxValue;
-            int constantCost = t1.distanceTo(t2);
+            int constantCost = t1.DistanceTo(t2);
             newTask = null;
 
             foreach (Task task in remainingTasks)
             {
-                int cost = t1.distanceTo(task) + task.distanceTo(t2);
+                int cost = t1.DistanceTo(task) + task.DistanceTo(t2);
                 if (cost < minCost)
                 {
                     minCost = cost;
@@ -93,17 +87,17 @@ namespace TaskOptimizer.Model
             return minCost - constantCost;
         }
 
-        public Task findAlmostNearestTask(Task fromTask, List<Task> tasks, double tolerance)
+        public Task FindAlmostNearestTask(Task fromTask, List<Task> tasks, double tolerance)
         {
             int minDistance = Int32.MaxValue;
             Task minTask = null;
 
             foreach (Task task in tasks)
             {
-                int distance = task.distanceTo(fromTask);
-                if (distance < minDistance && (minTask == null || m_rand.Next(2) == 0))
+                int distance = task.DistanceTo(fromTask);
+                if (distance < minDistance && (minTask == null || _rand.Next(2) == 0))
                 {
-                    var adjustedDistance = (int) (distance*tolerance);
+                    var adjustedDistance = (int)(distance * tolerance);
                     if (adjustedDistance < minDistance)
                     {
                         minDistance = adjustedDistance;

@@ -4,158 +4,158 @@ namespace TaskOptimizer.Interfaces
 {
     public abstract class Population<IndividualType> where IndividualType : Individual
     {
-        protected int m_bestFitness = Int32.MaxValue;
-        protected IndividualType m_bestIndividual = default(IndividualType);
-        protected int m_cataclysmCountdown;
-        protected int m_curIteration = 0;
-        protected IndividualType[] m_individuals;
-        protected int m_initialCataclysmCountdown = 1000;
-        protected int m_initialMutationRate = 70;
-        protected int m_maxIterationsWithoutImprovements;
-        protected int m_mutationRate;
-        public int m_nbIterationsWithoutImprovements = 0;
-        protected int m_populationSize = 10;
-        protected Random m_rand = new Random();
+        protected int BestFitness = Int32.MaxValue;
+        protected IndividualType bestIndividual = default(IndividualType);
+        protected int CataclysmCountdown;
+        protected int CurIteration = 0;
+        protected IndividualType[] Individuals;
+        protected int InitialCataclysmCountdown = 1000;
+        protected int InitialMutationRate = 70;
+        protected int MaxIterationsWithoutImprovements;
+        protected int MutationRate;
+        public int NbIterationsWithoutImprovements = 0;
+        protected int _populationSize = 10;
+        protected Random Rand = new Random();
 
-        public virtual void optimize()
+        public virtual void Optimize()
         {
-            m_nbIterationsWithoutImprovements++;
-            m_curIteration++;
+            NbIterationsWithoutImprovements++;
+            CurIteration++;
 
-            computeCrossovers();
-            computeMutations();
-            computeCataclysms();
+            ComputeCrossovers();
+            ComputeMutations();
+            ComputeCataclysms();
 
-            m_bestIndividual.optimize();
+            bestIndividual.Optimize();
         }
 
-        protected virtual void computeCrossovers()
+        protected virtual void ComputeCrossovers()
         {
-            if (m_populationSize == 1)
+            if (_populationSize == 1)
             {
                 return;
             }
 
             IndividualType parent;
             int nbChildren = 0;
-            int maxChildren = computeMaxChildren();
+            int maxChildren = ComputeMaxChildren();
 
-            while (nbChildren < maxChildren && (parent = selectHealthyIndividual()) != null)
+            while (nbChildren < maxChildren && (parent = SelectHealthyIndividual()) != null)
             {
-                if (crossover(parent))
+                if (Crossover(parent))
                 {
                     nbChildren++;
                 }
             }
         }
 
-        protected virtual bool crossover(IndividualType parent)
+        protected virtual bool Crossover(IndividualType parent)
         {
             IndividualType p1, p2, child;
-            selectCrossoverIndividuals(out p1, out p2, out child);
+            SelectCrossoverIndividuals(out p1, out p2, out child);
 
-            child.crossover(p1, p2);
+            child.Crossover(p1, p2);
 
-            if (child.Fitness < m_bestFitness)
+            if (child.Fitness < BestFitness)
             {
-                onNewBestIndividual(child);
+                OnNewBestIndividual(child);
             }
 
             return true;
         }
 
-        protected bool canWeakDieByCrossover(IndividualType weak, IndividualType parent)
+        protected bool CanWeakDieByCrossover(IndividualType weak, IndividualType parent)
         {
             return weak.Id != parent.Id;
         }
 
-        protected virtual void onNewBestIndividual(IndividualType individual)
+        protected virtual void OnNewBestIndividual(IndividualType individual)
         {
             // really a new best?
 
-            if (individual.Fitness < m_bestFitness)
+            if (individual.Fitness < BestFitness)
             {
-                m_mutationRate = m_initialMutationRate;
-                m_cataclysmCountdown = m_initialCataclysmCountdown;
-                m_nbIterationsWithoutImprovements = 0;
+                MutationRate = InitialMutationRate;
+                CataclysmCountdown = InitialCataclysmCountdown;
+                NbIterationsWithoutImprovements = 0;
             }
 
-            m_bestIndividual = individual;
-            m_bestFitness = individual.Fitness;
+            bestIndividual = individual;
+            BestFitness = individual.Fitness;
         }
 
-        protected virtual void computeMutations()
+        protected virtual void ComputeMutations()
         {
-            if (m_populationSize == 1)
+            if (_populationSize == 1)
             {
                 return;
             }
 
-            int maxMutations = computeMaxMutations();
+            int maxMutations = ComputeMaxMutations();
 
             for (int t = 0; t < maxMutations; t++)
             {
-                if (m_rand.Next(m_mutationRate) == 0)
+                if (Rand.Next(MutationRate) == 0)
                 {
-                    selectWeakIndividual().mutate();
+                    SelectWeakIndividual().Mutate();
                 }
             }
 
-            m_mutationRate--;
+            MutationRate--;
 
-            if (m_mutationRate < 1)
+            if (MutationRate < 1)
             {
-                m_mutationRate = 1;
+                MutationRate = 1;
             }
         }
 
 
-        protected virtual int computeMaxChildren()
+        protected virtual int ComputeMaxChildren()
         {
-            return (int) (m_populationSize*0.03 + 2);
+            return (int) (_populationSize*0.03 + 2);
         }
 
-        protected virtual int computeMaxMutations()
+        protected virtual int ComputeMaxMutations()
         {
-            return (int) (m_populationSize*0.03 + 2);
+            return (int) (_populationSize*0.03 + 2);
         }
 
 
-        protected virtual void computeCataclysms()
+        protected virtual void ComputeCataclysms()
         {
-            if (isCataclysmTime())
+            if (IsCataclysmTime())
             {
                 // boom! regenerate new distributions...
-                regeneratePopulation();
+                RegeneratePopulation();
 
-                m_cataclysmCountdown = m_initialCataclysmCountdown;
+                CataclysmCountdown = InitialCataclysmCountdown;
             }
 
-            m_cataclysmCountdown--;
+            CataclysmCountdown--;
         }
 
 
-        protected bool isCataclysmTime()
+        protected bool IsCataclysmTime()
         {
-            if (m_populationSize == 1)
+            if (_populationSize == 1)
             {
                 return false;
             }
 
-            return m_cataclysmCountdown <= 0;
+            return CataclysmCountdown <= 0;
         }
 
-        protected abstract void regeneratePopulation();
+        protected abstract void RegeneratePopulation();
 
 
-        protected virtual IndividualType selectWeakIndividual()
+        protected virtual IndividualType SelectWeakIndividual()
         {
             int maxFitness = Int32.MinValue;
             IndividualType weakestIndividual = default(IndividualType);
 
-            foreach (IndividualType individual in m_individuals)
+            foreach (IndividualType individual in Individuals)
             {
-                if (individual != null && individual.Fitness > maxFitness && individual.Id != m_bestIndividual.Id)
+                if (individual != null && individual.Fitness > maxFitness && individual.Id != bestIndividual.Id)
                 {
                     weakestIndividual = individual;
                     maxFitness = individual.Fitness;
@@ -165,35 +165,34 @@ namespace TaskOptimizer.Interfaces
             return weakestIndividual;
         }
 
-        protected virtual void selectCrossoverIndividuals(out IndividualType p1, out IndividualType p2,
+        protected virtual void SelectCrossoverIndividuals(out IndividualType p1, out IndividualType p2,
                                                           out IndividualType child)
         {
-            p1 = m_individuals[m_rand.Next()%m_populationSize];
-            p2 = m_individuals[m_rand.Next()%m_populationSize];
-            child = selectWeakIndividual();
+            p1 = Individuals[Rand.Next()%_populationSize];
+            p2 = Individuals[Rand.Next()%_populationSize];
+            child = SelectWeakIndividual();
 
             if (p1.Id == p2.Id || p1.Id == child.Id || p2.Id == child.Id)
             {
-                selectCrossoverIndividuals(out p1, out p2, out child);
+                SelectCrossoverIndividuals(out p1, out p2, out child);
             }
         }
 
-
-        protected virtual IndividualType selectHealthyIndividual()
+        protected virtual IndividualType SelectHealthyIndividual()
         {
             int nbTries = 0;
-            int curIndex = m_rand.Next(m_populationSize);
-            for (int t = 0; t < m_populationSize; t++)
+            int curIndex = Rand.Next(_populationSize);
+            for (int t = 0; t < _populationSize; t++)
             {
-                IndividualType individual = m_individuals[curIndex%m_populationSize];
+                IndividualType individual = Individuals[curIndex%_populationSize];
 
                 if (individual != null)
                 {
-                    if (individual.Id != m_bestIndividual.Id)
+                    if (individual.Id != bestIndividual.Id)
                     {
-                        int odds = (individual.Fitness*3/(m_bestFitness)) + 1;
+                        int odds = (individual.Fitness*3/(BestFitness)) + 1;
 
-                        int n = m_rand.Next(odds);
+                        int n = Rand.Next(odds);
 
                         if (n == 0)
                         {

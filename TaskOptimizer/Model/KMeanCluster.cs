@@ -5,14 +5,14 @@ namespace TaskOptimizer.Model
 {
     internal class KMeanCluster
     {
-        private readonly Random m_rand = new Random();
-        private List<List<Task>> m_meanTasks;
-        private List<Task> m_means;
-        private int m_overallDistanceToMeans = Int32.MaxValue;
-        private int[] m_taskAssignedCluster;
-        private List<Task> m_tasks;
+        private readonly Random _rand = new Random();
+        private List<List<Task>> _meanTasks;
+        private List<Task> _means;
+        private int _overallDistanceToMeans = Int32.MaxValue;
+        private int[] _taskAssignedCluster;
+        private List<Task> _tasks;
 
-        public void compute(List<Task> tasks, int nbClusters, int[] taskAssignedCluster)
+        public void Compute(List<Task> tasks, int nbClusters, int[] taskAssignedCluster)
         {
             if (taskAssignedCluster.Length < tasks.Count)
             {
@@ -24,76 +24,61 @@ namespace TaskOptimizer.Model
                 nbClusters = tasks.Count;
             }
 
-            m_tasks = tasks;
-            m_taskAssignedCluster = taskAssignedCluster;
-            m_means = new List<Task>(nbClusters);
+            _tasks = tasks;
+            _taskAssignedCluster = taskAssignedCluster;
+            _means = new List<Task>(nbClusters);
 
-            m_meanTasks = new List<List<Task>>(nbClusters);
+            _meanTasks = new List<List<Task>>(nbClusters);
             for (int t = 0; t < nbClusters; t++)
             {
-                m_meanTasks.Add(new List<Task>(tasks.Count/nbClusters + 1));
+                _meanTasks.Add(new List<Task>(tasks.Count/nbClusters + 1));
             }
 
-            clearTaskAssignedCluster();
-            selectRandomMeans(nbClusters);
-            assignTasksToNearestMean();
+            ClearTaskAssignedCluster();
+            SelectRandomMeans(nbClusters);
+            AssignTasksToNearestMean();
 
             int lastOverallDistanceToMeans;
             do
             {
-                lastOverallDistanceToMeans = m_overallDistanceToMeans;
-                compute();
-            } while (m_overallDistanceToMeans < lastOverallDistanceToMeans);
+                lastOverallDistanceToMeans = _overallDistanceToMeans;
+                Compute();
+            } while (_overallDistanceToMeans < lastOverallDistanceToMeans);
         }
 
-        private void clearTaskAssignedCluster()
+        private void Compute()
         {
-            for (int t = 0; t < m_tasks.Count; t++)
+            SelectNextMeans();
+            AssignTasksToNearestMean();
+        }
+
+        private void AssignTasksToNearestMean()
+        {
+            foreach (var task in _tasks)
             {
-                m_taskAssignedCluster[t] = -1;
+                int meanIndex = FindNearestMean(task);
+                _taskAssignedCluster[task.Id] = meanIndex;
+                _meanTasks[meanIndex].Add(task);
             }
         }
 
-        private void selectRandomMeans(int nbClusters)
+        private void ClearTaskAssignedCluster()
         {
-            m_means.Clear();
-
-            while (m_means.Count < nbClusters)
+            for (int t = 0; t < _tasks.Count; t++)
             {
-                Task mean = m_tasks[m_rand.Next(m_tasks.Count)];
-                if (m_taskAssignedCluster[mean.Id] == -1)
-                {
-                    m_means.Add(mean);
-                    int meanIndex = m_means.Count - 1;
-                }
+                _taskAssignedCluster[t] = -1;
             }
         }
 
-        private void compute()
-        {
-            selectNextMeans();
-            assignTasksToNearestMean();
-        }
-
-        private void assignTasksToNearestMean()
-        {
-            foreach (Task task in m_tasks)
-            {
-                int meanIndex = findNearestMean(task);
-                m_taskAssignedCluster[task.Id] = meanIndex;
-                m_meanTasks[meanIndex].Add(task);
-            }
-        }
-
-        private int findNearestMean(Task task)
+        private int FindNearestMean(Task task)
         {
             int minDistance = Int32.MaxValue;
             int minIndex = -1;
             int index = 0;
 
-            foreach (Task mean in m_means)
+            foreach (Task mean in _means)
             {
-                int distance = task.distanceTo(mean);
+                int distance = task.DistanceTo(mean);
                 if (distance < minDistance)
                 {
                     minIndex = index;
@@ -106,40 +91,54 @@ namespace TaskOptimizer.Model
             return minIndex;
         }
 
-        private void selectNextMeans()
+        private void SelectNextMeans()
         {
-            m_means.Clear();
+            _means.Clear();
 
-            m_overallDistanceToMeans = 0;
+            _overallDistanceToMeans = 0;
 
-            foreach (var tasks in m_meanTasks)
+            foreach (var tasks in _meanTasks)
             {
                 int minTotalDistance = 0;
-                Task minTask = findCentroidTask(tasks, out minTotalDistance);
+                Task minTask = FindCentroidTask(tasks, out minTotalDistance);
 
-                m_overallDistanceToMeans += minTotalDistance;
+                _overallDistanceToMeans += minTotalDistance;
 
                 tasks.Clear();
-                m_means.Add(minTask);
+                _means.Add(minTask);
+            }
+        }
+
+        private void SelectRandomMeans(int nbClusters)
+        {
+            _means.Clear();
+
+            while (_means.Count < nbClusters)
+            {
+                var mean = _tasks[_rand.Next(_tasks.Count)];
+                if (_taskAssignedCluster[mean.Id] == -1)
+                    _means.Add(mean);
             }
         }
 
         /// <summary>
-        /// The task closest to all other tasks. Don't assume euclidean distance to be able to work
-        /// with asymetrical values.
+        /// The task closest to all other tasks.
+        /// Using straight distance instead of route calculation for efficiency, should end up with the same result most of the time.
+        /// Don't assume euclidean distance to be able to work with asymetrical values.
         /// </summary>        
-        private Task findCentroidTask(List<Task> tasks, out int distance)
+        private static Task FindCentroidTask(List<Task> tasks, out int distance)
         {
             int minDistance = Int32.MaxValue;
             Task minTask = null;
 
-            foreach (Task fromTask in tasks)
+            foreach (var fromTask in tasks)
             {
                 distance = 0;
 
-                foreach (Task toTask in tasks)
+                foreach (var toTask in tasks)
                 {
-                    distance += fromTask.distanceTo(toTask);
+                    //TODO use cached table
+                    distance += fromTask.StraightDistanceTo(toTask);
                 }
 
                 if (distance < minDistance)

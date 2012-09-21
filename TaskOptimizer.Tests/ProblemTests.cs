@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Diagnostics;
-using TaskOptimizer.API;
 using TaskOptimizer.Calculator;
 
 namespace TaskOptimizer.Tests

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.Serialization;
+using TaskOptimizer.Calculator;
 
 namespace TaskOptimizer.API
 {
@@ -140,6 +141,9 @@ namespace TaskOptimizer.API
 
         [DataMember]
         public double lon { get; set; }
+
+        public double latRad { get { return GeoTools.DegreeToRadian(lat); } }
+        public double lonRad { get { return GeoTools.DegreeToRadian(lon); } }
 
         #region IComparable Members
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Runtime.Serialization.Json;
+using ServiceStack.Redis;
 using TaskOptimizer.API;
 
 namespace TaskOptimizer.Calculator
@@ -12,6 +13,62 @@ namespace TaskOptimizer.Calculator
     /// </summary>
     public static class OSRM
     {
+
+        /// <summary>
+        /// Get the distance (in meters) and time (in seconds) between two coordinates
+        /// </summary>
+        /// <param name="a">First coordinate</param>
+        /// <param name="b">Second coordinate</param>
+        /// <param name="redisClient">(Optional) If passed, it will use the redis client as a cache</param>
+        /// <returns>An array {distance, time}</returns>
+        public static int[] GetDistanceTime(Coordinate a, Coordinate b, IRedisClient redisClient = null)
+        {
+            //meters
+            int distance;
+            //seconds
+            int time;
+
+            try
+            {
+                var lookupString = a + "$" + b + "$dt";
+
+                string distanceTime;
+
+                //try to get the time and distance from the redis cache
+                if (redisClient != null && redisClient.ContainsKey(lookupString))
+                {
+                    distanceTime = redisClient.GetValue(lookupString);
+                }
+                //otherwise get it from OSRM
+                else
+                {
+                    var route = OSRM.CalculateRoute(a, b);
+                    distanceTime = route.Route_Summary.Total_Distance + "$" + route.Route_Summary.Total_Time;
+
+                    //if there is a redis client, cache the distance and time
+                    if (redisClient != null)
+                    {
+                        redisClient.SetEntry(lookupString, distanceTime);
+                    }
+                }
+
+                var values = distanceTime.Split('$');
+                distance = Int32.Parse(values[0]);
+                time = Int32.Parse(values[1]);
+            }
+            //if there is a problem, use straight distance, fake time calculation
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                distance = GeoTools.StraightDistance(a.latRad, a.lonRad, b.latRad, b.lonRad);
+
+                //TODO some calculation for time from a straight distance
+                time = distance * 1;
+            }
+
+            return new[] { distance, time };
+        }
+
         /// <summary>
         /// Calculate the route for two coordinates
         /// </summary>

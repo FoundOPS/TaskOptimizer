@@ -1,3 +1,4 @@
+using ServiceStack.Redis;
 using TaskOptimizer.API;
 using TaskOptimizer.Calculator;
 
@@ -5,65 +6,85 @@ namespace TaskOptimizer.Model
 {
     public class Task
     {
-        private readonly int[] m_distances;
-        private readonly int m_id;
-        private int m_defaultDistance;
+        private readonly int[] _mDistances;
+        private readonly int[] _mStraightDistances;
 
         public Task(int id, int nbTasks)
         {
-            m_id = id;
-            m_distances = new int[nbTasks];
+            Id = id;
+            _mDistances = new int[nbTasks];
+            _mStraightDistances = new int[nbTasks];
         }
 
         public Task(Task task)
         {
-            m_id = task.Id;
-            m_distances = task.m_distances;
-            m_defaultDistance = task.m_defaultDistance;
+            Id = task.Id;
+            _mDistances = task._mDistances;
+            _mStraightDistances = task._mStraightDistances;
 
             UserId = task.UserId;
-            X = task.X;
-            Y = task.Y;
             Effort = task.Effort;
         }
 
         public int UserId { get; set; }
 
-        public int Id
-        {
-            get { return m_id; }
-        }
-
-        public double X { get; set; }
-
-        public double Y { get; set; }
+        public int Id { get; private set; }
 
         public int Effort { get; set; }
-        public double lat { get; set; }
-        public double lon { get; set; }
 
-        public void setDefaultDistance(int distance)
+        private double _lat;
+        public double Lat
         {
-            m_defaultDistance = distance;
+            get { return _lat; }
+            set
+            {
+                _lat = value;
+                LatRad = GeoTools.DegreeToRadian(_lat);
+            }
         }
 
-        public void setDistance(Task task, int distance)
+        private double _lon;
+        public double Lon
         {
-            m_distances[task.Id] = distance;
+            get { return _lon; }
+            set
+            {
+                _lon = value;
+                LonRad = GeoTools.DegreeToRadian(_lon);
+            }
         }
 
-        public int distanceTo(Task task)
+        public double LatRad { get; private set; }
+        public double LonRad { get; private set; }
+
+        public int StraightDistanceTo(Task task)
+        {
+            if (task == null || task == this)
+                return 0;
+
+            var straightDistance = _mStraightDistances[task.Id];
+            if (straightDistance == 0)
+            {
+                straightDistance = GeoTools.StraightDistance(LatRad, LonRad, task.LatRad, task.LonRad);
+                //cache the calculation
+                _mStraightDistances[task.Id] = straightDistance;
+            }
+
+            return straightDistance;
+        }
+        public int DistanceTo(Task task, IRedisClient cache = null)
         {
             if (task == null || task == this)
             {
                 return 0;
             }
-            if (m_distances[task.Id] == 0)
+
+            if (_mDistances[task.Id] == 0)
             {
-                //TODO add cacher
-                m_distances[task.Id] = Cost.Calculate(new Coordinate(X, Y), new Coordinate(task.X, task.Y));
+                //cache the calculation in memory
+                _mDistances[task.Id] = OSRM.GetDistanceTime(new Coordinate(Lat, Lon), new Coordinate(Lat, Lon), cache)[0];
             }
-            return m_distances[task.Id];
+            return _mDistances[task.Id];
         }
 
         public override string ToString()
@@ -73,7 +94,7 @@ namespace TaskOptimizer.Model
 
         public override bool Equals(object obj)
         {
-            return ((Task) obj).Id == Id;
+            return ((Task)obj).Id == Id;
         }
 
         public override int GetHashCode()

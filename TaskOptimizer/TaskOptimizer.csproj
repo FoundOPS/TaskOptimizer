@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -31,6 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>TaskOptimizer.Program</StartupObject>
@@ -64,21 +66,20 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="API\OSMContract.cs" />
+    <Compile Include="Calculator\GeoTools.cs" />
     <Compile Include="Calculator\Problem.cs" />
     <Compile Include="Calculator\Cost.cs" />
     <Compile Include="Calculator\OSRM.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Interfaces\Individual.cs" />
     <Compile Include="Interfaces\Population.cs" />
-    <Compile Include="Interfaces\WorkProgress.cs" />
     <Compile Include="Model\FitnessLevels.cs" />
     <Compile Include="Model\KMeanCluster.cs" />
     <Compile Include="Model\Optimizer.cs" />
-    <Compile Include="Model\Robot.cs" />
+    <Compile Include="Model\Worker.cs" />
     <Compile Include="Model\Task.cs" />
     <Compile Include="Model\TaskDistribution.cs" />
     <Compile Include="Model\TaskDistributor.cs" />
-    <Compile Include="Model\TaskGenerator.cs" />
     <Compile Include="Model\TaskSequence.cs" />
     <Compile Include="Model\TaskSequencer.cs" />
     <Compile Include="Model\TaskSequencerNearestInsert.cs" />
