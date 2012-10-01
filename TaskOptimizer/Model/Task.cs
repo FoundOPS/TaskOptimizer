@@ -90,7 +90,7 @@ namespace TaskOptimizer.Model
 
         public override string ToString()
         {
-            return UserId.ToString();
+            return Id.ToString();
         }
 
         public override bool Equals(object obj)

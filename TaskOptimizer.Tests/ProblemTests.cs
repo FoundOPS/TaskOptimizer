@@ -22,10 +22,10 @@ namespace TaskOptimizer.Tests
         [TestMethod]
         public void MultiRoute()
         {
-            var stops = Tools.GetCoordinates();
+            var stops = Tools.GetCoordinates(100);
 
             DateTime startTime = DateTime.Now;
-            var result = Problem.Calculate(stops, 4);
+            var result = Problem.Calculate(stops, 5);
 
             Trace.WriteLine(String.Format("Total Seconds {0}", DateTime.Now.Subtract(startTime).TotalSeconds));
         }

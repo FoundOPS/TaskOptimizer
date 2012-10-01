@@ -86,7 +86,7 @@ namespace TaskOptimizer.Model
 
             if (copy.Fitness != individual.Fitness)
             {
-                //throw new Exception("Fitness mismatch when cloning task distribution");
+                throw new Exception("Fitness mismatch when cloning task distribution");
             }
 
 

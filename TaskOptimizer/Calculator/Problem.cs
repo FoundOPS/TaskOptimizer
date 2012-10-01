@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using TaskOptimizer.API;
 using TaskOptimizer.Model;
@@ -26,7 +27,7 @@ namespace TaskOptimizer.Calculator
             }
 
             var stopTasks = new List<Task>();
-            for (int i = 0; i < resolved.Count; i++ )
+            for (int i = 0; i < resolved.Count; i++)
             {
                 var c = resolved[i];
                 var t = new Task(i, resolved.Count) { Lat = c.lat, Lon = c.lon, Effort = 0 };
@@ -69,7 +70,16 @@ namespace TaskOptimizer.Calculator
                     routeList.Add(rp);
                 }
 
-                response += OSRM.CalculateRouteRaw(routeList) + ",";
+                if (routeList.Count > 1)
+                {
+                    var rawRoute = OSRM.CalculateRouteRaw(routeList);
+                    Trace.WriteLine(rawRoute);
+                    response += rawRoute + ",";
+                }
+                else
+                {
+                    //TODO (single stop routes cannot be calculated with OSRM)
+                }
             }
             response = response.Substring(0, response.Length - 1);
             return response + "}";

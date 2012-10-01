@@ -153,12 +153,12 @@ namespace TaskOptimizer.API
             if (other == null)
                 throw new Exception("Not a coordinate!");
 
-            var latDifference = other.lat - lat;
-            var lonDifference = other.lon - lon;
+            var latDifference = lat - other.lat;
+            var lonDifference = lon - other.lon;
 
             if (Math.Abs(latDifference) > 0.0000001 || Math.Abs(lonDifference) > 0.0000001)
             {
-                if (latDifference < 0 || lonDifference < 0)
+                if (latDifference > 0 || lonDifference > 0)
                     return 1;
 
                 return -1;
