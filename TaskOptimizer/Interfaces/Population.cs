@@ -2,13 +2,13 @@ using System;
 
 namespace TaskOptimizer.Interfaces
 {
-    public abstract class Population<IndividualType> where IndividualType : Individual
+    public abstract class Population<TIndividualType> where TIndividualType : Individual
     {
         protected int BestFitness = Int32.MaxValue;
-        protected IndividualType bestIndividual = default(IndividualType);
+        protected TIndividualType bestIndividual = default(TIndividualType);
         protected int CataclysmCountdown;
         protected int CurIteration = 0;
-        protected IndividualType[] Individuals;
+        protected TIndividualType[] Individuals;
         protected int InitialCataclysmCountdown = 1000;
         protected int InitialMutationRate = 70;
         protected int MaxIterationsWithoutImprovements;
@@ -36,7 +36,7 @@ namespace TaskOptimizer.Interfaces
                 return;
             }
 
-            IndividualType parent;
+            TIndividualType parent;
             int nbChildren = 0;
             int maxChildren = ComputeMaxChildren();
 
@@ -49,9 +49,9 @@ namespace TaskOptimizer.Interfaces
             }
         }
 
-        protected virtual bool Crossover(IndividualType parent)
+        protected virtual bool Crossover(TIndividualType parent)
         {
-            IndividualType p1, p2, child;
+            TIndividualType p1, p2, child;
             SelectCrossoverIndividuals(out p1, out p2, out child);
 
             child.Crossover(p1, p2);
@@ -64,12 +64,12 @@ namespace TaskOptimizer.Interfaces
             return true;
         }
 
-        protected bool CanWeakDieByCrossover(IndividualType weak, IndividualType parent)
+        protected bool CanWeakDieByCrossover(TIndividualType weak, TIndividualType parent)
         {
             return weak.Id != parent.Id;
         }
 
-        protected virtual void OnNewBestIndividual(IndividualType individual)
+        protected virtual void OnNewBestIndividual(TIndividualType individual)
         {
             // really a new best?
             if (individual.Fitness < BestFitness)
@@ -147,12 +147,12 @@ namespace TaskOptimizer.Interfaces
         protected abstract void RegeneratePopulation();
 
 
-        protected virtual IndividualType SelectWeakIndividual()
+        protected virtual TIndividualType SelectWeakIndividual()
         {
             int maxFitness = Int32.MinValue;
-            IndividualType weakestIndividual = default(IndividualType);
+            TIndividualType weakestIndividual = default(TIndividualType);
 
-            foreach (IndividualType individual in Individuals)
+            foreach (TIndividualType individual in Individuals)
             {
                 if (individual != null && individual.Fitness > maxFitness && individual.Id != bestIndividual.Id)
                 {
@@ -164,8 +164,8 @@ namespace TaskOptimizer.Interfaces
             return weakestIndividual;
         }
 
-        protected virtual void SelectCrossoverIndividuals(out IndividualType p1, out IndividualType p2,
-                                                          out IndividualType child)
+        protected virtual void SelectCrossoverIndividuals(out TIndividualType p1, out TIndividualType p2,
+                                                          out TIndividualType child)
         {
             p1 = Individuals[Rand.Next()%_populationSize];
             p2 = Individuals[Rand.Next()%_populationSize];
@@ -177,13 +177,13 @@ namespace TaskOptimizer.Interfaces
             }
         }
 
-        protected virtual IndividualType SelectHealthyIndividual()
+        protected virtual TIndividualType SelectHealthyIndividual()
         {
             int nbTries = 0;
             int curIndex = Rand.Next(_populationSize);
             for (int t = 0; t < _populationSize; t++)
             {
-                IndividualType individual = Individuals[curIndex%_populationSize];
+                TIndividualType individual = Individuals[curIndex%_populationSize];
 
                 if (individual != null)
                 {
@@ -203,7 +203,7 @@ namespace TaskOptimizer.Interfaces
                 }
             }
 
-            return default(IndividualType);
+            return default(TIndividualType);
         }
     }
 }

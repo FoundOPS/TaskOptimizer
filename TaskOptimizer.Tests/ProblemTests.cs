@@ -20,12 +20,12 @@ namespace TaskOptimizer.Tests
         /// Calculate a 10 coordinate route
         /// </summary>
         [TestMethod]
-        public void OneRoute()
+        public void MultiRoute()
         {
             var stops = Tools.GetCoordinates();
 
             DateTime startTime = DateTime.Now;
-            var result = Problem.Calculate(stops, 2);
+            var result = Problem.Calculate(stops, 4);
 
             Trace.WriteLine(String.Format("Total Seconds {0}", DateTime.Now.Subtract(startTime).TotalSeconds));
         }

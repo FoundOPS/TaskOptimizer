@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using ServiceStack.Redis;
 
 namespace TaskOptimizer.Model
 {
@@ -68,7 +67,6 @@ namespace TaskOptimizer.Model
                 _threads[t] = new Thread(OptimizeThread);
             }
 
-
             Start();
         }
 
@@ -80,7 +78,21 @@ namespace TaskOptimizer.Model
             }
         }
 
+
         private void Start()
+        {
+            Compute();
+            _mEndOptimizeThread = false;
+            for (int t = 0; t < _threads.Length; t++)
+            {
+                _threads[t].Start(t);
+            }
+        }
+
+        /// <summary>
+        /// Update the min distributor
+        /// </summary>
+        public void Compute()
         {
             int nbIterations = 0;
             for (int t = 0; t < _mDistributors.Length; t++)
@@ -94,12 +106,6 @@ namespace TaskOptimizer.Model
             }
 
             _mCurIteration = nbIterations;
-            _mEndOptimizeThread = false;
-
-            for (int t = 0; t < _threads.Length; t++)
-            {
-                _threads[t].Start(t);
-            }
         }
 
         public void Stop()
