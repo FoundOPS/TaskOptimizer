@@ -1,4 +1,5 @@
-﻿using Mono.Unix;
+﻿using System.Diagnostics;
+using Mono.Unix;
 using Mono.Unix.Native;
 using ServiceStack.ServiceInterface;
 using ServiceStack.WebHost.Endpoints;
@@ -6,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using TaskOptimizer.API;
 using TaskOptimizer.Calculator;
+using TaskOptimizer.Tests;
 using Container = Funq.Container;
 
 namespace TaskOptimizer
@@ -14,6 +16,7 @@ namespace TaskOptimizer
     {
         public static void Main(string[] args)
         {
+            /*
             //Initialize app host
             try
             {
@@ -46,6 +49,16 @@ namespace TaskOptimizer
             {
                 Console.WriteLine(e.StackTrace);
             }
+             * */
+
+
+            var stops = Tools.GetCoordinates(50);
+
+            DateTime startTime = DateTime.Now;
+            var result = (new Problem()).Calculate(stops, 2);
+
+            Trace.WriteLine(String.Format("Total Seconds {0}", DateTime.Now.Subtract(startTime).TotalSeconds));
+
         }
     }
 
@@ -110,7 +123,7 @@ namespace TaskOptimizer
                 }
             }
 
-            var retString = Problem.Calculate(coords, numTrucks);
+            var retString = (new Problem()).Calculate(coords, numTrucks);
             return retString;
         }
     }

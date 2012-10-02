@@ -26,7 +26,7 @@ namespace TaskOptimizer.Tests
             var stops = Tools.GetCoordinates(3);
 
             DateTime startTime = DateTime.Now;
-            OSMResponse route = OSRM.CalculateRoute(stops);
+            OSMResponse route = OSRM.GetInstance(new Guid()).CalculateRoute(stops);
 
             Trace.WriteLine(String.Format("Total Seconds {0}", DateTime.Now.Subtract(startTime).TotalSeconds));
             //foreach (OSMInstruction inst in route.Route_Instructions)
@@ -45,7 +45,7 @@ namespace TaskOptimizer.Tests
             DateTime startTime = DateTime.Now;
             foreach (var stop in stops)
             {
-                OSRM.FindNearest(stop);
+                OSRM.GetInstance(new Guid()).FindNearest(stop);
             }
 
             Trace.WriteLine(String.Format("Total Seconds {0}", DateTime.Now.Subtract(startTime).TotalSeconds));

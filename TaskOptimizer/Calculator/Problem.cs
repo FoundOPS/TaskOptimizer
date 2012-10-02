@@ -9,19 +9,29 @@ namespace TaskOptimizer.Calculator
 {
     public class Problem
     {
+        public Guid Id { get; private set; }
+
+        public Problem()
+        {
+            Id = Guid.NewGuid();
+        }
+
         /// <summary>
         /// Calculates the best distribution/organization for a number of trucks and destinations
         /// </summary>
         /// <param name="destinations">The destinations to service</param>
         /// <param name="trucks">The number of trucks</param>
         /// <returns></returns>
-        public static String Calculate(ICollection<Coordinate> destinations, int trucks)
+        public String Calculate(ICollection<Coordinate> destinations, int trucks)
         {
             var resolved = new List<Coordinate>();
+
+            OSRM osrm = OSRM.GetInstance(Id);
+
             //resolve each point on the map
             foreach (var c in destinations)
             {
-                var r = OSRM.FindNearest(c);
+                var r = osrm.FindNearest(c);
                 if (!resolved.Contains(r))
                     resolved.Add(r);
             }
@@ -30,11 +40,11 @@ namespace TaskOptimizer.Calculator
             for (int i = 0; i < resolved.Count; i++)
             {
                 var c = resolved[i];
-                var t = new Task(i, resolved.Count) { Lat = c.lat, Lon = c.lon, Effort = 0 };
+                var t = new Task(i, resolved.Count) {Lat = c.lat, Lon = c.lon, Effort = 0, ProblemId = Id};
                 stopTasks.Add(t);
             }
 
-            var optConf = new Optimizer.Configuration { Tasks = stopTasks };
+            var optConf = new Optimizer.Configuration {Tasks = stopTasks};
 
             var truck = new Worker();
             optConf.Workers = new List<Worker>();
@@ -42,7 +52,7 @@ namespace TaskOptimizer.Calculator
                 optConf.Workers.Add(truck);
 
             optConf.RandomSeed = 777777;
-            optConf.NumberDistributors = Environment.ProcessorCount * 3;
+            optConf.NumberDistributors = Environment.ProcessorCount*3;
 
             var o = new Optimizer(optConf);
             while (o.MinDistributor.NbIterationsWithoutImprovements < 10000)
@@ -72,7 +82,7 @@ namespace TaskOptimizer.Calculator
 
                 if (routeList.Count > 1)
                 {
-                    var rawRoute = OSRM.CalculateRouteRaw(routeList);
+                    var rawRoute = osrm.CalculateRouteRaw(routeList);
                     Trace.WriteLine(rawRoute);
                     response += rawRoute + ",";
                 }
@@ -81,8 +91,12 @@ namespace TaskOptimizer.Calculator
                     //TODO (single stop routes cannot be calculated with OSRM)
                 }
             }
+
+            OSRM.ReleaseInstance(Id);
+
             response = response.Substring(0, response.Length - 1);
             return response + "}";
+
         }
     }
 }

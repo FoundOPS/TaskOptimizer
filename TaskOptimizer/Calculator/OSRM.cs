@@ -11,9 +11,39 @@ namespace TaskOptimizer.Calculator
     /// <summary>
     /// Interact with OSRM for map based calculations
     /// </summary>
-    public static class OSRM
+    public class OSRM : IDisposable
     {
+        // Factory Pattern
+        private static Dictionary<Guid, OSRM> _sInstances = new Dictionary<Guid, OSRM>();
+
+        public static OSRM GetInstance(Guid problemId)
+        {
+            if (!_sInstances.ContainsKey(problemId))
+                _sInstances.Add(problemId, new OSRM());
+            
+            return _sInstances[problemId];
+        }
+        public static void ReleaseInstance(Guid problemId)
+        {
+            if (!_sInstances.ContainsKey(problemId)) return;
+            _sInstances[problemId].Dispose();
+            _sInstances.Remove(problemId);
+        }
+
+
+       
+        // Static Variables
         private static readonly PooledRedisClientManager RedisClientManager = new PooledRedisClientManager(Constants.RedisServer);
+        
+
+        // TODO This is a hard coded set ID, need to change it to a parameter
+        private const string SET_ID = "1$dt";
+
+       // Instance Variables
+        // Redis client forthis instance
+        private IRedisClient mClient = RedisClientManager.GetClient();
+        // Preprocessed entries cached in memory
+        private Dictionary<String, int[]> mCachedEntries = new Dictionary<string, int[]>(); 
 
         /// <summary>
         /// Get the distance (in meters) and time (in seconds) between two coordinates
@@ -21,19 +51,24 @@ namespace TaskOptimizer.Calculator
         /// <param name="a">First coordinate</param>
         /// <param name="b">Second coordinate</param>
         /// <returns>An array {distance, time}</returns>
-        public static int[] GetDistanceTime(Coordinate a, Coordinate b)
+        public int[] GetDistanceTime(Coordinate a, Coordinate b)
         {
+            return GetDistanceTime_New(a, b);
+            /*
             //meters
             int distance;
             //seconds
             int time;
 
+            
+
             try
             {
+                
                 string lookupString = a.CompareTo(b) < 0
                                           ? a + "$" + b + "$dt"
                                           : b + "$" + a + "$dt";
-
+                
                 string distanceTime;
 
                 using (var client = RedisClientManager.GetClient())
@@ -49,6 +84,7 @@ namespace TaskOptimizer.Calculator
 
                         //if there is a redis client, cache the distance and time
                         client.SetEntry(lookupString, distanceTime);
+
                         client.Save();
                     }
                     else
@@ -73,17 +109,77 @@ namespace TaskOptimizer.Calculator
 
 
             return new[] { distance, time };
+             */
         }
+
+        private int[] GetDistanceTime_New(Coordinate a, Coordinate b)
+        {
+            int[] distanceTime = new int[2]; // distance (meters), time (seconds)
+
+            try
+            {
+                string lookupString = a.CompareTo(b) < 0
+                                          ? a + "$" + b
+                                          : b + "$" + a;
+
+                if (mCachedEntries.Count == 0)      // if local cache is empty, fetch data from redis
+                {
+
+                    HashSet<String> values = mClient.GetAllItemsFromSet(SET_ID);
+                    foreach (String entry in values)
+                    {
+                        // CoordinateA$CoodinateB$distance$time
+                        String[] splitEntry = entry.Split('$');
+                        String key = splitEntry[0] + "$" + splitEntry[1];
+                        mCachedEntries[key] = new int[] {Int32.Parse(splitEntry[2]), Int32.Parse(splitEntry[3])};
+                    }
+                }
+
+                if (!mCachedEntries.ContainsKey(lookupString))      // if lookup string can't be found in cache
+                {
+                    // calculate route distance and time
+                    var route = CalculateRoute(a, b);
+                    distanceTime[0] = route.Route_Summary.Total_Distance;
+                    distanceTime[1] = route.Route_Summary.Total_Time;
+
+                    // put it into the local cache
+                    mCachedEntries[lookupString] = distanceTime;
+
+                    // put it into redis
+                    String redisItem = String.Format("{0}${1}${2}", lookupString, distanceTime[0], distanceTime[1]);
+                    mClient.AddItemToSet(SET_ID, redisItem);
+                    //client.SaveAsync();
+                    //client.Save();
+                }
+                
+                // set up result
+                distanceTime = mCachedEntries[lookupString];
+            }
+            //if there is a problem, use straight distance, fake time calculation
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                distanceTime[0] = GeoTools.StraightDistance(a.latRad, a.lonRad, b.latRad, b.lonRad);
+
+                //TODO some calculation for time from a straight distance
+                distanceTime[1] = distanceTime[0] * 1;
+
+                //TODO log lat/long
+            }
+
+            return distanceTime;
+        }
+
 
         /// <summary>
         /// Calculate the route for two coordinates
         /// </summary>
-        public static OSMResponse CalculateRoute(Coordinate a, Coordinate b)
+        public OSMResponse CalculateRoute(Coordinate a, Coordinate b)
         {
             return CalculateRoute(new[] { a, b });
         }
 
-        private static string MakeRouteAction(IEnumerable<Coordinate> coords)
+        private string MakeRouteAction(IEnumerable<Coordinate> coords)
         {
             var actionString = "viaroute?";
             foreach (Coordinate c in coords)
@@ -96,7 +192,7 @@ namespace TaskOptimizer.Calculator
         /// <summary>
         /// Calculate the route for a set of coordinates
         /// </summary>
-        public static OSMResponse CalculateRoute(ICollection<Coordinate> coords)
+        public OSMResponse CalculateRoute(ICollection<Coordinate> coords)
         {
             var response = Request<OSMResponse>(MakeRouteAction(coords));
 
@@ -131,7 +227,7 @@ namespace TaskOptimizer.Calculator
         /// Same as CalculateRoute but returns the JSON string
         /// </summary>
         /// <returns>A string</returns>
-        public static string CalculateRouteRaw(ICollection<Coordinate> coords)
+        public string CalculateRouteRaw(ICollection<Coordinate> coords)
         {
             return RawRequest(MakeRouteAction(coords));
         }
@@ -139,7 +235,7 @@ namespace TaskOptimizer.Calculator
         /// <summary>
         /// Find the nearest point on the map to a coordinate
         /// </summary>
-        public static Coordinate FindNearest(Coordinate a)
+        public Coordinate FindNearest(Coordinate a)
         {
             var actionString = "nearest?loc=" + a.lat + "," + a.lon;
             var response = Request<LocResponse>(actionString);
@@ -151,7 +247,7 @@ namespace TaskOptimizer.Calculator
         /// </summary>
         /// <typeparam name="T">The type to deserialize the JSON to</typeparam>
         /// <param name="action">Ex. viaroute?loc=124.124,151.222</param>
-        private static T Request<T>(string action) where T : class
+        private T Request<T>(string action) where T : class
         {
             var requestUrl = Constants.OSRMServer + action;
 
@@ -171,7 +267,7 @@ namespace TaskOptimizer.Calculator
         /// Make a request to the OSRM server and get a string back
         /// </summary>
         /// <param name="action">Ex. viaroute?loc=124.124,151.222</param>
-        private static string RawRequest(string action)
+        private string RawRequest(string action)
         {
             var requestUrl = Constants.OSRMServer + action;
 
@@ -206,5 +302,15 @@ namespace TaskOptimizer.Calculator
         //        return null;
         //    }
         //}
+
+        #region IDIsposable
+
+        public void Dispose()
+        {
+            mClient.Save();
+            mClient.Dispose();
+        }
+
+        #endregion
     }
 }

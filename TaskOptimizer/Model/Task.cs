@@ -1,3 +1,4 @@
+using System;
 using TaskOptimizer.API;
 using TaskOptimizer.Calculator;
 
@@ -15,6 +16,10 @@ namespace TaskOptimizer.Model
             _mStraightDistances = new int[nbTasks];
         }
 
+        /// <summary>
+        /// Used for cloning a task
+        /// </summary>
+        /// <param name="task">The task to clone</param>
         public Task(Task task)
         {
             Id = task.Id;
@@ -32,6 +37,8 @@ namespace TaskOptimizer.Model
         public int Id { get; private set; }
 
         public int Effort { get; set; }
+
+        public Guid ProblemId { get; internal set; }
 
         private double _lat;
         public double Lat
@@ -83,7 +90,7 @@ namespace TaskOptimizer.Model
             if (_mDistances[task.Id] == 0)
             {
                 //cache the calculation in memory
-                _mDistances[task.Id] = OSRM.GetDistanceTime(new Coordinate(Lat, Lon), new Coordinate(task.Lat, task.Lon))[0];
+                _mDistances[task.Id] = OSRM.GetInstance(ProblemId).GetDistanceTime(new Coordinate(Lat, Lon), new Coordinate(task.Lat, task.Lon))[0];
             }
             return _mDistances[task.Id];
         }
