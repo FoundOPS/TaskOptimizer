@@ -51,7 +51,7 @@ namespace TaskOptimizer
             }
              * */
 
-            int stopCount = 100;
+            int stopCount = 1000;
             int truckCount = 10;
 
             if (args.Length == 2)
@@ -70,7 +70,7 @@ namespace TaskOptimizer
             var sw = new Stopwatch();
 
             sw.Start();
-            var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 2000);
+            var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 1000);
             var tasks = Tools.GetTasks(Tools.GetCoordinates(stopCount), problem);
             var result = problem.Calculate(tasks, truckCount);
             sw.Stop();
