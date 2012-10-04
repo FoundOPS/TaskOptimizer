@@ -1,4 +1,3 @@
-using System;
 using TaskOptimizer.API;
 using TaskOptimizer.Calculator;
 
@@ -6,14 +5,9 @@ namespace TaskOptimizer.Model
 {
     public class Task
     {
-        private readonly int[] _mDistances;
-        private readonly int[] _mStraightDistances;
-
         public Task(int id, int nbTasks)
         {
             Id = id;
-            _mDistances = new int[nbTasks];
-            _mStraightDistances = new int[nbTasks];
         }
 
         /// <summary>
@@ -23,22 +17,21 @@ namespace TaskOptimizer.Model
         public Task(Task task)
         {
             Id = task.Id;
-            _mDistances = task._mDistances;
-            _mStraightDistances = task._mStraightDistances;
             Lat = task.Lat;
             Lon = task.Lon;
 
             UserId = task.UserId;
-            Effort = task.Effort;
+            Time = task.Time;
+            Problem = task.Problem;
         }
 
         public int UserId { get; set; }
 
         public int Id { get; private set; }
 
-        public int Effort { get; set; }
+        public int Time { get; set; } // Seconds
 
-        public Guid ProblemId { get; internal set; }
+        public Problem Problem { get; set; }
 
         private double _lat;
         public double Lat
@@ -62,37 +55,27 @@ namespace TaskOptimizer.Model
             }
         }
 
+        public Coordinate Location
+        { get { return new Coordinate(_lat, _lon); } }
+
         public double LatRad { get; private set; }
         public double LonRad { get; private set; }
 
-        public int StraightDistanceTo(Task task)
-        {
-            if (task == null || task == this)
-                return 0;
-
-            var straightDistance = _mStraightDistances[task.Id];
-            if (straightDistance == 0)
-            {
-                straightDistance = GeoTools.StraightDistance(LatRad, LonRad, task.LatRad, task.LonRad);
-                //cache the calculation
-                _mStraightDistances[task.Id] = straightDistance;
-            }
-
-            return straightDistance;
-        }
-        public int DistanceTo(Task task)
+        public int CostTo(Task task)
         {
             if (task == null || task == this)
             {
-                return 0;
+                //TODO add depot task, and return cost from here to there
+                return 1;
             }
 
-            if (_mDistances[task.Id] == 0)
+            if (Problem.GetCachedCost(this.Id, task.Id) == 0)
             {
                 //cache the calculation in memory
-                _mDistances[task.Id] = OSRM.GetInstance(ProblemId).GetDistanceTime(new Coordinate(Lat, Lon), new Coordinate(task.Lat, task.Lon))[0];
+                //_mDistances[task.Id] = Problem.Osrm.GetDistanceTime(new Coordinate(Lat, Lon), new Coordinate(task.Lat, task.Lon))[0];
+                Problem.SetCachedCost(this.Id, task.Id, Problem.CostFunction.Calculate(this, task, true));
             }
-            return _mDistances[task.Id];
+            return Problem.GetCachedCost(this.Id, task.Id);
         }
 
         public override string ToString()

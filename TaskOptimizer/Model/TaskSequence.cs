@@ -108,18 +108,19 @@ namespace TaskOptimizer.Model
 
         public void UpdateFitness()
         {
-            int distance = 0;
+            int cost = 0;
             Task fromTask = null;
 
             foreach (var task in Tasks)
             {
-                distance += task.DistanceTo(fromTask);
+                //do not calculate the cost from a task to itself
+                if (task == fromTask)
+                    continue;
+                
+                cost += task.CostTo(fromTask);
                 fromTask = task;
             }
-
-            //TODO Update cost function
-            int cost = distance + 1;
-
+            
             Fitness = cost;
         }
 

@@ -1,28 +1,45 @@
-﻿using ServiceStack.Redis;
-using System;
-using TaskOptimizer.API;
+﻿using System;
+using TaskOptimizer.Model;
 
 namespace TaskOptimizer.Calculator
 {
-    public static class Cost
+    public interface ICostFunction
     {
-        /// <summary>
-        /// The calculation used for cost based on distance and time
-        /// </summary>
-        /// <param name="distance">The distance in meters</param>
-        /// <param name="time">The time in seconds</param>
-        /// <param name="milesPerGallon">The truck's average MPG</param>
-        /// <param name="gallonGas">The cost of a gallon of gas</param>
-        /// <param name="hourlyWage">The average hourly wage of an employee</param>
-        private static int Calculation(int distance, int time, int milesPerGallon = 10, int gallonGas = 4, int hourlyWage = 50)
-        {
-            //miles / milesPerGallon * gallonGas
-            var distCost = ((distance / 1609.34) / milesPerGallon) * gallonGas;
+        int Calculate(Task origin, Task destination, bool considerTaskTime);
+    }
 
-            var timeCost = (time / 3600.0) * hourlyWage;
+    public class DefaultCost : ICostFunction
+    {
+        public int MilesPerGallon { get; set; }
+        public int PricePerGallon { get; set; }
+        public int HourlyWage { get; set; }
+
+        public int Calculate(Task origin, Task destination, bool considerTaskTime)
+        {
+            if (origin == null || destination == null || origin == destination)
+                return 0;
+
+#if DEBUG
+            if (origin.Problem != destination.Problem)
+                throw new Exception("Tasks have to belong to the same problem!");
+#endif
+            // Get time & Distance
+            int[] distanceTime = origin.Problem.Osrm.GetDistanceTime(origin.Location, destination.Location);
+            
+            // Calculate cost
+            //miles / milesPerGallon * gallonGas
+            var distCost = ((distanceTime[0] / 1609.34) / MilesPerGallon) * PricePerGallon;
+
+
+            if (considerTaskTime)
+                distanceTime[1] += (origin.Time + destination.Time)/2;
+
+            var timeCost = (distanceTime[1] / 3600.0) * HourlyWage;
             var cost = (timeCost + distCost) * 100;
 
             return (int)cost;
+
+
         }
     }
 }

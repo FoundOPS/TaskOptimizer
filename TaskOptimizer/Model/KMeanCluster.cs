@@ -78,11 +78,11 @@ namespace TaskOptimizer.Model
 
             foreach (Task mean in _means)
             {
-                int distance = task.DistanceTo(mean);
-                if (distance < minDistance)
+                int cost = task.Problem.CostFunction.Calculate(task, mean, false);
+                if (cost < minDistance)
                 {
                     minIndex = index;
-                    minDistance = distance;
+                    minDistance = cost;
                 }
 
                 index++;
@@ -138,7 +138,8 @@ namespace TaskOptimizer.Model
                 foreach (var toTask in tasks)
                 {
                     //TODO use cached table
-                    distance += fromTask.StraightDistanceTo(toTask);
+                    //distance += fromTask.StraightDistanceTo(toTask);
+                    distance += fromTask.Problem.CostFunction.Calculate(fromTask, toTask, false);
                 }
 
                 if (distance < minDistance)

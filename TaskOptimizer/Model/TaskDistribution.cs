@@ -263,28 +263,30 @@ namespace TaskOptimizer.Model
             Optimize();
         }
 
-        public Task FindNearestAssignedTask(Task fromTask)
-        {
-            int minDistance = Int32.MaxValue;
-            Task minTask = null;
+        //TODO figure out why this is not used
+        //public Task FindNearestAssignedTask(Task fromTask)
+        //{
+        //    int minDistance = Int32.MaxValue;
+        //    Task minTask = null;
 
-            foreach (Task task in _tasks)
-            {
-                // assigned?
-                if (_taskDistributedWorker[task.Id] != -1 && fromTask.Id != task.Id)
-                {
-                    int distance = task.DistanceTo(fromTask);
-                    if (distance < minDistance)
-                    {
-                        minDistance = distance;
-                        minTask = task;
-                    }
-                }
-            }
+        //    foreach (Task task in _tasks)
+        //    {
+        //        // assigned?
+        //        if (_taskDistributedWorker[task.Id] != -1 && fromTask.Id != task.Id)
+        //        {
+        //            //int distance = task.DistanceTo(fromTask);
+        //            int cost = task.CostTo(fromTask);
+        //            if (cost < minDistance)
+        //            {
+        //                minDistance = cost;
+        //                minTask = task;
+        //            }
+        //        }
+        //    }
 
 
-            return minTask;
-        }
+        //    return minTask;
+        //}
 
         private void Configure(Configuration config)
         {

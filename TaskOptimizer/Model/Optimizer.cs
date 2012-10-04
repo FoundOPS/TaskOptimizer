@@ -111,15 +111,10 @@ namespace TaskOptimizer.Model
         public void Stop()
         {
             _mEndOptimizeThread = true;
-            for (int t = 0; t < _threads.Length; t++)
+            foreach (Thread t in _threads)
             {
-                if (_threads[t] != null && _threads[t].IsAlive)
-                {
-                    if (_threads[t] != null)
-                    {
-                        _threads[t].Join();
-                    }
-                }
+                if (t != null && t.IsAlive)
+                   t.Join();
             }
         }
 

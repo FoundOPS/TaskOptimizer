@@ -51,14 +51,34 @@ namespace TaskOptimizer
             }
              * */
 
+            int stopCount = 25;
+            int truckCount = 2;
 
-            var stops = Tools.GetCoordinates(50);
+            if (args.Length == 2)
+            {
+                try
+                {
+                    stopCount = Int32.Parse(args[0]);
+                    truckCount = Int32.Parse(args[1]);
+                } catch
+                {
+                    
+                }
+            }
 
-            DateTime startTime = DateTime.Now;
-            var result = (new Problem()).Calculate(stops, 2);
+            var sw = new Stopwatch();
+            var stops = Tools.GetCoordinates(stopCount);
 
-            Trace.WriteLine(String.Format("Total Seconds {0}", DateTime.Now.Subtract(startTime).TotalSeconds));
+            sw.Start();
+            Problem problem = new Problem(new DefaultCost() {MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50});
+            var result = problem.Calculate(stops, truckCount);
+            sw.Stop();
 
+            //Trace.WriteLine(String.Format("Total Time {0}ms", sw.ElapsedMilliseconds));
+            Console.WriteLine("\nTotal Time {0}ms", sw.ElapsedMilliseconds);
+
+            if (Debugger.IsAttached) // Disable waiting when not in debugging mode so that profiler gets more accurate results
+            Console.ReadKey();
         }
     }
 
@@ -123,7 +143,7 @@ namespace TaskOptimizer
                 }
             }
 
-            var retString = (new Problem()).Calculate(coords, numTrucks);
+            var retString = (new Problem(new DefaultCost() { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 })).Calculate(coords, numTrucks);
             return retString;
         }
     }

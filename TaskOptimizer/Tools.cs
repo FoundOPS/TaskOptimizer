@@ -40,12 +40,9 @@ namespace TaskOptimizer.Tests
             }
 
             var coordinates = new List<Coordinate>();
-            var r = new Random();
             for (int i = 0; i < number; i++)
             {
-                var coordinate = csvCoordinates[r.Next(csvCoordinates.Count)];
-                if (!coordinates.Contains(coordinate))
-                    coordinates.Add(coordinate);
+                coordinates.Add(csvCoordinates[i]);
             }
 
             return coordinates;

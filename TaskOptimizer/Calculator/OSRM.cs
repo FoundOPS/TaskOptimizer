@@ -20,7 +20,7 @@ namespace TaskOptimizer.Calculator
         {
             if (!_sInstances.ContainsKey(problemId))
                 _sInstances.Add(problemId, new OSRM());
-            
+
             return _sInstances[problemId];
         }
         public static void ReleaseInstance(Guid problemId)
@@ -31,19 +31,48 @@ namespace TaskOptimizer.Calculator
         }
 
 
-       
+
         // Static Variables
         private static readonly PooledRedisClientManager RedisClientManager = new PooledRedisClientManager(Constants.RedisServer);
-        
+
 
         // TODO This is a hard coded set ID, need to change it to a parameter
-        private const string SET_ID = "1$dt";
+        private const string SET_ID_DISTANCETIME = "1$dt";
+        private const string SET_ID_NEARESTLOCATION = "1$nl";
 
-       // Instance Variables
+        // Instance Variables
         // Redis client forthis instance
         private IRedisClient mClient = RedisClientManager.GetClient();
         // Preprocessed entries cached in memory
-        private Dictionary<String, int[]> mCachedEntries = new Dictionary<string, int[]>(); 
+        private Dictionary<String, int[]> mCachedEntries = new Dictionary<string, int[]>();
+        private Dictionary<String, Coordinate> mCachedLocations = new Dictionary<String, Coordinate>();
+
+        // Constructor
+        public OSRM()
+        {
+            // Get all cached distance/time entries
+            HashSet<String> values = mClient.GetAllItemsFromSet(SET_ID_DISTANCETIME);
+            foreach (String entry in values)
+            {
+                // CoordinateA$CoodinateB$distance$time
+                String[] splitEntry = entry.Split('$');
+                String key = splitEntry[0] + "$" + splitEntry[1];
+                mCachedEntries[key] = new int[] { Int32.Parse(splitEntry[2]), Int32.Parse(splitEntry[3]) };
+            }
+
+            // Get all cached coordinate/nearestLocation entries
+            values = mClient.GetAllItemsFromSet(SET_ID_NEARESTLOCATION);
+            foreach (String entry in values)
+            {
+                // Coordinate$NearestLocation
+                // Coordinates rounded to 5 decimal places
+                String[] splitEntry = entry.Split(new char[] { '$' });
+                String original = splitEntry[0];
+                String[] splitCoordinate = splitEntry[1].Split(new char[] { ',' });
+                Coordinate resolved = new Coordinate(Double.Parse(splitCoordinate[0]), Double.Parse(splitCoordinate[1]));
+                mCachedLocations[original] = resolved;
+            }
+        }
 
         /// <summary>
         /// Get the distance (in meters) and time (in seconds) between two coordinates
@@ -52,67 +81,6 @@ namespace TaskOptimizer.Calculator
         /// <param name="b">Second coordinate</param>
         /// <returns>An array {distance, time}</returns>
         public int[] GetDistanceTime(Coordinate a, Coordinate b)
-        {
-            return GetDistanceTime_New(a, b);
-            /*
-            //meters
-            int distance;
-            //seconds
-            int time;
-
-            
-
-            try
-            {
-                
-                string lookupString = a.CompareTo(b) < 0
-                                          ? a + "$" + b + "$dt"
-                                          : b + "$" + a + "$dt";
-                
-                string distanceTime;
-
-                using (var client = RedisClientManager.GetClient())
-                {
-                    //try to get the time and distance from the redis cache
-                    distanceTime = client.Get<string>(lookupString);
-
-                    //otherwise get it from OSRM
-                    if (String.IsNullOrEmpty(distanceTime))
-                    {
-                        var route = CalculateRoute(a, b);
-                        distanceTime = route.Route_Summary.Total_Distance + "$" + route.Route_Summary.Total_Time;
-
-                        //if there is a redis client, cache the distance and time
-                        client.SetEntry(lookupString, distanceTime);
-
-                        client.Save();
-                    }
-                    else
-                    {
-
-                    }
-                }
-
-                var values = distanceTime.Split('$');
-                distance = Int32.Parse(values[0]);
-                time = Int32.Parse(values[1]);
-            }
-            //if there is a problem, use straight distance, fake time calculation
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                distance = GeoTools.StraightDistance(a.latRad, a.lonRad, b.latRad, b.lonRad);
-
-                //TODO some calculation for time from a straight distance
-                time = distance * 1;
-            }
-
-
-            return new[] { distance, time };
-             */
-        }
-
-        private int[] GetDistanceTime_New(Coordinate a, Coordinate b)
         {
             int[] distanceTime = new int[2]; // distance (meters), time (seconds)
 
@@ -124,14 +92,13 @@ namespace TaskOptimizer.Calculator
 
                 if (mCachedEntries.Count == 0)      // if local cache is empty, fetch data from redis
                 {
-
-                    HashSet<String> values = mClient.GetAllItemsFromSet(SET_ID);
+                    HashSet<String> values = mClient.GetAllItemsFromSet(SET_ID_DISTANCETIME);
                     foreach (String entry in values)
                     {
                         // CoordinateA$CoodinateB$distance$time
                         String[] splitEntry = entry.Split('$');
                         String key = splitEntry[0] + "$" + splitEntry[1];
-                        mCachedEntries[key] = new int[] {Int32.Parse(splitEntry[2]), Int32.Parse(splitEntry[3])};
+                        mCachedEntries[key] = new int[] { Int32.Parse(splitEntry[2]), Int32.Parse(splitEntry[3]) };
                     }
                 }
 
@@ -147,11 +114,11 @@ namespace TaskOptimizer.Calculator
 
                     // put it into redis
                     String redisItem = String.Format("{0}${1}${2}", lookupString, distanceTime[0], distanceTime[1]);
-                    mClient.AddItemToSet(SET_ID, redisItem);
+                    mClient.AddItemToSet(SET_ID_DISTANCETIME, redisItem);
                     //client.SaveAsync();
                     //client.Save();
                 }
-                
+
                 // set up result
                 distanceTime = mCachedEntries[lookupString];
             }
@@ -171,14 +138,6 @@ namespace TaskOptimizer.Calculator
         }
 
 
-        /// <summary>
-        /// Calculate the route for two coordinates
-        /// </summary>
-        public OSMResponse CalculateRoute(Coordinate a, Coordinate b)
-        {
-            return CalculateRoute(new[] { a, b });
-        }
-
         private string MakeRouteAction(IEnumerable<Coordinate> coords)
         {
             var actionString = "viaroute?";
@@ -187,6 +146,14 @@ namespace TaskOptimizer.Calculator
             //remove the last &
             actionString = actionString.Substring(0, actionString.Length - 1);
             return actionString;
+        }
+
+        /// <summary>
+        /// Calculate the route for two coordinates
+        /// </summary>
+        public OSMResponse CalculateRoute(Coordinate a, Coordinate b)
+        {
+            return CalculateRoute(new[] { a, b });
         }
 
         /// <summary>
@@ -232,14 +199,29 @@ namespace TaskOptimizer.Calculator
             return RawRequest(MakeRouteAction(coords));
         }
 
+
         /// <summary>
         /// Find the nearest point on the map to a coordinate
         /// </summary>
         public Coordinate FindNearest(Coordinate a)
         {
+            // round the original
+            a.lat = Math.Round(a.lat, 5);
+            a.lon = Math.Round(a.lon, 5);
+
+            // try find the location in cache
+            if (mCachedLocations.ContainsKey(a.ToString()))
+                return mCachedLocations[a.ToString()];
+
             var actionString = "nearest?loc=" + a.lat + "," + a.lon;
             var response = Request<LocResponse>(actionString);
-            return new Coordinate(response.Mapped_Coordinate[0], response.Mapped_Coordinate[1]);
+            Coordinate result = new Coordinate(response.Mapped_Coordinate[0], response.Mapped_Coordinate[1]);
+
+            // cache result
+            mCachedLocations[a.ToString()] = result;
+            mClient.AddItemToSet(SET_ID_NEARESTLOCATION, String.Format("{0}${1}", a, result));
+
+            return result;
         }
 
         /// <summary>
@@ -310,6 +292,12 @@ namespace TaskOptimizer.Calculator
             mClient.Save();
             mClient.Dispose();
         }
+
+        #endregion
+
+        #region Utility Methods (Caching)
+
+
 
         #endregion
     }

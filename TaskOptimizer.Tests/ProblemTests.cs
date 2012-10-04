@@ -25,7 +25,7 @@ namespace TaskOptimizer.Tests
             var stops = Tools.GetCoordinates(10);
 
             DateTime startTime = DateTime.Now;
-            var result = (new Problem()).Calculate(stops, 2);
+            var result = (new Problem(new DefaultCost() { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 })).Calculate(stops, 2);
 
             Trace.WriteLine(String.Format("Total Seconds {0}", DateTime.Now.Subtract(startTime).TotalSeconds));
         }

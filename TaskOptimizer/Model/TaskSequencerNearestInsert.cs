@@ -70,12 +70,12 @@ namespace TaskOptimizer.Model
         private int FindCheapestInsert(Task t1, Task t2, IEnumerable<Task> remainingTasks, out Task newTask)
         {
             int minCost = Int32.MaxValue;
-            int constantCost = t1.DistanceTo(t2);
+            int constantCost = t1.CostTo(t2);
             newTask = null;
 
             foreach (Task task in remainingTasks)
             {
-                int cost = t1.DistanceTo(task) + task.DistanceTo(t2);
+                int cost = t1.CostTo(task) + task.CostTo(t2);
                 if (cost < minCost)
                 {
                     minCost = cost;
@@ -93,7 +93,11 @@ namespace TaskOptimizer.Model
 
             foreach (Task task in tasks)
             {
-                int distance = task.DistanceTo(fromTask);
+                //TODO check this is correct
+                if(task == fromTask)
+                    continue;
+
+                int distance = task.CostTo(fromTask);
                 if (distance < minDistance && (minTask == null || _rand.Next(2) == 0))
                 {
                     var adjustedDistance = (int)(distance * tolerance);

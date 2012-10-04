@@ -179,7 +179,6 @@ namespace TaskOptimizer.Interfaces
 
         protected virtual TIndividualType SelectHealthyIndividual()
         {
-            int nbTries = 0;
             int curIndex = Rand.Next(_populationSize);
             for (int t = 0; t < _populationSize; t++)
             {
@@ -198,7 +197,6 @@ namespace TaskOptimizer.Interfaces
                             return individual;
                         }
                     }
-                    nbTries++;
                     curIndex++;
                 }
             }
