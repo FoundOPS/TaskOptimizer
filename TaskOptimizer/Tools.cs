@@ -16,7 +16,7 @@ namespace TaskOptimizer
         /// <param name="random">Choose random coordinates. Defaults to false</param>
         public static List<Coordinate> GetCoordinates(int total = 10, bool random = false)
         {
-            var f = new FileInfo(Constants.RootDirectory + "LatLon.csv");
+            var f = new FileInfo(Constants.RootDirectory + "Lafayette.csv");
             var csvCoordinates = new List<Coordinate>();
             var fs = f.OpenText();
             while (!fs.EndOfStream)
