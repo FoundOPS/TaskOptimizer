@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using TaskOptimizer.API;
 using TaskOptimizer.Calculator;
-using TaskOptimizer.Tests;
+using TaskOptimizer.Model;
 using Container = Funq.Container;
 
 namespace TaskOptimizer
@@ -51,8 +51,8 @@ namespace TaskOptimizer
             }
              * */
 
-            int stopCount = 25;
-            int truckCount = 2;
+            int stopCount = 100;
+            int truckCount = 10;
 
             if (args.Length == 2)
             {
@@ -60,25 +60,28 @@ namespace TaskOptimizer
                 {
                     stopCount = Int32.Parse(args[0]);
                     truckCount = Int32.Parse(args[1]);
-                } catch
+                }
+                catch
                 {
-                    
+
                 }
             }
 
             var sw = new Stopwatch();
-            var stops = Tools.GetCoordinates(stopCount);
 
             sw.Start();
-            Problem problem = new Problem(new DefaultCost() {MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50});
-            var result = problem.Calculate(stops, truckCount);
+            var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 2000);
+            var tasks = Tools.GetTasks(Tools.GetCoordinates(stopCount), problem);
+            var result = problem.Calculate(tasks, truckCount);
             sw.Stop();
 
             //Trace.WriteLine(String.Format("Total Time {0}ms", sw.ElapsedMilliseconds));
             Console.WriteLine("\nTotal Time {0}ms", sw.ElapsedMilliseconds);
 
+            String test = result + " ";
+
             if (Debugger.IsAttached) // Disable waiting when not in debugging mode so that profiler gets more accurate results
-            Console.ReadKey();
+                Console.ReadKey();
         }
     }
 
@@ -143,7 +146,11 @@ namespace TaskOptimizer
                 }
             }
 
-            var retString = (new Problem(new DefaultCost() { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 })).Calculate(coords, numTrucks);
+            var problem = new Problem(new DefaultCost {MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50}, 1000);
+
+            var tasks = Tools.GetTasks(coords, problem);
+
+            var retString = problem.Calculate(tasks, numTrucks)[0];
             return retString;
         }
     }

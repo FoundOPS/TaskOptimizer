@@ -78,7 +78,6 @@ namespace TaskOptimizer.Model
             }
         }
 
-
         private void Start()
         {
             Compute();

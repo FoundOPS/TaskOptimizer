@@ -1,5 +1,4 @@
-﻿using System;
-using TaskOptimizer.Model;
+﻿using TaskOptimizer.Model;
 
 namespace TaskOptimizer.Calculator
 {
@@ -24,7 +23,7 @@ namespace TaskOptimizer.Calculator
                 throw new Exception("Tasks have to belong to the same problem!");
 #endif
             // Get time & Distance
-            int[] distanceTime = origin.Problem.Osrm.GetDistanceTime(origin.Location, destination.Location);
+            int[] distanceTime = origin.Problem.Osrm.GetDistanceTime(origin.Coordinate, destination.Coordinate);
             
             // Calculate cost
             //miles / milesPerGallon * gallonGas
@@ -38,8 +37,6 @@ namespace TaskOptimizer.Calculator
             var cost = (timeCost + distCost) * 100;
 
             return (int)cost;
-
-
         }
     }
 }

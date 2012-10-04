@@ -5,63 +5,61 @@ using System.Net;
 using System.Runtime.Serialization.Json;
 using ServiceStack.Redis;
 using TaskOptimizer.API;
+using TaskOptimizer.Model;
 
 namespace TaskOptimizer.Calculator
 {
     /// <summary>
     /// Interact with OSRM for map based calculations
     /// </summary>
-    public class OSRM : IDisposable
+    public class Osrm : IDisposable
     {
         // Factory Pattern
-        private static Dictionary<Guid, OSRM> _sInstances = new Dictionary<Guid, OSRM>();
+        private static readonly Dictionary<Guid, Osrm> SInstances = new Dictionary<Guid, Osrm>();
 
-        public static OSRM GetInstance(Guid problemId)
+        public static Osrm GetInstance(Guid problemId)
         {
-            if (!_sInstances.ContainsKey(problemId))
-                _sInstances.Add(problemId, new OSRM());
+            if (!SInstances.ContainsKey(problemId))
+                SInstances.Add(problemId, new Osrm());
 
-            return _sInstances[problemId];
+            return SInstances[problemId];
         }
         public static void ReleaseInstance(Guid problemId)
         {
-            if (!_sInstances.ContainsKey(problemId)) return;
-            _sInstances[problemId].Dispose();
-            _sInstances.Remove(problemId);
+            if (!SInstances.ContainsKey(problemId)) return;
+            SInstances[problemId].Dispose();
+            SInstances.Remove(problemId);
         }
-
-
 
         // Static Variables
         private static readonly PooledRedisClientManager RedisClientManager = new PooledRedisClientManager(Constants.RedisServer);
 
-
         // TODO This is a hard coded set ID, need to change it to a parameter
-        private const string SET_ID_DISTANCETIME = "1$dt";
-        private const string SET_ID_NEARESTLOCATION = "1$nl";
+        private const string SetIdDistancetime = "1$dt";
+        private const string SetIdNearestlocation = "1$nl";
 
         // Instance Variables
         // Redis client forthis instance
-        private IRedisClient mClient = RedisClientManager.GetClient();
+        private readonly IRedisClient _mClient = RedisClientManager.GetClient();
         // Preprocessed entries cached in memory
-        private Dictionary<String, int[]> mCachedEntries = new Dictionary<string, int[]>();
-        private Dictionary<String, Coordinate> mCachedLocations = new Dictionary<String, Coordinate>();
+        private readonly Dictionary<String, int[]> _mCachedEntries = new Dictionary<string, int[]>();
+        private readonly Dictionary<String, Coordinate> _mCachedLocations = new Dictionary<String, Coordinate>();
 
         // Constructor
-        public OSRM()
+        public Osrm()
         {
             // Get all cached distance/time entries
-            HashSet<String> values = mClient.GetAllItemsFromSet(SET_ID_DISTANCETIME);
+            HashSet<String> values = _mClient.GetAllItemsFromSet(SetIdDistancetime);
             foreach (String entry in values)
             {
                 // CoordinateA$CoodinateB$distance$time
                 String[] splitEntry = entry.Split('$');
                 String key = splitEntry[0] + "$" + splitEntry[1];
-                mCachedEntries[key] = new int[] { Int32.Parse(splitEntry[2]), Int32.Parse(splitEntry[3]) };
+                _mCachedEntries[key] = new int[] { Int32.Parse(splitEntry[2]), Int32.Parse(splitEntry[3]) };
             }
 
             // Get all cached coordinate/nearestLocation entries
-            values = mClient.GetAllItemsFromSet(SET_ID_NEARESTLOCATION);
+            values = _mClient.GetAllItemsFromSet(SetIdNearestlocation);
             foreach (String entry in values)
             {
                 // Coordinate$NearestLocation
@@ -70,7 +68,7 @@ namespace TaskOptimizer.Calculator
                 String original = splitEntry[0];
                 String[] splitCoordinate = splitEntry[1].Split(new char[] { ',' });
                 Coordinate resolved = new Coordinate(Double.Parse(splitCoordinate[0]), Double.Parse(splitCoordinate[1]));
-                mCachedLocations[original] = resolved;
+                _mCachedLocations[original] = resolved;
             }
         }
 
@@ -90,19 +88,19 @@ namespace TaskOptimizer.Calculator
                                           ? a + "$" + b
                                           : b + "$" + a;
 
-                if (mCachedEntries.Count == 0)      // if local cache is empty, fetch data from redis
+                if (_mCachedEntries.Count == 0)      // if local cache is empty, fetch data from redis
                 {
-                    HashSet<String> values = mClient.GetAllItemsFromSet(SET_ID_DISTANCETIME);
+                    HashSet<String> values = _mClient.GetAllItemsFromSet(SetIdDistancetime);
                     foreach (String entry in values)
                     {
                         // CoordinateA$CoodinateB$distance$time
                         String[] splitEntry = entry.Split('$');
                         String key = splitEntry[0] + "$" + splitEntry[1];
-                        mCachedEntries[key] = new int[] { Int32.Parse(splitEntry[2]), Int32.Parse(splitEntry[3]) };
+                        _mCachedEntries[key] = new int[] { Int32.Parse(splitEntry[2]), Int32.Parse(splitEntry[3]) };
                     }
                 }
 
-                if (!mCachedEntries.ContainsKey(lookupString))      // if lookup string can't be found in cache
+                if (!_mCachedEntries.ContainsKey(lookupString))      // if lookup string can't be found in cache
                 {
                     // calculate route distance and time
                     var route = CalculateRoute(a, b);
@@ -110,17 +108,17 @@ namespace TaskOptimizer.Calculator
                     distanceTime[1] = route.Route_Summary.Total_Time;
 
                     // put it into the local cache
-                    mCachedEntries[lookupString] = distanceTime;
+                    _mCachedEntries[lookupString] = distanceTime;
 
                     // put it into redis
                     String redisItem = String.Format("{0}${1}${2}", lookupString, distanceTime[0], distanceTime[1]);
-                    mClient.AddItemToSet(SET_ID_DISTANCETIME, redisItem);
+                    _mClient.AddItemToSet(SetIdDistancetime, redisItem);
                     //client.SaveAsync();
                     //client.Save();
                 }
 
                 // set up result
-                distanceTime = mCachedEntries[lookupString];
+                distanceTime = _mCachedEntries[lookupString];
             }
             //if there is a problem, use straight distance, fake time calculation
             catch (Exception e)
@@ -136,7 +134,6 @@ namespace TaskOptimizer.Calculator
 
             return distanceTime;
         }
-
 
         private string MakeRouteAction(IEnumerable<Coordinate> coords)
         {
@@ -199,7 +196,6 @@ namespace TaskOptimizer.Calculator
             return RawRequest(MakeRouteAction(coords));
         }
 
-
         /// <summary>
         /// Find the nearest point on the map to a coordinate
         /// </summary>
@@ -210,16 +206,16 @@ namespace TaskOptimizer.Calculator
             a.lon = Math.Round(a.lon, 5);
 
             // try find the location in cache
-            if (mCachedLocations.ContainsKey(a.ToString()))
-                return mCachedLocations[a.ToString()];
+            if (_mCachedLocations.ContainsKey(a.ToString()))
+                return _mCachedLocations[a.ToString()];
 
             var actionString = "nearest?loc=" + a.lat + "," + a.lon;
             var response = Request<LocResponse>(actionString);
             Coordinate result = new Coordinate(response.Mapped_Coordinate[0], response.Mapped_Coordinate[1]);
 
             // cache result
-            mCachedLocations[a.ToString()] = result;
-            mClient.AddItemToSet(SET_ID_NEARESTLOCATION, String.Format("{0}${1}", a, result));
+            _mCachedLocations[a.ToString()] = result;
+            _mClient.AddItemToSet(SetIdNearestlocation, String.Format("{0}${1}", a, result));
 
             return result;
         }
@@ -289,8 +285,8 @@ namespace TaskOptimizer.Calculator
 
         public void Dispose()
         {
-            mClient.Save();
-            mClient.Dispose();
+            _mClient.Save();
+            _mClient.Dispose();
         }
 
         #endregion

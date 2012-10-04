@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
+using System.Linq;
 using TaskOptimizer.API;
 using TaskOptimizer.Model;
 
@@ -9,14 +9,16 @@ namespace TaskOptimizer.Calculator
 {
     public class Problem
     {
+        private readonly int _numberIterationsWithoutImprovement;
         private int[,] _mCachedCosts;
 
-        public OSRM Osrm { get; private set; }
+        public Osrm Osrm { get; private set; }
         public ICostFunction CostFunction { get; private set; }
         public Int32[,] CachedCosts { get { return _mCachedCosts; } }
 
-        public Problem(ICostFunction costFunction)
+        public Problem(ICostFunction costFunction, int numberIterationsWithoutImprovement)
         {
+            _numberIterationsWithoutImprovement = numberIterationsWithoutImprovement;
             CostFunction = costFunction;
         }
 
@@ -44,42 +46,28 @@ namespace TaskOptimizer.Calculator
             return cost;
         }
 
-        public String Calculate(ICollection<Coordinate> destinations, int trucks)
-        {
-            Osrm = new OSRM();
-
-            var resolved = new List<Coordinate>();
-            //resolve each point on the map
-            foreach (var c in destinations)
-            {
-                var r = Osrm.FindNearest(c);
-                if (!resolved.Contains(r))
-                    resolved.Add(r);
-            }
-
-            var stopTasks = new List<Task>();
-            for (int i = 0; i < resolved.Count; i++)
-            {
-                var c = resolved[i];
-                var t = new Task(i, resolved.Count) { Lat = c.lat, Lon = c.lon, Time = 30 * 60, Problem = this };
-                stopTasks.Add(t);
-            }
-
-            return Calculate(stopTasks, trucks);
-        }
-
         /// <summary>
-        /// Calculates the best distribution/organization for a number of trucks and destinations
+        /// Calculate the problem for a set of tasks
         /// </summary>
+        /// <param name="tasksToCalculate">The tasks to calculate</param>
         /// <param name="trucks">The number of trucks</param>
-        /// <returns></returns>
-        public String Calculate(ICollection<Task> tasks, int trucks)
+        public String[] Calculate(IEnumerable<Task> tasksToCalculate, int trucks)
         {
-            if (Osrm == null) Osrm = new OSRM();
+            var tasks = tasksToCalculate.ToList();
 
-            List<Task> lstTasks = new List<Task>(tasks);
-            _mCachedCosts = new int[lstTasks.Count, lstTasks.Count];
-            var optConf = new Optimizer.Configuration { Tasks = lstTasks };
+            Osrm = new Osrm();
+
+            //resolve each point on the map
+            foreach (var t in tasks)
+            {
+                var r = Osrm.FindNearest(t.Coordinate);
+                t.Coordinate = r;
+            }
+
+            if (Osrm == null) Osrm = new Osrm();
+
+            _mCachedCosts = new int[tasks.Count(), tasks.Count()];
+            var optConf = new Optimizer.Configuration { Tasks = tasks };
 
             var truck = new Worker();
             optConf.Workers = new List<Worker>();
@@ -90,12 +78,14 @@ namespace TaskOptimizer.Calculator
             optConf.NumberDistributors = Environment.ProcessorCount * 3;
 
             var o = new Optimizer(optConf);
-            while (o.MinDistributor.NbIterationsWithoutImprovements < 10000)
+            while (o.MinDistributor.NbIterationsWithoutImprovements < _numberIterationsWithoutImprovement)
             {
                 o.Compute();
-                //Thread.Sleep(1000); // TODO Deal with this!!
             }
             o.Stop();
+
+            Console.WriteLine("Total Fitness " + o.Fitness);
+
             string response = "{";
             int cont = 0;
             for (int r = 0; r < o.MinSequences.Count; r++)
@@ -107,13 +97,8 @@ namespace TaskOptimizer.Calculator
                 }
                 Console.WriteLine(o.MinSequences[r].Tasks.Count);
                 response += "\"" + ((r + 1) - cont) + "\"" + ": ";
-                var routeList = new List<Coordinate>();
 
-                foreach (Task t in o.MinSequences[r].Tasks)
-                {
-                    var rp = new Coordinate(t.Lat, t.Lon);
-                    routeList.Add(rp);
-                }
+                var routeList = o.MinSequences[r].Tasks.Select(t => t.Coordinate).ToList();
 
                 if (routeList.Count > 1)
                 {
@@ -130,9 +115,9 @@ namespace TaskOptimizer.Calculator
             Osrm.Dispose();
             Osrm = null;
 
-            response = response.Substring(0, response.Length - 1);
-            return response + "}";
+            response = response.Substring(0, response.Length - 1) + response + "}";
 
+            return new[] { response, o.Fitness.ToString() };
         }
     }
 }

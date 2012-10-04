@@ -69,7 +69,7 @@
     <Compile Include="Calculator\GeoTools.cs" />
     <Compile Include="Calculator\Problem.cs" />
     <Compile Include="Calculator\Cost.cs" />
-    <Compile Include="Calculator\OSRM.cs" />
+    <Compile Include="Calculator\Osrm.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Interfaces\Individual.cs" />
     <Compile Include="Interfaces\Population.cs" />

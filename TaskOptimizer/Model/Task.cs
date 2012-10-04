@@ -5,9 +5,10 @@ namespace TaskOptimizer.Model
 {
     public class Task
     {
-        public Task(int id, int nbTasks)
+        public Task(int id, double lat, double lon)
         {
             Id = id;
+            Coordinate = new Coordinate(lat, lon);
         }
 
         /// <summary>
@@ -17,8 +18,7 @@ namespace TaskOptimizer.Model
         public Task(Task task)
         {
             Id = task.Id;
-            Lat = task.Lat;
-            Lon = task.Lon;
+            Coordinate = task.Coordinate;
 
             UserId = task.UserId;
             Time = task.Time;
@@ -33,33 +33,7 @@ namespace TaskOptimizer.Model
 
         public Problem Problem { get; set; }
 
-        private double _lat;
-        public double Lat
-        {
-            get { return _lat; }
-            set
-            {
-                _lat = value;
-                LatRad = GeoTools.DegreeToRadian(_lat);
-            }
-        }
-
-        private double _lon;
-        public double Lon
-        {
-            get { return _lon; }
-            set
-            {
-                _lon = value;
-                LonRad = GeoTools.DegreeToRadian(_lon);
-            }
-        }
-
-        public Coordinate Location
-        { get { return new Coordinate(_lat, _lon); } }
-
-        public double LatRad { get; private set; }
-        public double LonRad { get; private set; }
+        public Coordinate Coordinate { get; set; }
 
         public int CostTo(Task task)
         {
