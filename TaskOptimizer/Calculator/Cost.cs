@@ -20,7 +20,7 @@ namespace TaskOptimizer.Calculator
 
 #if DEBUG
             if (origin.Problem != destination.Problem)
-                throw new Exception("Tasks have to belong to the same problem!");
+                throw new System.Exception("Tasks have to belong to the same problem!");
 #endif
             // Get time & Distance
             int[] distanceTime = origin.Problem.Osrm.GetDistanceTime(origin.Coordinate, destination.Coordinate);

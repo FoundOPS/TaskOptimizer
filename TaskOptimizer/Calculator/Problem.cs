@@ -142,10 +142,13 @@ namespace TaskOptimizer.Calculator
             optConf.NumberDistributors = Environment.ProcessorCount * 3;
 
             var _optimizer = new Optimizer(optConf);
+            Int32 i = 0;
             while (_optimizer.MinDistributor.NbIterationsWithoutImprovements < _numberIterationsWithoutImprovement)
             {
                 _optimizer.Compute();
-                SendLogMessage("FitnessImprovement", "{0},{1}", _optimizer.MinDistributor.NbIterationsWithoutImprovements, _optimizer.Fitness); 
+
+                _optimizer.RecomputeFitness();
+                SendLogMessage("FitnessImprovement", "Iteration = {0}; Fitness = {1}", i++, _optimizer.Fitness); 
             }
             _optimizer.Stop();
 

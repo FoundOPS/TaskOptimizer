@@ -12,12 +12,12 @@ namespace TaskOptimizer.Logging
     /// </summary>
     public class PlainTextLogger : Logger
     {
-        StreamWriter _writer; 
+        StreamWriter _writer;
 
-        public PlainTextLogger(String filePath)
+        public PlainTextLogger(String filePath, Boolean overwrite = true)
             : base()
         {
-            _writer = new StreamWriter(filePath, true);
+            _writer = new StreamWriter(filePath, !overwrite);
         }
 
         protected override void SubmitMessageQueue(LoggerEventArgs[] messages)
@@ -29,7 +29,10 @@ namespace TaskOptimizer.Logging
 
         public override void Dispose()
         {
-            _writer.Flush();
+        }
+
+        protected override void ReleaseResources()
+        {
             _writer.Close();
         }
     }

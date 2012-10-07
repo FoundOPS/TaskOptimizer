@@ -53,8 +53,8 @@ namespace TaskOptimizer
             }
              * */
 
-            int stopCount = 25;
-            int truckCount = 2;
+            int stopCount = 50;
+            int truckCount = 3;
 
             if (args.Length == 2)
             {
@@ -75,14 +75,14 @@ namespace TaskOptimizer
             using (var logger = new PlainTextLogger(Path.Combine(Constants.RootDirectory, "TaskOptimizer.log")))
             {
                 sw.Start();
-                var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 1000);
+                var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 500);
                 problem.AttachLogger(logger);
                 logger.Run();
                 var tasks = Tools.GetTasks(Tools.GetCoordinates(stopCount), problem);
                 var result = problem.Calculate(tasks, truckCount);
                 sw.Stop();
 
-                logger.Stop(true);
+                logger.Stop(false);
                 //Trace.WriteLine(String.Format("Total Time {0}ms", sw.ElapsedMilliseconds));
                 Console.WriteLine("\nTotal Time {0}ms", sw.ElapsedMilliseconds);
 

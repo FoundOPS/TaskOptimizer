@@ -83,6 +83,7 @@ namespace TaskOptimizer.Logging
                     {
                         // If termination is requested, submit remaining messages and quit the thread
                         SubmitMessageQueue(_messages.ToArray());
+                        ReleaseResources();
                         break;
                     }
                 }
@@ -133,9 +134,16 @@ namespace TaskOptimizer.Logging
         protected abstract void SubmitMessageQueue(LoggerEventArgs[] messages);
 
         /// <summary>
+        /// Releases all resources used by logger.
+        /// </summary>
+        protected abstract void ReleaseResources();
+
+        /// <summary>
         /// Member of IDisposable interface, do cleanup here.
         /// </summary>
         public abstract void Dispose();
+
+
     }
 
 
