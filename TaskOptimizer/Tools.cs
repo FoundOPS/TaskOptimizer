@@ -16,19 +16,18 @@ namespace TaskOptimizer
         /// <param name="random">Choose random coordinates. Defaults to false</param>
         public static List<Coordinate> GetCoordinates(int total = 10, bool random = false)
         {
-            var f = new FileInfo(Constants.RootDirectory + "Lafayette.csv");
+            
+            // Modified coordinate loading so that it doesn't lock the file
             var csvCoordinates = new List<Coordinate>();
-            var fs = f.OpenText();
-            while (!fs.EndOfStream)
+            String[] lines = File.ReadAllLines(Path.Combine(Constants.RootDirectory, "Lafayette.csv"));
+            foreach (String str in lines)
             {
-                string s = fs.ReadLine();
-                string[] points = s.Split(new[] { ',' }, 2);
+                String[] points = str.Split(new[] { ',' }, 2);
                 points[1] = points[1].Replace(",", "");
                 var c = new Coordinate(double.Parse(points[0]), double.Parse(points[1]));
-                if (!csvCoordinates.Contains(c))
-                    csvCoordinates.Add(c);
+                if (!csvCoordinates.Contains(c)) csvCoordinates.Add(c);
             }
-
+             
             if (total > csvCoordinates.Count)
             {
                 throw new Exception("Cannot get more coordinates than the CSV has!");

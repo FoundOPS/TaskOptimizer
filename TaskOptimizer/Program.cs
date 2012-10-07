@@ -9,6 +9,8 @@ using TaskOptimizer.API;
 using TaskOptimizer.Calculator;
 using TaskOptimizer.Model;
 using Container = Funq.Container;
+using TaskOptimizer.Logging;
+using System.IO;
 
 namespace TaskOptimizer
 {
@@ -51,8 +53,8 @@ namespace TaskOptimizer
             }
              * */
 
-            int stopCount = 1000;
-            int truckCount = 10;
+            int stopCount = 25;
+            int truckCount = 2;
 
             if (args.Length == 2)
             {
@@ -69,16 +71,23 @@ namespace TaskOptimizer
 
             var sw = new Stopwatch();
 
-            sw.Start();
-            var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 1000);
-            var tasks = Tools.GetTasks(Tools.GetCoordinates(stopCount), problem);
-            var result = problem.Calculate(tasks, truckCount);
-            sw.Stop();
+           
+            using (var logger = new PlainTextLogger(Path.Combine(Constants.RootDirectory, "TaskOptimizer.log")))
+            {
+                sw.Start();
+                var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 1000);
+                problem.AttachLogger(logger);
+                logger.Run();
+                var tasks = Tools.GetTasks(Tools.GetCoordinates(stopCount), problem);
+                var result = problem.Calculate(tasks, truckCount);
+                sw.Stop();
 
-            //Trace.WriteLine(String.Format("Total Time {0}ms", sw.ElapsedMilliseconds));
-            Console.WriteLine("\nTotal Time {0}ms", sw.ElapsedMilliseconds);
+                logger.Stop(true);
+                //Trace.WriteLine(String.Format("Total Time {0}ms", sw.ElapsedMilliseconds));
+                Console.WriteLine("\nTotal Time {0}ms", sw.ElapsedMilliseconds);
 
-            String test = result + " ";
+                //String test = result + " ";
+            }
 
             if (Debugger.IsAttached) // Disable waiting when not in debugging mode so that profiler gets more accurate results
                 Console.ReadKey();
