@@ -128,6 +128,8 @@ namespace TaskOptimizer.Calculator
                 t.Coordinate = r;
             }
 
+            SendLogMessage("Problem.Calculate", "Coordinate resolution complete!");
+
             if (Osrm == null) Osrm = new Osrm();
 
             _mCachedCosts = new int[tasks.Count(), tasks.Count()];
@@ -143,16 +145,31 @@ namespace TaskOptimizer.Calculator
 
             var _optimizer = new Optimizer(optConf);
             Int32 i = 0;
-            while (_optimizer.MinDistributor.NbIterationsWithoutImprovements < _numberIterationsWithoutImprovement)
+
+            Int32 prevFitness = -1; // Fitness of the previous iteration
+            Int32 noImprovementCount = 0; // Number of iterations without fitness improvement
+
+            //while (_optimizer.MinDistributor.NbIterationsWithoutImprovements < _numberIterationsWithoutImprovement)
+            while (noImprovementCount < _numberIterationsWithoutImprovement)
             {
                 _optimizer.Compute();
-
                 _optimizer.RecomputeFitness();
+
+                if (_optimizer.Fitness <= prevFitness)
+                    noImprovementCount++;
+                else
+                {
+                    prevFitness = _optimizer.Fitness;
+                    noImprovementCount = 0;
+                }
+
                 SendLogMessage("FitnessImprovement", "Iteration = {0}; Fitness = {1}", i++, _optimizer.Fitness); 
             }
+            
             _optimizer.Stop();
-
-            Console.WriteLine("Total Fitness " + _optimizer.Fitness);
+            
+            // Write the message to console and logs
+            SendLogMessage("TaskOptimizer", "Total Fitness = {0}", _optimizer.Fitness);
 
             string response = "{";
             int cont = 0;
@@ -163,7 +180,7 @@ namespace TaskOptimizer.Calculator
                     cont++;
                     continue;
                 }
-                Console.WriteLine(_optimizer.MinSequences[r].Tasks.Count);
+                SendLogMessage("TaskOptimizer", "MinSequence[r].Tasks.Count = {0}", _optimizer.MinSequences[r].Tasks.Count);
                 response += "\"" + ((r + 1) - cont) + "\"" + ": ";
 
                 var routeList = _optimizer.MinSequences[r].Tasks.Select(t => t.Coordinate).ToList();

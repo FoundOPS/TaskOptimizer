@@ -73,6 +73,7 @@
     <Compile Include="Constants.cs" />
     <Compile Include="Interfaces\Individual.cs" />
     <Compile Include="Interfaces\Population.cs" />
+    <Compile Include="Logging\ConsoleLogger.cs" />
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LoggerEventArgs.cs" />
     <Compile Include="Logging\PlainTextLogger.cs" />
