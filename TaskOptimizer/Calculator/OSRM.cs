@@ -32,7 +32,7 @@ namespace TaskOptimizer.Calculator
         }
 
         // Static Variables
-        private static readonly PooledRedisClientManager RedisClientManager = new PooledRedisClientManager(Constants.RedisServer);
+        private static readonly PooledRedisClientManager RedisClientManager = new PooledRedisClientManager(Configuration.Instance.RedisServer);
 
         // TODO This is a hard coded set ID, need to change it to a parameter
         private const string SetIdDistancetime = "1$dt";
@@ -227,7 +227,7 @@ namespace TaskOptimizer.Calculator
         /// <param name="action">Ex. viaroute?loc=124.124,151.222</param>
         private T Request<T>(string action) where T : class
         {
-            var requestUrl = Constants.OSRMServer + action;
+            var requestUrl = Configuration.Instance.OSRMServer + action;
 
             var request = WebRequest.Create(requestUrl) as HttpWebRequest;
             using (var response = request.GetResponse() as HttpWebResponse)
@@ -247,7 +247,7 @@ namespace TaskOptimizer.Calculator
         /// <param name="action">Ex. viaroute?loc=124.124,151.222</param>
         private string RawRequest(string action)
         {
-            var requestUrl = Constants.OSRMServer + action;
+            var requestUrl = Configuration.Instance.OSRMServer + action;
 
             var request = WebRequest.Create(requestUrl) as HttpWebRequest;
             using (var response = request.GetResponse() as HttpWebResponse)

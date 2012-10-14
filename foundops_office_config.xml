@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TaskOptimizerConfiguration>
+	
+	<RootDir>C:/FoundOPS/TaskOptimizer/</RootDir>
+	<RedisServer>192.168.0.104:6379</RedisServer>
+	<OSRMServer>192.168.0.104:5000</OSRMServer>
+	
+</TaskOptimizerConfiguration>

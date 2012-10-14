@@ -19,7 +19,7 @@ namespace TaskOptimizer
             
             // Modified coordinate loading so that it doesn't lock the file
             var csvCoordinates = new List<Coordinate>();
-            String[] lines = File.ReadAllLines(Path.Combine(Constants.RootDirectory, "Lafayette.csv"));
+            String[] lines = File.ReadAllLines(Path.Combine(Configuration.Instance.RootDirectory, "Lafayette.csv"));
             foreach (String str in lines)
             {
                 String[] points = str.Split(new[] { ',' }, 2);

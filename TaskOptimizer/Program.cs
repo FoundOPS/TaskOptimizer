@@ -53,26 +53,39 @@ namespace TaskOptimizer
             }
              * */
 
+            CommandLineArguments cargs = new CommandLineArguments();
+
             int stopCount = 100;
             int truckCount = 4;
+            String config = null;
 
-            if (args.Length == 2)
+            for (int i = 0; i < cargs.Count; i++)
             {
-                try
+                CommandLineArgument arg = cargs[i];
+                if (arg.Type == CommandLineArgument.ArgumentType.Option)
                 {
-                    stopCount = Int32.Parse(args[0]);
-                    truckCount = Int32.Parse(args[1]);
-                }
-                catch
-                {
-
+                    switch (arg.Name.ToLower())
+                    {
+                        case "stopcount":
+                            stopCount = Int32.Parse(arg.Arguments[0]);
+                            break;
+                        case "truckcount":
+                            truckCount = Int32.Parse(arg.Arguments[0]);
+                            break;
+                        case "configuration":
+                            config = arg.Arguments[0];
+                            break;
+                    }
                 }
             }
 
-            var sw = new Stopwatch();
+            if (config != null) Configuration.Initialize(config);
+            else Configuration.Initialize();
 
+
+            var sw = new Stopwatch();
            
-            using (var logger = new PlainTextLogger(Path.Combine(Constants.RootDirectory, "TaskOptimizer.log")))
+            using (var logger = new PlainTextLogger(Path.Combine(Configuration.Instance.RootDirectory, "TaskOptimizer.log")))
             {
                 ConsoleLogger console = new ConsoleLogger();
 
