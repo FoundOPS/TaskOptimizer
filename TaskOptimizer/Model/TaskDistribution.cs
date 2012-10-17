@@ -31,14 +31,15 @@ namespace TaskOptimizer.Model
 
             var config = new Configuration(distribution._workers, distribution._tasks, distribution._distributor, distribution._rand.Next());
 
-            Console.WriteLine(config.Workers.Count);
+            Console.WriteLine("Worker Count = {0}", config.Workers.Count);
+            Console.WriteLine("Sequence Count = {0}", distribution.Sequences.Count);
             Id = distribution.Id;
 
             Configure(config);
-            Console.WriteLine("Configured");
             Fitness = Int32.MaxValue;
-            Console.WriteLine(distribution.Sequences.Count);
             SetSequences(distribution.Sequences);
+
+            Console.WriteLine("Task Distribution Configured");
         }
 
         public bool OptimizeSequences
@@ -185,7 +186,7 @@ namespace TaskOptimizer.Model
         public void SetSequences(List<TaskSequence> sequences)
         {
             int workerIndex = 0;
-            Console.WriteLine(sequences.Count);
+            //Console.WriteLine(sequences.Count); // Redundant output, see constructor
             foreach (TaskSequence sequence in sequences)
             {
                 if (sequence != null)

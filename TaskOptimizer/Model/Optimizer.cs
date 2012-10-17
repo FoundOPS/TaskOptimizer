@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using TaskOptimizer.Calculator;
 
 namespace TaskOptimizer.Model
 {
@@ -17,8 +18,12 @@ namespace TaskOptimizer.Model
         private bool[] _recomputeFitnesses;
         private Thread[] _threads;
 
-        public Optimizer(Configuration config)
+        public Problem Problem { get; private set; }
+
+
+        public Optimizer(Problem p, Configuration config)
         {
+            Problem = p;
             Create(config);
         }
 
@@ -131,6 +136,8 @@ namespace TaskOptimizer.Model
                     _recomputeFitnesses[distributorIndex] = false;
                 }
                 distributor.Optimize();
+
+                Console.WriteLine("Distributor #{0,-2} Optimized! Fitness = {1}", index, distributor.Fitness);
             }
         }
 

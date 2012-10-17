@@ -1,16 +1,13 @@
-﻿using System.Diagnostics;
-using Mono.Unix;
-using Mono.Unix.Native;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using ServiceStack.ServiceInterface;
 using ServiceStack.WebHost.Endpoints;
-using System;
-using System.Collections.Generic;
 using TaskOptimizer.API;
 using TaskOptimizer.Calculator;
-using TaskOptimizer.Model;
-using Container = Funq.Container;
 using TaskOptimizer.Logging;
-using System.IO;
+using Container = Funq.Container;
 
 namespace TaskOptimizer
 {
@@ -66,13 +63,13 @@ namespace TaskOptimizer
                 {
                     switch (arg.Name.ToLower())
                     {
-                        case "stopcount":
+                        case "stops":
                             stopCount = Int32.Parse(arg.Arguments[0]);
                             break;
-                        case "truckcount":
+                        case "trucks":
                             truckCount = Int32.Parse(arg.Arguments[0]);
                             break;
-                        case "configuration":
+                        case "config":
                             config = arg.Arguments[0];
                             break;
                     }
@@ -87,10 +84,10 @@ namespace TaskOptimizer
            
             using (var logger = new PlainTextLogger(Path.Combine(Configuration.Instance.RootDirectory, "TaskOptimizer.log")))
             {
-                ConsoleLogger console = new ConsoleLogger();
+                ConsoleLogger console = ConsoleLogger.Instance;
 
                 sw.Start();
-                var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 500);
+                var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 1000);
                 problem.AttachLogger(logger);
                 problem.AttachLogger(console);
                 logger.Run();

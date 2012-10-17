@@ -10,6 +10,10 @@ namespace TaskOptimizer.Logging
     /// </summary>
     public class ConsoleLogger : Logger
     {
+        private static ConsoleLogger _instance = null;
+        public static ConsoleLogger Instance
+        { get { return _instance ?? new ConsoleLogger(); } }
+
         // Maxumum number of characters on the same line
         private readonly Int32 _splitPoint = Console.BufferWidth - 35;
 
