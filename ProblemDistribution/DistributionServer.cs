@@ -62,9 +62,14 @@ namespace ProblemDistribution
 
             while (true)
             {
+                while (client.Available < Task.SerializedLength) ; // wait for data
+
                 Task t = Task.ReadFromStream(br);
                 GlobalLogger.SendLogMessage("ServerTest", "Task received {{{0}, {1}, {2}}}", t.TaskID, t.Longitude, t.Latitude);
             }
+
+
+            GlobalLogger.SendLogMessage("ServerTest", "Client Disconnected {0}", client.Client.RemoteEndPoint.ToString());
         }
     }
 }

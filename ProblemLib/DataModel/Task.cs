@@ -97,6 +97,9 @@ namespace ProblemLib.DataModel
             return t;
         }
 
+        public static Int32 SerializedLength
+        { get { return 17; } }
+
         public bool Equals(Task other)
         {
             return this.TaskID == other.TaskID;
