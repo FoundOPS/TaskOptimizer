@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace TaskOptimizer.Logging
+namespace ProblemController.Logging
 {
     /// <summary>
     /// Basic implementation of Logger.

@@ -90,7 +90,7 @@ namespace TaskOptimizer
                 ConsoleLogger console = new ConsoleLogger();
 
                 sw.Start();
-                var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 500);
+                var problem = new Problem(new DefaultCost { MilesPerGallon = 10, PricePerGallon = 4, HourlyWage = 50 }, 10000);
                 problem.AttachLogger(logger);
                 problem.AttachLogger(console);
                 logger.Run();
@@ -101,8 +101,8 @@ namespace TaskOptimizer
                 sw.Stop();
 
                 logger.Stop(false);
-                console.Stop(false);
                 console.HandleMessage(problem, new LoggerEventArgs("TaskOptimizer", "Total Time: {0}ms", sw.ElapsedMilliseconds));
+                console.Stop(true);
 
                 //String test = result + " ";
             }
