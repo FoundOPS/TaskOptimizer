@@ -8,8 +8,6 @@ using TaskOptimizer.Logging;
 
 namespace TaskOptimizer.Calculator
 {
-    // TODO replace all Console.WriteLine() with Logger messages
-
     /// <summary>
     /// Representation of a routing problem.
     /// </summary>
@@ -99,7 +97,7 @@ namespace TaskOptimizer.Calculator
             remove { _logMessageHandler -= value; }
         }
         private EventHandler<LoggerEventArgs> _logMessageHandler;
-        private void SendLogMessage(String tag, String format, params Object[] args)
+        public void SendLogMessage(String tag, String format, params Object[] args)
         {
             if (_logMessageHandler != null)
                 _logMessageHandler(this, new LoggerEventArgs(tag, format, args));
@@ -143,47 +141,50 @@ namespace TaskOptimizer.Calculator
             optConf.RandomSeed = 777777;
             optConf.NumberDistributors = Environment.ProcessorCount * 3;
 
-            var _optimizer = new Optimizer(optConf);
+            SendLogMessage("Problem.Calculate", "Starting to create Optimizer instance..");
+            var optimizer = new Optimizer(this, optConf);
+            SendLogMessage("Problem.Calculate", "Finished creating Optimizer instnce!");
             Int32 i = 0;
 
-            Int32 prevFitness = -1; // Fitness of the previous iteration
+            Int32 prevFitness = Int32.MaxValue; // Fitness of the previous iteration
             Int32 noImprovementCount = 0; // Number of iterations without fitness improvement
 
             //while (_optimizer.MinDistributor.NbIterationsWithoutImprovements < _numberIterationsWithoutImprovement)
             while (noImprovementCount < _numberIterationsWithoutImprovement)
             {
-                _optimizer.Compute();
-                _optimizer.RecomputeFitness();
+                optimizer.Compute();
+                optimizer.RecomputeFitness();
 
-                if (_optimizer.Fitness <= prevFitness)
+                if (optimizer.Fitness >= prevFitness)
                     noImprovementCount++;
                 else
                 {
-                    prevFitness = _optimizer.Fitness;
+                    prevFitness = optimizer.Fitness;
                     noImprovementCount = 0;
                 }
 
-                SendLogMessage("FitnessImprovement", "Iteration = {0}; Fitness = {1}", i++, _optimizer.Fitness); 
+                SendLogMessage("FitnessImprovement", "Iteration = {0}; Fitness = {1}", i++, optimizer.Fitness); 
             }
             
-            _optimizer.Stop();
+            optimizer.Stop();
             
             // Write the message to console and logs
-            SendLogMessage("TaskOptimizer", "Total Fitness = {0}", _optimizer.Fitness);
+            SendLogMessage("TaskOptimizer", "Total Fitness = {0}", optimizer.Fitness);
 
             string response = "{";
             int cont = 0;
-            for (int r = 0; r < _optimizer.MinSequences.Count; r++)
+            for (int r = 0; r < optimizer.MinSequences.Count; r++)
             {
-                if (_optimizer.MinSequences[r] == null)
+                if (optimizer.MinSequences[r] == null)
                 {
                     cont++;
                     continue;
                 }
-                SendLogMessage("TaskOptimizer", "MinSequence[r].Tasks.Count = {0}", _optimizer.MinSequences[r].Tasks.Count);
+                SendLogMessage("TaskOptimizer", "MinSequence[r].Tasks.Count = {0}", optimizer.MinSequences[r].Tasks.Count);
+                SendLogMessage("TaskOptimizer", "MinSequence[r].Fitness = {0}", optimizer.MinSequences[r].Fitness);
                 response += "\"" + ((r + 1) - cont) + "\"" + ": ";
 
-                var routeList = _optimizer.MinSequences[r].Tasks.Select(t => t.Coordinate).ToList();
+                var routeList = optimizer.MinSequences[r].Tasks.Select(t => t.Coordinate).ToList();
 
                 if (routeList.Count > 1)
                 {
@@ -202,7 +203,7 @@ namespace TaskOptimizer.Calculator
 
             response = response.Substring(0, response.Length - 1) + response + "}";
 
-            return new[] { response, _optimizer.Fitness.ToString() };
+            return new[] { response, optimizer.Fitness.ToString() };
         }
     }
 }
