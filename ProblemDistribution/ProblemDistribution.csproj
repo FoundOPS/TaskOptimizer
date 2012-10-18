@@ -42,15 +42,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DistributionServer.cs" />
-    <Compile Include="Logging\ConsoleLogger.cs" />
-    <Compile Include="Logging\GlobalLogger.cs" />
-    <Compile Include="Logging\Logger.cs" />
-    <Compile Include="Logging\LoggerEventArgs.cs" />
-    <Compile Include="Logging\PlainTextLogger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\ProblemLib\ProblemLib.csproj">
+      <Project>{ef76cad2-7235-4465-adef-f119be6bd690}</Project>
+      <Name>ProblemLib</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

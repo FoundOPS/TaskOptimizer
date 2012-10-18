@@ -5,7 +5,7 @@ using System.Text;
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace ProblemController.Logging
+namespace ProblemLib.Logging
 {
     /// <summary>
     /// Abstract implementation of a logger.

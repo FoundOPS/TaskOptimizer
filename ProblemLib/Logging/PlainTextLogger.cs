@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace ProblemController.Logging
+namespace ProblemLib.Logging
 {
     /// <summary>
     /// Basic implementation of Logger.

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ProblemController.Logging
+namespace ProblemLib.Logging
 {
     /// <summary>
     /// Static class that all global loggers attach to
@@ -22,7 +22,7 @@ namespace ProblemController.Logging
         /// <param name="tag">Tag associated with the message</param>
         /// <param name="format">Format string of the message</param>
         /// <param name="args">Message format arguments</param>
-        internal static void SendLogMessage(String tag, String format, params Object[] args)
+        public static void SendLogMessage(String tag, String format, params Object[] args)
         {
             if (_onLogMessage != null)
             {

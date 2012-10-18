@@ -101,7 +101,7 @@ namespace TaskOptimizer.Model
             _tasks = config.Tasks;
             _workers = config.Workers;
             _optimizer = config.Optimizer;
-
+            
             ConfigureTaskDistributions();
         }
 

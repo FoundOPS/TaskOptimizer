@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{71E7C19F-3FC1-4E38-B88B-CF2C993B9393}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{EF76CAD2-7235-4465-ADEF-F119BE6BD690}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProblemController</RootNamespace>
-    <AssemblyName>ProblemController</AssemblyName>
+    <RootNamespace>ProblemLib</RootNamespace>
+    <AssemblyName>ProblemLib</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -32,8 +30,30 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ServiceStack">
+      <HintPath>..\TaskOptimizer\bin\Release\ServiceStack.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.Common">
+      <HintPath>..\TaskOptimizer\bin\Release\ServiceStack.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.Interfaces">
+      <HintPath>..\TaskOptimizer\bin\Release\ServiceStack.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.OrmLite">
+      <HintPath>..\TaskOptimizer\bin\Release\ServiceStack.OrmLite.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.Redis">
+      <HintPath>..\TaskOptimizer\bin\Release\ServiceStack.Redis.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.ServiceInterface">
+      <HintPath>..\TaskOptimizer\bin\Release\ServiceStack.ServiceInterface.dll</HintPath>
+    </Reference>
+    <Reference Include="ServiceStack.Text">
+      <HintPath>..\TaskOptimizer\bin\Release\ServiceStack.Text.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -41,15 +61,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ControllerServer.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="API\OSMContract.cs" />
+    <Compile Include="DataModel\Task.cs" />
+    <Compile Include="Logging\ConsoleLogger.cs" />
+    <Compile Include="Logging\GlobalLogger.cs" />
+    <Compile Include="Logging\Logger.cs" />
+    <Compile Include="Logging\LoggerEventArgs.cs" />
+    <Compile Include="Logging\PlainTextLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ProblemLib\ProblemLib.csproj">
-      <Project>{ef76cad2-7235-4465-adef-f119be6bd690}</Project>
-      <Name>ProblemLib</Name>
-    </ProjectReference>
+    <Compile Include="Utilities\GeoTools.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ProblemController.Logging
+namespace ProblemLib.Logging
 {
     /// <summary>
     /// Logger implementation that writes log messages to the console.

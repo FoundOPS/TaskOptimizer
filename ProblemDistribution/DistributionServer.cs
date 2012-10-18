@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using ProblemController.Logging;
+using ProblemLib.DataModel;
+using ProblemLib.Logging;
 
 namespace ProblemDistribution
 {
@@ -27,8 +29,6 @@ namespace ProblemDistribution
         private Thread tcpThread;
 
         private Boolean continueRunning = true;
-
-
 
         public DistributionServer()
         {
@@ -57,9 +57,14 @@ namespace ProblemDistribution
             TcpClient client = (TcpClient)tcpClient;
             GlobalLogger.SendLogMessage("ServerTest", "Client Connected {0}", client.Client.RemoteEndPoint.ToString());
 
-            // TODO get data, resolve it and pass it to the distribution calculator
+            Stream s = client.GetStream();
+            BinaryReader br = new BinaryReader(s);
 
-
+            while (true)
+            {
+                Task t = Task.ReadFromStream(br);
+                GlobalLogger.SendLogMessage("ServerTest", "Task received {{{0}, {1}, {2}}}", t.TaskID, t.Longitude, t.Latitude);
+            }
         }
     }
 }

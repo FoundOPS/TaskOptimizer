@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ProblemController.Logging
+namespace ProblemLib.Logging
 {
     public class LoggerEventArgs : EventArgs
     {
