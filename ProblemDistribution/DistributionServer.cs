@@ -62,10 +62,35 @@ namespace ProblemDistribution
 
             while (true)
             {
-                while (client.Available < Task.SerializedLength) ; // wait for data
+                while (client.Available < 2) Thread.Sleep(10); // wait 10ms for data
 
-                Task t = Task.ReadFromStream(br);
-                GlobalLogger.SendLogMessage("ServerTest", "Task received {{{0}, {1}, {2}}}", t.TaskID, t.Longitude, t.Latitude);
+                ushort code = br.ReadUInt16();
+                if (code == 0xD501)
+                {
+                    //while (client.Available < Task.SerializedLength) Thread.Sleep(10); // wait for data
+                    
+                    //Task t = Task.ReadFromStream(br);
+                    //GlobalLogger.SendLogMessage("ServerTest", "Task received {{{0}, {1}, {2}}}", t.TaskID, t.Longitude, t.Latitude);
+
+                    DistributionConfiguration cfg = DistributionConfiguration.ReadFromStream(client, br);
+
+                    GlobalLogger.SendLogMessage("Server", "Distribution Configuration Received!");
+                    GlobalLogger.SendLogMessage("Server", "Controller IP: {0}:{1}", cfg.ControllerServer.ToString(), cfg.ControllerServerPort);
+                    GlobalLogger.SendLogMessage("Server", "Redis IP: {0}:{1}", cfg.RedisServer.ToString(), cfg.RedisServerPort);
+                    GlobalLogger.SendLogMessage("Server", "OSRM IP: {0}:{1}", cfg.OsrmServer.ToString(), cfg.OsrmServerPort);
+                    GlobalLogger.SendLogMessage("Server", "Worker/Cluster Count: {0}", cfg.Workers.Length);
+
+                    foreach (Task[] cluster in cfg.Clusters)
+                    {
+                        GlobalLogger.SendLogMessage("Server", "Task Cluster Size: {0}", cluster.Length);
+                    }
+
+                }
+                else if (code == 0xD502)
+                {
+                    break;
+                }
+
             }
 
 

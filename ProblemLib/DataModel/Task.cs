@@ -96,9 +96,13 @@ namespace ProblemLib.DataModel
             t.CanRearrange = r.ReadBoolean();
             return t;
         }
-
+        /// <summary>
+        /// Returns the length of serialized data
+        /// </summary>
         public static Int32 SerializedLength
         { get { return 17; } }
+
+        #region Overrides
 
         public bool Equals(Task other)
         {
@@ -125,5 +129,8 @@ namespace ProblemLib.DataModel
         {
             return new Task(this);
         }
+        
+        #endregion
+
     }
 }
