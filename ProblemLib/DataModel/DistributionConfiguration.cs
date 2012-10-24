@@ -10,6 +10,8 @@ namespace ProblemLib.DataModel
 {
     public class DistributionConfiguration
     {
+        public Guid ProblemID { get; set; }
+
         public IPAddress ControllerServer { get; set; }
         public UInt16 ControllerServerPort { get; set; }
         public IPAddress RedisServer { get; set; }
@@ -18,11 +20,15 @@ namespace ProblemLib.DataModel
         public UInt16 OsrmServerPort { get; set; }
 
         public Int32 RandomSeed { get; set; }
-        public Task[][] Clusters { get; set; }
+        public Task[] Tasks { get; set; }
         public Worker[] Workers { get; set; }
 
         public void WriteToStream(BinaryWriter s)
         {
+            // Write problem id
+            Byte[] problemid = ProblemID.ToByteArray();
+            s.Write(problemid);
+
             // Serialize IP Addresses
             Byte[] cb = ControllerServer.GetAddressBytes();
             Byte[] rb = RedisServer.GetAddressBytes();
@@ -56,17 +62,18 @@ namespace ProblemLib.DataModel
                 Workers[i].WriteToStream(s);
 
             // Write Clusters
-            for (int i = 0; i < Clusters.Length; i++)
-            {
-                s.Write(Clusters[i].Length);
-                for (int j = 0; j < Clusters[i].Length; j++)
-                    Clusters[i][j].WriteToStream(s);
-            }
+            s.Write(Tasks.Length);
+            for (int i = 0; i < Tasks.Length; i++)
+            { Tasks[i].WriteToStream(s); }
         }
 
         public static DistributionConfiguration ReadFromStream(TcpClient client, BinaryReader br)
         {
             DistributionConfiguration cfg = new DistributionConfiguration();
+
+            while (client.Available < 17) ; // wait for data
+            Byte[] problemid = br.ReadBytes(16);
+            cfg.ProblemID = new Guid(problemid);
 
             Byte addrtype = br.ReadByte();
 
@@ -104,15 +111,13 @@ namespace ProblemLib.DataModel
                 cfg.Workers[i] = Worker.ReadFromStream(br);
 
             // Read Clusters
-            cfg.Clusters = new Task[wcount][];
-            for (int i = 0; i < wcount; i++)
+            while (client.Available < 4) ; // wait for data
+            Int32 tcount = br.ReadInt32();
+            cfg.Tasks = new Task[tcount];
+            for (int i = 0; i < tcount; i++)
             {
-                while (client.Available < 4) ; // wait for data
-                Int32 ccount = br.ReadInt32(); // cluster size
-                cfg.Clusters[i] = new Task[ccount];
-                while (client.Available < ccount * Task.SerializedLength) ; // wait for data
-                for (int j = 0; j < ccount; j++)
-                    cfg.Clusters[i][j] = Task.ReadFromStream(br);
+                while (client.Available < Task.SerializedLength) ; // wait for data
+                cfg.Tasks[i] = Task.ReadFromStream(br);
             }
 
             return cfg;

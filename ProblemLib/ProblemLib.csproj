@@ -61,8 +61,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="API\ControlCodes.cs" />
     <Compile Include="API\OSMContract.cs" />
+    <Compile Include="API\OSRM.cs" />
+    <Compile Include="DataModel\DistributionConfiguration.cs" />
     <Compile Include="DataModel\Task.cs" />
+    <Compile Include="DataModel\Worker.cs" />
     <Compile Include="Logging\ConsoleLogger.cs" />
     <Compile Include="Logging\GlobalLogger.cs" />
     <Compile Include="Logging\Logger.cs" />

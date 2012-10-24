@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using ProblemLib.API;
 using ProblemLib.DataModel;
 using ProblemLib.Logging;
 
@@ -23,70 +24,101 @@ namespace ProblemDistribution
 
     public class DistributionServer
     {
-        const int PORT = 17924;
+        const int Port = 17924;
 
-        private TcpListener tcpListener;
-        private Thread tcpThread;
+        private readonly TcpListener _tcpListener;
+        private readonly Thread _tcpThread;
 
-        private Boolean continueRunning = true;
+        private Boolean _continueRunning = true;
 
         public DistributionServer()
         {
-            this.tcpListener = new TcpListener(IPAddress.Any, PORT);
-            this.tcpThread = new Thread(new ThreadStart(ListenForClinet));
-            this.tcpThread.Start();
+            this._tcpListener = new TcpListener(IPAddress.Any, Port);
+            this._tcpThread = new Thread(new ThreadStart(ListenForClinet));
+            this._tcpThread.Start();
         }
 
         private void ListenForClinet()
         {
-            GlobalLogger.SendLogMessage("Server", "Distribution Server started at {0}", tcpListener.LocalEndpoint.ToString());
+            GlobalLogger.SendLogMessage("Server", "Distribution Server started at {0}", _tcpListener.LocalEndpoint.ToString());
 
-            this.tcpListener.Start();
+            this._tcpListener.Start();
 
-            while (continueRunning)
+            while (_continueRunning)
             {
-                TcpClient client = this.tcpListener.AcceptTcpClient();
+                var client = this._tcpListener.AcceptTcpClient();
 
-                Thread clientThread = new Thread(new ParameterizedThreadStart(StartNewClient));
+                var clientThread = new Thread(new ParameterizedThreadStart(StartNewClient));
                 clientThread.Start(client);
             }
         }
 
         private void StartNewClient(Object tcpClient)
         {
-            TcpClient client = (TcpClient)tcpClient;
-            GlobalLogger.SendLogMessage("ServerTest", "Client Connected {0}", client.Client.RemoteEndPoint.ToString());
+            Boolean runClientThread = true;
 
+            // Get client 
+            var client = (TcpClient)tcpClient;
+            GlobalLogger.SendLogMessage("ServerEvent", "Client Connected {0}", client.Client.RemoteEndPoint.ToString());
+
+            // Get client stream and create writer/reader
             Stream s = client.GetStream();
-            BinaryReader br = new BinaryReader(s);
+            var br = new BinaryReader(s);
+            var bw = new BinaryWriter(s);
 
-            while (true)
+            // Create Optimizer
+            var optimizer = new DistributionOptimizer();
+
+            // Start accepting messages
+            while (runClientThread)
             {
                 while (client.Available < 2) Thread.Sleep(10); // wait 10ms for data
 
                 ushort code = br.ReadUInt16();
-                if (code == 0xD501)
+
+                switch (code)
                 {
-                    //while (client.Available < Task.SerializedLength) Thread.Sleep(10); // wait for data
-                    
-                    //Task t = Task.ReadFromStream(br);
-                    //GlobalLogger.SendLogMessage("ServerTest", "Task received {{{0}, {1}, {2}}}", t.TaskID, t.Longitude, t.Latitude);
+                    case ControlCodes.SendingConfiguration: // configuration data coming!
+                        {
+                            try
+                            {
+                                var cfg = DistributionConfiguration.ReadFromStream(client, br);
 
-                    DistributionConfiguration cfg = DistributionConfiguration.ReadFromStream(client, br);
+                                GlobalLogger.SendLogMessage("Server", "Distribution Configuration Received!");
+                                GlobalLogger.SendLogMessage("Server", "Problem ID: {0}", cfg.ProblemID.ToString());
+                                GlobalLogger.SendLogMessage("Server", "Controller IP: {0}:{1}",
+                                                            cfg.ControllerServer.ToString(), cfg.ControllerServerPort);
+                                GlobalLogger.SendLogMessage("Server", "Redis IP: {0}:{1}", cfg.RedisServer.ToString(),
+                                                            cfg.RedisServerPort);
+                                GlobalLogger.SendLogMessage("Server", "OSRM IP: {0}:{1}", cfg.OsrmServer.ToString(),
+                                                            cfg.OsrmServerPort);
+                                GlobalLogger.SendLogMessage("Server", "Worker Count: {0}", cfg.Workers.Length);
+                                GlobalLogger.SendLogMessage("Server", "Task Count: {0}", cfg.Tasks.Length);
 
-                    GlobalLogger.SendLogMessage("Server", "Distribution Configuration Received!");
-                    GlobalLogger.SendLogMessage("Server", "Controller IP: {0}:{1}", cfg.ControllerServer.ToString(), cfg.ControllerServerPort);
-                    GlobalLogger.SendLogMessage("Server", "Redis IP: {0}:{1}", cfg.RedisServer.ToString(), cfg.RedisServerPort);
-                    GlobalLogger.SendLogMessage("Server", "OSRM IP: {0}:{1}", cfg.OsrmServer.ToString(), cfg.OsrmServerPort);
-                    GlobalLogger.SendLogMessage("Server", "Worker/Cluster Count: {0}", cfg.Workers.Length);
+                                optimizer.Initialize(cfg);
 
-                    foreach (Task[] cluster in cfg.Clusters)
-                    {
-                        GlobalLogger.SendLogMessage("Server", "Task Cluster Size: {0}", cluster.Length);
-                    }
-
+                                // send back acknowledge
+                                bw.Write(ControlCodes.Acknowledge);
+                            } 
+                            catch (Exception ex)
+                            {
+                                GlobalLogger.SendLogMessage("Error", "An exception of type {0} occured: {1}", ex.GetType().FullName, ex.Message);
+                                // send back error code
+                                bw.Write(ControlCodes.Error);
+                            }
+                        }
+                        break;
+                    case ControlCodes.TerminateConnection: // Terminate connection!
+                        runClientThread = false;
+                        break;
                 }
-                else if (code == 0xD502)
+
+
+
+                if (code == ControlCodes.SendingConfiguration) // configuration signal
+                {
+                }
+                else if (code == ControlCodes.TerminateConnection) // Termination signal
                 {
                     break;
                 }
@@ -94,7 +126,7 @@ namespace ProblemDistribution
             }
 
 
-            GlobalLogger.SendLogMessage("ServerTest", "Client Disconnected {0}", client.Client.RemoteEndPoint.ToString());
+            GlobalLogger.SendLogMessage("ServerEvent", "Client Disconnected {0}", client.Client.RemoteEndPoint.ToString());
         }
     }
 }
