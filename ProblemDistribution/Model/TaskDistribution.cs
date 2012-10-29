@@ -7,6 +7,8 @@ using ProblemLib.Interfaces;
 
 namespace ProblemDistribution.Model
 {
+    // Work in progress therefore not commented
+
     class TaskDistribution : Individual, ICloneable
     {
         private DistributionOptimizer optimizer;

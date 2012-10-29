@@ -26,6 +26,9 @@ namespace ProblemDistribution
 
     public class DistributionServer
     {
+        /// <summary>
+        /// Port number that this server uses
+        /// </summary>
         const int Port = 17924;
 
         private readonly TcpListener _tcpListener;
@@ -33,14 +36,21 @@ namespace ProblemDistribution
 
         private Boolean _continueRunning = true;
 
+        /// <summary>
+        /// Constructor.
+        /// Starts the listener thread.
+        /// </summary>
         public DistributionServer()
         {
             this._tcpListener = new TcpListener(IPAddress.Any, Port);
-            this._tcpThread = new Thread(new ThreadStart(ListenForClinet));
+            this._tcpThread = new Thread(new ThreadStart(ListenForClients));
             this._tcpThread.Start();
         }
 
-        private void ListenForClinet()
+        /// <summary>
+        /// Async method that listens for client connections and spawns new threads for each of them.
+        /// </summary>
+        private void ListenForClients()
         {
             GlobalLogger.SendLogMessage("Server", "Distribution Server started at {0}", _tcpListener.LocalEndpoint.ToString());
 
@@ -48,13 +58,17 @@ namespace ProblemDistribution
 
             while (_continueRunning)
             {
-                var client = this._tcpListener.AcceptTcpClient();
+                var client = this._tcpListener.AcceptTcpClient(); // wait for connection
 
-                var clientThread = new Thread(new ParameterizedThreadStart(StartNewClient));
+                // when connection accepted, spawn new thread
+                var clientThread = new Thread(new ParameterizedThreadStart(StartNewClient)); 
                 clientThread.Start(client);
             }
         }
-
+        /// <summary>
+        /// Async method that handles connection for each of the connected clients.
+        /// </summary>
+        /// <param name="tcpClient"></param>
         private void StartNewClient(Object tcpClient)
         {
             Boolean runClientThread = true;
@@ -68,15 +82,15 @@ namespace ProblemDistribution
             var br = new BinaryReader(s);
             var bw = new BinaryWriter(s);
 
-            // Create Optimizer
-            var optimizer = new DistributionOptimizer();
+            // Create Optimizer for this client
+            var optimizer = new DistributionOptimizer(this);
 
             // Start accepting messages
             while (runClientThread)
             {
-                while (client.Available < 2) Thread.Sleep(10); // wait 10ms for data
+                while (client.Available < 2) Thread.Sleep(10); // wait 10ms for control code
 
-                ushort code = br.ReadUInt16();
+                ushort code = br.ReadUInt16(); // read control code
 
                 switch (code)
                 {
@@ -84,8 +98,10 @@ namespace ProblemDistribution
                         {
                             try
                             {
+                                // read configuration from network stream
                                 var cfg = DistributionConfiguration.ReadFromStream(client, br);
 
+                                // Print debug info
                                 GlobalLogger.SendLogMessage("Server", "Distribution Configuration Received!");
                                 GlobalLogger.SendLogMessage("Server", "Problem ID: {0}", cfg.ProblemID.ToString());
                                 GlobalLogger.SendLogMessage("Server", "Controller IP: {0}:{1}",
@@ -97,13 +113,14 @@ namespace ProblemDistribution
                                 GlobalLogger.SendLogMessage("Server", "Worker Count: {0}", cfg.Workers.Length);
                                 GlobalLogger.SendLogMessage("Server", "Task Count: {0}", cfg.Tasks.Length);
 
+                                // initalize the optimizer using the configuration
                                 optimizer.Initialize(cfg);
 
                                 // send back acknowledge
                                 bw.Write(ControlCodes.Acknowledge);
                             }
-                            catch (ProblemLibException x)
-                            {
+                            catch (ProblemLibException x) // ProblemLibException represents expected errors with assigned error codes
+                            { // Expected errors are handed back to the controller
                                 GlobalLogger.SendLogMessage("Error", "An expected error was caught in DistributionServer.StartNewClient()");
                                 GlobalLogger.SendLogMessage("Error", "Error-{0}: {1}", x.ErrorCode, x.InnerException != null ? x.InnerException.Message : "null");
                                 // send back error info
@@ -111,7 +128,7 @@ namespace ProblemDistribution
                                 bw.Write(x.ErrorCode);
                                 bw.Write(x.TimeStamp.Ticks);
                             }
-                            catch (Exception ex)
+                            catch (Exception ex) // any other exception is unexpected
                             {
                                 GlobalLogger.SendLogMessage("Error", "An unexpected exception of type {0} occured: {1}", ex.GetType().FullName, ex.Message);
                                 // send back error info
@@ -122,7 +139,15 @@ namespace ProblemDistribution
                         }
                         break;
                     case ControlCodes.TerminateConnection: // Terminate connection!
-                        runClientThread = false;
+                        {
+                            runClientThread = false;
+                            // NOTE release resources here!
+
+
+                            // Send ACK and terminate connection
+                            bw.Write(ControlCodes.Acknowledge);
+                            client.Close();
+                        }
                         break;
                 }
 

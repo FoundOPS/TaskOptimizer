@@ -69,6 +69,8 @@
     <Compile Include="DataModel\Task.cs" />
     <Compile Include="DataModel\Worker.cs" />
     <Compile Include="ErrorHandling\ProblemLibException.cs" />
+    <Compile Include="Interfaces\Individual.cs" />
+    <Compile Include="Interfaces\Population.cs" />
     <Compile Include="Logging\ConsoleLogger.cs" />
     <Compile Include="Logging\GlobalLogger.cs" />
     <Compile Include="Logging\Logger.cs" />

@@ -10,7 +10,6 @@ namespace ProblemDistribution.Model
     class DistributionOptimizer : Population<TaskDistribution>
     {
         private DistributionServer server;
-        private TaskDistribution bestIndividual;
         private List<Worker> workers;
         private List<Task> tasks;
 
@@ -105,11 +104,17 @@ namespace ProblemDistribution.Model
 
         #region Members of Population<T>
 
+        /// <summary>
+        /// Generates a new population while preserving best individuals
+        /// </summary>
         protected override void RegeneratePopulation()
         {
             throw new NotImplementedException();
         }
-
+        /// <summary>
+        /// Called when a new best individual is detected
+        /// </summary>
+        /// <param name="individual">The best individual</param>
         protected override void OnNewBestIndividual(TaskDistribution individual)
         {
             if (bestIndividual != null && bestIndividual.Fitness == individual.Fitness)
@@ -125,7 +130,9 @@ namespace ProblemDistribution.Model
             bestIndividual = copy;
             base.OnNewBestIndividual(individual);
         }
-
+        /// <summary>
+        /// Run one iteration of optimization
+        /// </summary>
         public override void Optimize()
         {
 

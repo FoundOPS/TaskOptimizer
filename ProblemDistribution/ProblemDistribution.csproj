@@ -41,8 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DistributionOptimizer.cs" />
+    <Compile Include="Model\DistributionOptimizer.cs" />
     <Compile Include="DistributionServer.cs" />
+    <Compile Include="Model\TaskDistribution.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

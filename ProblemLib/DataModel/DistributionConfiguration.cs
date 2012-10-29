@@ -8,6 +8,10 @@ using System.Net.Sockets;
 
 namespace ProblemLib.DataModel
 {
+    /// <summary>
+    /// Configuration data for ProblemDistribution.
+    /// Can be serialized and sent over network.
+    /// </summary>
     public class DistributionConfiguration
     {
         public Guid ProblemID { get; set; }
@@ -23,6 +27,10 @@ namespace ProblemLib.DataModel
         public Task[] Tasks { get; set; }
         public Worker[] Workers { get; set; }
 
+        /// <summary>
+        /// Writes contents of this DistributionConfiguration into the specified stream.
+        /// </summary>
+        /// <param name="s"></param>
         public void WriteToStream(BinaryWriter s)
         {
             // Write problem id
@@ -66,7 +74,12 @@ namespace ProblemLib.DataModel
             for (int i = 0; i < Tasks.Length; i++)
             { Tasks[i].WriteToStream(s); }
         }
-
+        /// <summary>
+        /// Reads a DistributionConfiguration from a specified stream.
+        /// </summary>
+        /// <param name="client">TCP Client that manages the network stream</param>
+        /// <param name="br"></param>
+        /// <returns></returns>
         public static DistributionConfiguration ReadFromStream(TcpClient client, BinaryReader br)
         {
             DistributionConfiguration cfg = new DistributionConfiguration();
