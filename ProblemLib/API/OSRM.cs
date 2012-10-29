@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Runtime.Serialization.Json;
+using ProblemLib.ErrorHandling;
 using ProblemLib.Utilities;
 using ServiceStack.Redis;
 
@@ -51,9 +52,21 @@ namespace ProblemLib.API
             _osrmServer = osrmServer;
             _mClientManager = new PooledRedisClientManager(redisServer);
             _mClient = _mClientManager.GetClient();
+        }
 
-            // Get all cached distance/time entries
-            HashSet<String> values = _mClient.GetAllItemsFromSet(SetIdDistancetime);
+        public void PullCache()
+        {
+            HashSet<String> values;
+
+            try
+            {
+                // Get all cached distance/time entries
+                values = _mClient.GetAllItemsFromSet(SetIdDistancetime);
+            }
+            catch (RedisException x)
+            {
+                throw new ProblemLibException(ErrorCodes.RedisConnectionFailed, x);
+            }
 
             foreach (String entry in values)
             {
@@ -238,7 +251,7 @@ namespace ProblemLib.API
             using (var response = request.GetResponse() as HttpWebResponse)
             {
                 if (response.StatusCode != HttpStatusCode.OK)
-                    throw new Exception(String.Format("Server error (HTTP {0}: {1}).", response.StatusCode, response.StatusDescription));
+                    throw new ProblemLibException(ErrorCodes.OsrmConnectionFailed, new Exception(String.Format("Server error (HTTP {0}: {1}).", response.StatusCode, response.StatusDescription)));
 
                 var jsonSerializer = new DataContractJsonSerializer(typeof(T));
                 var objResponse = jsonSerializer.ReadObject(response.GetResponseStream());
@@ -258,7 +271,7 @@ namespace ProblemLib.API
             using (var response = request.GetResponse() as HttpWebResponse)
             {
                 if (response.StatusCode != HttpStatusCode.OK)
-                    throw new Exception(String.Format("Server error (HTTP {0}: {1}).", response.StatusCode, response.StatusDescription));
+                    throw new ProblemLibException(ErrorCodes.OsrmConnectionFailed, new Exception(String.Format("Server error (HTTP {0}: {1}).", response.StatusCode, response.StatusDescription)));
 
                 var sr = new StreamReader(response.GetResponseStream());
                 var result = sr.ReadToEnd();

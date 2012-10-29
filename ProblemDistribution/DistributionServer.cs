@@ -9,6 +9,8 @@ using System.Threading;
 using ProblemLib.API;
 using ProblemLib.DataModel;
 using ProblemLib.Logging;
+using ProblemLib.ErrorHandling;
+using ProblemDistribution.Model;
 
 namespace ProblemDistribution
 {
@@ -99,28 +101,29 @@ namespace ProblemDistribution
 
                                 // send back acknowledge
                                 bw.Write(ControlCodes.Acknowledge);
-                            } 
+                            }
+                            catch (ProblemLibException x)
+                            {
+                                GlobalLogger.SendLogMessage("Error", "An expected error was caught in DistributionServer.StartNewClient()");
+                                GlobalLogger.SendLogMessage("Error", "Error-{0}: {1}", x.ErrorCode, x.InnerException != null ? x.InnerException.Message : "null");
+                                // send back error info
+                                bw.Write(ControlCodes.Error);
+                                bw.Write(x.ErrorCode);
+                                bw.Write(x.TimeStamp.Ticks);
+                            }
                             catch (Exception ex)
                             {
-                                GlobalLogger.SendLogMessage("Error", "An exception of type {0} occured: {1}", ex.GetType().FullName, ex.Message);
-                                // send back error code
+                                GlobalLogger.SendLogMessage("Error", "An unexpected exception of type {0} occured: {1}", ex.GetType().FullName, ex.Message);
+                                // send back error info
                                 bw.Write(ControlCodes.Error);
+                                bw.Write(ErrorCodes.UnknownError);
+                                bw.Write(DateTime.Now.Ticks);
                             }
                         }
                         break;
                     case ControlCodes.TerminateConnection: // Terminate connection!
                         runClientThread = false;
                         break;
-                }
-
-
-
-                if (code == ControlCodes.SendingConfiguration) // configuration signal
-                {
-                }
-                else if (code == ControlCodes.TerminateConnection) // Termination signal
-                {
-                    break;
                 }
 
             }

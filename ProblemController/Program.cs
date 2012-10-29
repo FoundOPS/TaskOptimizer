@@ -16,7 +16,7 @@ namespace ProblemController
         // Basic structure for problem controller
         static void Main(string[] args)
         {
-
+            // NOTE this is an implementation for testing only!
             var console = new ConsoleLogger();
             GlobalLogger.AttachLogger(console);
             console.Run();
@@ -46,9 +46,9 @@ namespace ProblemController
                 c.ProblemID = Guid.NewGuid();
                 c.ControllerServer = IPAddress.Parse("127.0.0.1");
                 c.ControllerServerPort = 3879;
-                c.RedisServer = IPAddress.Parse("192.168.0.115");
+                c.RedisServer = IPAddress.Parse("192.168.2.31");
                 c.RedisServerPort = 6379;
-                c.OsrmServer = IPAddress.Parse("192.168.0.115");
+                c.OsrmServer = IPAddress.Parse("192.168.2.31");
                 c.OsrmServerPort = 5000;
                 c.RandomSeed = 1234567;
                 c.Workers = new[] { new Worker() { WorkerID = 0 }, new Worker() { WorkerID = 1 }, new Worker() { WorkerID = 2 } };
@@ -66,7 +66,12 @@ namespace ProblemController
                 if (ctrl == ControlCodes.Acknowledge)
                     GlobalLogger.SendLogMessage("ControllerEvent", "Distribution server replied with ACK!");
                 else if (ctrl == ControlCodes.Error)
-                    GlobalLogger.SendLogMessage("DistributionError", "Distribution server encountered an ERROR!");
+                {
+                    while (client.Available < 12) ; // wait for data
+                    UInt32 errcode = br.ReadUInt32();
+                    DateTime ts = new DateTime(br.ReadInt64());
+                    GlobalLogger.SendLogMessage("DistributionError", "Distribution server reported error {0} at {1}:{2}:{3}.{4}", errcode, ts.Hour, ts.Minute, ts.Second, ts.Millisecond);
+                }
             }
             finally
             {

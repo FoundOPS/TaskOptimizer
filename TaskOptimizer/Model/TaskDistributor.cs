@@ -66,12 +66,6 @@ namespace TaskOptimizer.Model
 
             DateTime end = DateTime.Now;
             TimeSpan elapsed = end - start;
-
-
-            if (elapsed.TotalMilliseconds > 300)
-            {
-                int a = 0;
-            }
         }
 
         protected override void OnNewBestIndividual(TaskDistribution individual)
