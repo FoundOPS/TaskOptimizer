@@ -4,22 +4,54 @@ using ProblemLib.API;
 using ProblemLib.Interfaces;
 using ProblemLib.DataModel;
 using System.Collections.Generic;
+using ProblemLib.Logging;
 
 namespace ProblemDistribution.Model
 {
+    /// <summary>
+    /// Server side version of the TaskOptimizer.TaskDistributor
+    /// </summary>
+    /// <remarks>
+    /// Due to multithreaded nature of the server software, nearly all previously statis
+    /// stuff is now exposed via this class.
+    /// </remarks>
     class DistributionOptimizer : Population<TaskDistribution>
     {
         private DistributionServer server;
         private List<Worker> workers;
         private List<Task> tasks;
 
-        // remove this??
+        private Boolean isOptimizingSequences;
+        private Int32 seqOptimizationIterations;
+
+        /// <summary>
+        /// Configuration used for initializing this instance
+        /// </summary>
         public DistributionConfiguration Configuration { get; private set; }
-
+        /// <summary>
+        /// Interface to the OSRM server
+        /// </summary>
         public Osrm Osrm { get; private set; }
+        /// <summary>
+        /// Cost function used by this optimizer instance
+        /// </summary>
+        public ICostFunction CostFunction { get; set; }
 
-        // Public
 
+        public Int32 MutationForce
+        {
+            get
+            {
+                return (Int32)((InitialMutationRate - MutationRate) / (Double)InitialMutationRate * 10);
+            }
+        }
+
+        public Int32 MaxMutations
+        {
+            get { return 0; }
+        }
+
+        
         /// <summary>
         /// Constructor
         /// </summary>
@@ -66,7 +98,7 @@ namespace ProblemDistribution.Model
             for (int i = 0; i < Individuals.Length; i++)
             {
                 // create and initialize task distribution
-                Individuals[i] = new TaskDistribution(this);
+                Individuals[i] = new TaskDistribution(this) { Id = i };
                 Individuals[i].Initialize(workers, tasks, Rand.Next());
 
                 // generate initial solution: fixed for first few and randomized for the rest
@@ -97,11 +129,6 @@ namespace ProblemDistribution.Model
         }
 
 
-        // Protected
-
-
-
-
         #region Members of Population<T>
 
         /// <summary>
@@ -109,7 +136,26 @@ namespace ProblemDistribution.Model
         /// </summary>
         protected override void RegeneratePopulation()
         {
-            throw new NotImplementedException();
+            TaskDistribution best = null;
+            int bestFitness = Int32.MaxValue;
+
+            for (int i = 0; i < _populationSize; i++)
+            {
+                if (Individuals[i].Id != best.Id)
+                {
+                    if (i != 0)
+                        Individuals[i].GenerateInitialSolution();
+                    // TODO grab another good solution from server ??
+                }
+
+                if (Individuals[i].Fitness < bestFitness)
+                {
+                    bestFitness = Individuals[i].Fitness;
+                    best = Individuals[i];
+                }
+            }
+
+            OnNewBestIndividual(best);
         }
         /// <summary>
         /// Called when a new best individual is detected
@@ -135,9 +181,42 @@ namespace ProblemDistribution.Model
         /// </summary>
         public override void Optimize()
         {
+            // compute optimization parameters
+            if (!isOptimizingSequences && NbIterationsWithoutImprovements > MaxIterationsWithoutImprovements)
+            {
+                // target reached, stop optimizing distribution and switch to optimizing sequences of the best distribution
+                bestIndividual.OptimizeSequences = true;
+                seqOptimizationIterations = 0;
 
+                isOptimizingSequences = true;
+                seqOptimizationIterations++;
+            }
+            else if (workers.Count > 1 && isOptimizingSequences &&
+                NbIterationsWithoutImprovements > 2 * MaxIterationsWithoutImprovements)
+            {
+                // restart distribution optimization
+                foreach (TaskDistribution distribution in Individuals)
+                    distribution.OptimizeSequences = false;
+
+                NbIterationsWithoutImprovements = 0;
+                isOptimizingSequences = false;
+            }
+
+            // run optimization
+#if DEBUG   // performance logging only for debug build
+            System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+#endif
 
             base.Optimize();
+
+            if (isOptimizingSequences)
+                OnNewBestIndividual(bestIndividual);
+
+#if DEBUG
+            // Log execution time in debug mode
+            GlobalLogger.SendLogMessage("Performance", "DistributionOptimizer.Optimize(): {0}ms", sw.ElapsedMilliseconds);
+#endif
         }
 
         #endregion

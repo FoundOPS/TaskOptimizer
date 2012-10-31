@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ProblemLib.API;
 
 
 namespace ProblemLib.DataModel
@@ -17,6 +18,8 @@ namespace ProblemLib.DataModel
     /// </remarks>
     public class Task : IEquatable<Task>, ICloneable
     {
+        #region Serialized Properties
+
         /// <summary>
         /// ID of the task
         /// </summary>
@@ -38,6 +41,18 @@ namespace ProblemLib.DataModel
         /// </summary>
         public Boolean CanRearrange { get; set; }
 
+        #endregion
+
+        #region Other Properties (Not Serialized)
+
+        /// <summary>
+        /// Gets coordinates of this task
+        /// 
+        /// </summary>
+        public Coordinate Coordinates { get; private set; }
+
+        #endregion
+
         /// <summary>
         /// Constructor
         /// Only to be used from within the Task class
@@ -54,6 +69,7 @@ namespace ProblemLib.DataModel
             this.TaskID = id;
             this.Longitude = lon;
             this.Latitude = lat;
+            this.Coordinates = new Coordinate(lat, lon);
         }
         /// <summary>
         /// Constructor for cloning tasks.
@@ -92,6 +108,7 @@ namespace ProblemLib.DataModel
             t.TaskID = r.ReadUInt32();
             t.Longitude = r.ReadSingle();
             t.Latitude = r.ReadSingle();
+            t.Coordinates = new Coordinate(t.Latitude, t.Longitude);
             t.TimeOnTask = r.ReadUInt32();
             t.CanRearrange = r.ReadBoolean();
             return t;

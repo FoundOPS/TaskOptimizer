@@ -13,15 +13,13 @@ namespace ProblemDistribution.Model
     {
         private DistributionOptimizer optimizer;
 
-        public int Id
-        {
-            get { throw new NotImplementedException(); }
-        }
+        private Random rand;
 
-        public int Fitness
-        {
-            get { throw new NotImplementedException(); }
-        }
+
+
+
+        public Boolean OptimizeSequences { get; set; }
+
 
 
         public TaskDistribution(DistributionOptimizer optimizer)
@@ -33,6 +31,7 @@ namespace ProblemDistribution.Model
         {
             
         }
+
 
 
         /// <summary>
@@ -55,6 +54,13 @@ namespace ProblemDistribution.Model
         }
 
         #region Members of Individual
+
+        public int Id { get; set; }
+
+        public int Fitness
+        {
+            get { throw new NotImplementedException(); }
+        }
 
         public void Optimize()
         {

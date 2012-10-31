@@ -67,6 +67,7 @@ namespace TaskOptimizer.Model
             return sequence;
         }
 
+
         private int FindCheapestInsert(Task t1, Task t2, IEnumerable<Task> remainingTasks, out Task newTask)
         {
             int minCost = Int32.MaxValue;
