@@ -41,9 +41,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\Cost.cs" />
     <Compile Include="Model\DistributionOptimizer.cs" />
     <Compile Include="DistributionServer.cs" />
+    <Compile Include="Model\NearestInsertSequencer.cs" />
     <Compile Include="Model\TaskDistribution.cs" />
+    <Compile Include="Model\TaskSequence.cs" />
+    <Compile Include="Model\TaskSequencer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -52,6 +56,9 @@
       <Project>{ef76cad2-7235-4465-adef-f119be6bd690}</Project>
       <Name>ProblemLib</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Preprocessing\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

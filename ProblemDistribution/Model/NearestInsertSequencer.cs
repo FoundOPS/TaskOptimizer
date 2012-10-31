@@ -6,11 +6,30 @@ using ProblemLib.DataModel;
 
 namespace ProblemDistribution.Model
 {
+    /// <summary>
+    /// Generates optimal task orders by finding the most optimal insert points
+    /// </summary>
     class NearestInsertSequencer
     {
         private readonly Random rand = new Random(10); // Why a constant random seed ???
-        private DistributionOptimizer optimizer;
+        private readonly DistributionOptimizer optimizer;
 
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="optimizer">DistributionOptimizer that this seuencer belongs to</param>
+        public NearestInsertSequencer(DistributionOptimizer optimizer)
+        {
+            this.optimizer = optimizer;
+        }
+
+        /// <summary>
+        /// Generates a task sequence from remainin tasks and assigns it to the specified
+        /// sequence.
+        /// </summary>
+        /// <param name="remaining">List of remaining tasks</param>
+        /// <param name="tasksInSequence">Number of tasks in a sequence</param>
+        /// <param name="sequence">TaskSequence o assign tasks to</param>
         public void Generate(List<Task> remaining, Int32 tasksInSequence, TaskSequence sequence)
         {
             HashSet<Task> tmpRemaining = new HashSet<Task>(remaining);
@@ -30,13 +49,48 @@ namespace ProblemDistribution.Model
                     task = FindAlmostNearestTask(task, tmpRemaining, 1.0);
                     remaining.Remove(task); // same as above
                     orderedTasks.Add(task);
+
+                    orderedTasks.Add(null);
+
+                    for (int i = 0; i < tasksInSequence; i++)
+                    {
+                        Int32 minCost = Int32.MaxValue;
+                        Task minTask = null;
+                        int minInsertPos = -1;
+
+                        for (int j = 0; j < orderedTasks.Count - 1; j++)
+                        {
+                            int cost = FindCheapestInsert(orderedTasks[j], orderedTasks[j + 2], remaining, out task);
+                            if (cost < minCost)
+                            {
+                                minCost = cost;
+                                minTask = task;
+                                minInsertPos = j;
+                            }
+                        }
+
+                        remaining.Remove(minTask);
+                        orderedTasks.Insert(minInsertPos + 1, minTask);
+                    }
+
+                    orderedTasks.RemoveAt(orderedTasks.Count - 1);
                 }
             }
-        }
 
+            sequence.Tasks = orderedTasks;
+        }
+        /// <summary>
+        /// Generates a task sequence from remaining tasks and assigns it to a new sequence.
+        /// </summary>
+        /// <param name="remaining">List of remaining tasks</param>
+        /// <param name="tasksInSequence">Number of tasks in a sequence</param>
+        /// <param name="w">Worker to assign tasks to</param>
+        /// <returns></returns>
         public TaskSequence Generate(List<Task> remaining, Int32 tasksInSequence, Worker w)
         {
-            throw new NotImplementedException();
+            TaskSequence sequence = new TaskSequence(optimizer) { Worker = w };
+            Generate(remaining, tasksInSequence, sequence);
+            return sequence;
         }
 
         /// <summary>

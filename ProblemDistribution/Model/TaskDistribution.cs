@@ -15,21 +15,64 @@ namespace ProblemDistribution.Model
 
         private Random rand;
 
+        private List<Task> tasks; 
+        private List<Worker> workers;
+        private List<Task>[] distributedTasks;
+        private TaskSequencer[] sequencers;
+        private readonly NearestInsertSequencer nearestInsert;
+        private Int32[] taskDistributedWorker;
+        private Int32[] lastTaskDistributedWorker;
+        private Boolean optimizingSequences = false;
 
 
 
-        public Boolean OptimizeSequences { get; set; }
+        public Boolean OptimizeSequences
+        {
+            get { return optimizingSequences; }
+            set
+            {
+                // TODO Useless Loop?? Cleanup this mess!!
+                foreach (TaskSequencer seq in sequencers)
+                {
+                    if (value) sequencers[0].UseOptimalPopuationSize();
+                    else sequencers[0].PopulationSize = 1;
+                }
+                optimizingSequences = value;
+            }
+        }
 
+        public List<TaskSequence> Sequences { get; private set; } 
 
 
         public TaskDistribution(DistributionOptimizer optimizer)
         {
             this.optimizer = optimizer;
+            nearestInsert = new NearestInsertSequencer(optimizer);
         }
 
         public void Initialize(List<Worker> workers, List<Task> tasks, Int32 randomSeed)
         {
-            
+            rand = new Random(randomSeed);
+
+            // Configure tasks and workers
+            this.tasks = CloneTaskList(tasks);
+            this.workers = workers;
+
+            taskDistributedWorker = new Int32[tasks.Count];
+            lastTaskDistributedWorker = new Int32[tasks.Count];
+            sequencers = new TaskSequencer[workers.Count];
+            distributedTasks = new List<Task>[workers.Count];
+            Sequences = new List<TaskSequence>(workers.Count);
+
+            for (int i = 0; i < workers.Count; i++)
+            {
+                distributedTasks[i] = new List<Task>(tasks.Count);
+                sequencers[i] = new TaskSequencer(tasks.Count);
+                Sequences.Add(null);
+            }
+
+            for (int i = 0; i < tasks.Count; i++)
+                lastTaskDistributedWorker[i] = -1;
         }
 
 
@@ -84,6 +127,18 @@ namespace ProblemDistribution.Model
         public object Clone()
         {
             throw new NotImplementedException();
+        }
+
+        #endregion
+
+        #region Utility Methods
+
+        private static List<Task> CloneTaskList(List<Task> original)
+        {
+            List<Task> cloned = new List<Task>(original.Count);
+            foreach (Task task in original)
+                cloned.Add(task);
+            return cloned;
         }
 
         #endregion

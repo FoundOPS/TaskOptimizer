@@ -33,6 +33,12 @@ namespace ProblemLib.API
         /// </summary>
         public const UInt16 SendingConfiguration = 0xD501;
 
+        /// <summary>
+        /// Tells Distribution to start preprocessing location data.
+        /// Followed by parameters indicating alocated region for each distribution
+        /// </summary>
+        public const UInt16 StartPreprocessing = 0xD502;
+
         #endregion
 
         #region Connection Related Codes

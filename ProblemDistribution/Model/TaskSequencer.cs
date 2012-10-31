@@ -7,5 +7,9 @@ namespace ProblemDistribution.Model
 {
     class TaskSequencer
     {
+        public TaskSequencer(Int32 maxTasks)
+        {
+            
+        }
     }
 }

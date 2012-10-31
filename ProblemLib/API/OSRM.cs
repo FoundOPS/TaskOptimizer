@@ -38,7 +38,7 @@ namespace ProblemLib.API
         // Instance Variables
         // Redis client forthis instance
         private String _redisServer;
-        private String _osrmServer;
+        private readonly String _osrmServer;
         private readonly IRedisClient _mClient;
         // Preprocessed entries cached in memory
         private readonly Dictionary<String, int[]> _mCachedEntries = new Dictionary<string, int[]>();
@@ -54,6 +54,9 @@ namespace ProblemLib.API
             _mClient = _mClientManager.GetClient();
         }
 
+        /// <summary>
+        /// Pulls cached data from OSRM server
+        /// </summary>
         public void PullCache()
         {
             HashSet<String> values;
@@ -287,12 +290,6 @@ namespace ProblemLib.API
             _mClient.Save();
             _mClient.Dispose();
         }
-
-        #endregion
-
-        #region Utility Methods (Caching)
-
-
 
         #endregion
     }
