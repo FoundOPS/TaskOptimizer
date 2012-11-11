@@ -12,5 +12,6 @@ namespace ProblemLib.API
         public const UInt32 RedisConnectionFailed = 0xC800;
         public const UInt32 OsrmConnectionFailed = 0xC801;
 
+        public const UInt32 RedisDistanceTimeCacheCorrupted = 0xC802;
     }
 }

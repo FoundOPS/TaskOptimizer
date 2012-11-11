@@ -31,7 +31,8 @@ namespace ProblemLib.ErrorHandling
         /// Exception wrapped into this exception (if any).
         /// Used for generating log entries.
         /// </summary>
-        public Exception InnerException { get; private set; }
+        public Exception InnerException
+        { get; private set; }
 
     }
 }

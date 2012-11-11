@@ -11,5 +11,12 @@ namespace ProblemDistribution.Model
         {
             
         }
+
+        internal void UseOptimalPopuationSize()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int PopulationSize { get; set; }
     }
 }

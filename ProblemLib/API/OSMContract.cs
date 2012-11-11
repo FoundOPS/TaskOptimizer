@@ -130,10 +130,10 @@ namespace ProblemLib.API
     [DataContract]
     public class Coordinate : IComparable, IComparable<Coordinate>, IEquatable<Coordinate>
     {
-        public Coordinate(double x, double y)
+        public Coordinate(double lat, double lon)
         {
-            lat = x;
-            lon = y;
+            this.lat = lat;
+            this.lon = lon;
         }
 
         [DataMember]
