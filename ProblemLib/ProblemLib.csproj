@@ -64,8 +64,16 @@
     <Compile Include="API\ControlCodes.cs" />
     <Compile Include="API\ErrorCodes.cs" />
     <Compile Include="API\NewOsrm.cs" />
+    <Compile Include="API\Model\DateWindow.cs" />
+    <Compile Include="API\Model\OptimizationRequest.cs" />
+    <Compile Include="API\Model\OptimizationResponse.cs" />
+    <Compile Include="API\Model\Window.cs" />
     <Compile Include="API\OSMContract.cs" />
     <Compile Include="API\OSRM.cs" />
+    <Compile Include="API\Model\Solution.cs" />
+    <Compile Include="API\Model\Task.cs" />
+    <Compile Include="API\Model\TimeWindow.cs" />
+    <Compile Include="API\Model\Resource.cs" />
     <Compile Include="DataModel\DistributionConfiguration.cs" />
     <Compile Include="DataModel\Task.cs" />
     <Compile Include="DataModel\Worker.cs" />
