@@ -128,19 +128,32 @@ namespace ProblemLib.API
     }
 
     [DataContract]
-    public class Coordinate : IComparable, IComparable<Coordinate>, IEquatable<Coordinate>
+    public class Coordinate : 
+        Pair<Double, Double>, IComparable, IComparable<Coordinate>, IEquatable<Coordinate> 
     {
         public Coordinate(double lat, double lon)
+            : base(lat, lon)
         {
             this.lat = lat;
             this.lon = lon;
         }
+        
+        [DataMember]
+        public double lat
+        {
+            get { return First; }
+            set
+            {
+                First = value;
+            }
+        }
 
         [DataMember]
-        public double lat { get; set; }
-
-        [DataMember]
-        public double lon { get; set; }
+        public double lon
+        {
+            get { return Second; }
+            set { Second = value; }
+        }
 
         public double latRad { get { return GeoTools.DegreeToRadian(lat); } }
         public double lonRad { get { return GeoTools.DegreeToRadian(lon); } }

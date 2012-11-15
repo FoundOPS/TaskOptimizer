@@ -48,7 +48,6 @@
     <Compile Include="Model\TaskDistribution.cs" />
     <Compile Include="Model\TaskSequence.cs" />
     <Compile Include="Model\TaskSequencer.cs" />
-    <Compile Include="Preprocessing\PreprocessingPartitioner.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\RedisNumberEncoder.cs" />

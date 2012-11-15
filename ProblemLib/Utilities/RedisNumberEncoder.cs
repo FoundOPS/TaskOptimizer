@@ -4,8 +4,11 @@ using System.Linq;
 using System.Text;
 using ProblemLib.API;
 
-namespace ProblemDistribution.Utilities
+namespace ProblemLib.Utilities
 {
+    /// <summary>
+    /// Encodes/decodes data stored in Redis server
+    /// </summary>
     static class RedisNumberEncoder
     {
         /// <summary>
@@ -90,7 +93,49 @@ namespace ProblemDistribution.Utilities
             }
             catch (FormatException ex)
             {
-                throw new ProblemLib.ErrorHandling.ProblemLibException(ErrorCodes.RedisDistanceTimeCacheCorrupted, ex);
+                throw new ProblemLib.ErrorHandling.ProblemLibException(ErrorCodes.RedisCacheCorrupted, ex);
+            }
+        }
+        /// <summary>
+        /// Encodes a coordinate pair entry into a compact string representation
+        /// that can be stored in Redis. This method does not sort coordinates!
+        /// </summary>
+        /// <param name="c0">First Location</param>
+        /// <param name="c1">Second Location</param>
+        /// <returns></returns>
+        public static String EncodeCoordinatePair(Coordinate c0, Coordinate c1)
+        {
+            Byte[] payload = new Byte[16];
+
+            EncodeSingle((Single)c0.lon, payload, 0);
+            EncodeSingle((Single)c0.lat, payload, 4);
+            EncodeSingle((Single)c1.lon, payload, 8);
+            EncodeSingle((Single)c1.lat, payload, 12);
+            
+            return Convert.ToBase64String(payload);
+        }
+        /// <summary>
+        /// Decodes coordinate pair entry from its compact representation
+        /// </summary>
+        /// <param name="data">Encoded data</param>
+        /// <param name="c0">First Location</param>
+        /// <param name="c1">Second Location</param>
+        public static void DecodeCoordinatePair(String data, out Coordinate c0, out Coordinate c1)
+        {
+            try
+            {
+                Byte[] payload = Convert.FromBase64String(data);
+
+                Single c0lon = BitConverter.ToSingle(payload, 0);
+                Single c0lat = BitConverter.ToSingle(payload, 4);
+                Single c1lon = BitConverter.ToSingle(payload, 8);
+                Single c1lat = BitConverter.ToSingle(payload, 12);
+                c0 = new Coordinate(Math.Round(c0lat, ROUND_DECIMALS), Math.Round(c0lon, ROUND_DECIMALS));
+                c1 = new Coordinate(Math.Round(c1lat, ROUND_DECIMALS), Math.Round(c1lon, ROUND_DECIMALS));
+            }
+            catch (FormatException ex)
+            {
+                throw new ProblemLib.ErrorHandling.ProblemLibException(ErrorCodes.RedisCacheCorrupted, ex);
             }
         }
 

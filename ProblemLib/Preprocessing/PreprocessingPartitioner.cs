@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace TaskOptimizer_PPP
+namespace ProblemLib.Preprocessing
 {
     /// <summary>
     /// Represents a partition of preprocessing data.
     /// </summary>
     /// <typeparam name="T">Type of preprocessing pairs</typeparam>
-    public class PreprocessingPartition<T> : IEnumerable<KeyValuePair<T, T>>, IEnumerator<KeyValuePair<T, T>>
+    public class PreprocessingPartition<T> : IEnumerable<Pair<T, T>>, IEnumerator<Pair<T, T>>
     {
         
         T[] arr;            // One dimension of the preprocessing "grid"
@@ -17,10 +17,12 @@ namespace TaskOptimizer_PPP
         Int32 startY;       // Start Y position of current partition
         Int32 endX;         // Ending X position of current partition
         Int32 endY;         // Ending Y position of current partition
+        Int32 length;       // length of the partition (in # of elements)
 
         // variables used for iteration
         Int32 y;            // Current X position of the iterator
         Int32 x;            // Current Y position of the iterator
+        Int32 cIndex;       // Current Linear Index
 
         /// <summary>
         /// Constructor.
@@ -37,7 +39,7 @@ namespace TaskOptimizer_PPP
         /// <param name="arr"></param>
         /// <param name="start"></param>
         public PreprocessingPartition(T[] arr, Int64 start)
-            : this(arr, start, RowSum(arr.Length, arr.Length) - start) { }
+            : this(arr, start, (int)(RowSum(arr.Length, arr.Length) - start)) { }
 
         /// <summary>
         /// Constructor.
@@ -46,7 +48,7 @@ namespace TaskOptimizer_PPP
         /// <param name="arr"></param>
         /// <param name="start"></param>
         /// <param name="len"></param>
-        public PreprocessingPartition(T[] arr, Int64 start, Int64 len)
+        public PreprocessingPartition(T[] arr, Int64 start, Int32 len)
         {
             this.arr = arr;
 
@@ -62,6 +64,8 @@ namespace TaskOptimizer_PPP
 
             // Calculate ending position
             BoxIndex(start + len - 1, out endX, out endY);
+
+            length = len;
 
             // Set Start
             Reset();
@@ -111,11 +115,16 @@ namespace TaskOptimizer_PPP
             y = ty;
         }
 
+        public Int32 Size
+        { get { return length; } }
+        public Int32 CurrentIndex
+        { get { return cIndex; } }
+
         #endregion
 
         #region IEnumerable Members
 
-        public IEnumerator<KeyValuePair<T, T>> GetEnumerator()
+        public IEnumerator<Pair<T, T>> GetEnumerator()
         {
             return this;
         }
@@ -129,13 +138,13 @@ namespace TaskOptimizer_PPP
 
         #region IEnumerator Members
 
-        public KeyValuePair<T, T> Current
+        public Pair<T, T> Current
         {
             get
             {
                 T lhs = arr[y];
                 T rhs = arr[ReverseIndex(x)];
-                return new KeyValuePair<T, T>(lhs, rhs);
+                return new Pair<T, T>(lhs, rhs);
             }
         }
 
@@ -152,6 +161,7 @@ namespace TaskOptimizer_PPP
         {
             // advance line counter
             x++;
+            cIndex++;
 
             // calculate row change
             Int32 rowLen = ReverseIndex(y);

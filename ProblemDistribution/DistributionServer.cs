@@ -138,6 +138,11 @@ namespace ProblemDistribution
                             }
                         }
                         break;
+                    case ControlCodes.StartPreprocessing:
+                        {
+                            //if (optimizer 
+                        }
+                        break;
                     case ControlCodes.TerminateConnection: // Terminate connection!
                         {
                             runClientThread = false;
@@ -157,4 +162,6 @@ namespace ProblemDistribution
             GlobalLogger.SendLogMessage("ServerEvent", "Client Disconnected {0}", client.Client.RemoteEndPoint.ToString());
         }
     }
+
+    
 }

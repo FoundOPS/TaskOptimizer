@@ -63,6 +63,7 @@
   <ItemGroup>
     <Compile Include="API\ControlCodes.cs" />
     <Compile Include="API\ErrorCodes.cs" />
+    <Compile Include="API\NewOsrm.cs" />
     <Compile Include="API\OSMContract.cs" />
     <Compile Include="API\OSRM.cs" />
     <Compile Include="DataModel\DistributionConfiguration.cs" />
@@ -76,8 +77,12 @@
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LoggerEventArgs.cs" />
     <Compile Include="Logging\PlainTextLogger.cs" />
+    <Compile Include="Preprocessing\PreprocessedDataCache.cs" />
+    <Compile Include="Preprocessing\PreprocessingPartitioner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\GeoTools.cs" />
+    <Compile Include="Utilities\NetworkUtilities.cs" />
+    <Compile Include="Utilities\Pair.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

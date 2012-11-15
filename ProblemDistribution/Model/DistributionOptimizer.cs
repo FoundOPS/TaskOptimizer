@@ -21,13 +21,21 @@ namespace ProblemDistribution.Model
         private List<Worker> workers;
         private List<Task> tasks;
 
+        private Boolean isInitialized = false;
         private Boolean isOptimizingSequences;
         private Int32 seqOptimizationIterations;
 
-        /// <summary>
-        /// Configuration used for initializing this instance
-        /// </summary>
-        public DistributionConfiguration Configuration { get; private set; }
+        #region Preprocessing
+
+        public void PreprocessProblemData(Int32 start, Int32 len, Action<Int32, Int32> progressCallback)
+        {
+            
+        }
+
+        #endregion
+
+        #region Optimizing
+
         /// <summary>
         /// Interface to the OSRM server
         /// </summary>
@@ -36,7 +44,6 @@ namespace ProblemDistribution.Model
         /// Cost function used by this optimizer instance
         /// </summary>
         public ICostFunction CostFunction { get; set; }
-
 
         public Int32 MutationForce
         {
@@ -50,6 +57,7 @@ namespace ProblemDistribution.Model
         {
             get { return 0; }
         }
+
 
         
         /// <summary>
@@ -107,6 +115,8 @@ namespace ProblemDistribution.Model
 
             // first update of the fitness
             UpdateFitness();
+
+            isInitialized = true;
         }
         /// <summary>
         /// Causes this distribution and all its children to reevaluate their fitness values.
@@ -127,6 +137,19 @@ namespace ProblemDistribution.Model
             }
 
         }
+
+        #endregion
+
+        /// <summary>
+        /// Configuration used for initializing this instance
+        /// </summary>
+        public DistributionConfiguration Configuration { get; private set; }
+        /// <summary>
+        /// Returns a boolean indicating whether the optimizer object has been
+        /// initialized.
+        /// </summary>
+        public Boolean IsInitialized
+        { get { return isInitialized; } }
 
 
         #region Members of Population<T>
