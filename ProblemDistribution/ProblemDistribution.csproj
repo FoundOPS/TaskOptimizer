@@ -50,7 +50,6 @@
     <Compile Include="Model\TaskSequencer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utilities\RedisNumberEncoder.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProblemLib\ProblemLib.csproj">

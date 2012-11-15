@@ -77,12 +77,15 @@
     <Compile Include="Logging\Logger.cs" />
     <Compile Include="Logging\LoggerEventArgs.cs" />
     <Compile Include="Logging\PlainTextLogger.cs" />
+    <Compile Include="Preprocessing\ICacheFactory.cs" />
     <Compile Include="Preprocessing\PreprocessedDataCache.cs" />
     <Compile Include="Preprocessing\PreprocessingPartitioner.cs" />
+    <Compile Include="Preprocessing\RedisDataCacheFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utilities\GeoTools.cs" />
     <Compile Include="Utilities\NetworkUtilities.cs" />
     <Compile Include="Utilities\Pair.cs" />
+    <Compile Include="Utilities\RedisNumberEncoder.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
