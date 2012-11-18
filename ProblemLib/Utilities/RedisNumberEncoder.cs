@@ -9,7 +9,7 @@ namespace ProblemLib.Utilities
     /// <summary>
     /// Encodes/decodes data stored in Redis server
     /// </summary>
-    static class RedisNumberEncoder
+    public static class RedisNumberEncoder
     {
         /// <summary>
         /// Number of decimals to leave after decoding Single/Double numbers

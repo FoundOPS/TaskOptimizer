@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProblemDistribution", "Prob
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProblemLib", "ProblemLib\ProblemLib.csproj", "{EF76CAD2-7235-4465-ADEF-F119BE6BD690}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskOptimizerDevKit", "TaskOptimizerDevKit\TaskOptimizerDevKit.csproj", "{1B654D34-25E3-40D6-B0A3-1AA18E7D74C4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{0B82D577-71D3-4700-8A5B-59948DFF3B83}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B82D577-71D3-4700-8A5B-59948DFF3B83}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B82D577-71D3-4700-8A5B-59948DFF3B83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B654D34-25E3-40D6-B0A3-1AA18E7D74C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B654D34-25E3-40D6-B0A3-1AA18E7D74C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B654D34-25E3-40D6-B0A3-1AA18E7D74C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B654D34-25E3-40D6-B0A3-1AA18E7D74C4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3B10FB27-5D63-4613-A698-875DBC5AF2AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3B10FB27-5D63-4613-A698-875DBC5AF2AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B10FB27-5D63-4613-A698-875DBC5AF2AA}.Release|Any CPU.ActiveCfg = Release|Any CPU

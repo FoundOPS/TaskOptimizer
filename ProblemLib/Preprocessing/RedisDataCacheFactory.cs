@@ -34,14 +34,14 @@ namespace ProblemLib.Preprocessing
         }
         
         /// <summary>
-        /// Creates a new cache object and pulls cache data from Redis server.
+        /// Creates a new cache object and pulls existing data from the server.
         /// </summary>
         /// <returns></returns>
         public PreprocessedDataCache CreateCache()
         {
             PreprocessedDataCache cache = new PreprocessedDataCache(this);
-            PullFromStore(cache, CacheType.NearestNode);
-            PullFromStore(cache, CacheType.DistanceTime);
+            this.PullFromStore(cache, CacheType.NearestNode);
+            this.PullFromStore(cache, CacheType.DistanceTime);
             return cache;
         }
 

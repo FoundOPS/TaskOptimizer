@@ -1,4 +1,5 @@
-﻿using ProblemDistribution.Model;
+﻿using System;
+using ProblemDistribution.Model;
 using ProblemLib.API;
 using ProblemLib.DataModel;
 
@@ -30,8 +31,9 @@ namespace ProblemDistribution.Model
                 return 0;
 
             // Get time & Distance
-            int[] distanceTime = optimizer.Osrm.GetDistanceTime(origin.Coordinates, destination.Coordinates);
-            
+          //  int[] distanceTime = optimizer.Osrm.GetDistanceTime(origin.Coordinates, destination.Coordinates);
+            throw new NotImplementedException();
+            /*
             // Calculate cost
             //miles / milesPerGallon * gallonGas
             var distCost = ((distanceTime[0] / 1609.34) / MilesPerGallon) * PricePerGallon;
@@ -44,6 +46,7 @@ namespace ProblemDistribution.Model
             var cost = (timeCost + distCost) * 100;
 
             return (int)cost;
+             * */
         }
     }
 }

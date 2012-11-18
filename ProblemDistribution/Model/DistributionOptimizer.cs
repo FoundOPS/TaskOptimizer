@@ -5,6 +5,8 @@ using ProblemLib.Interfaces;
 using ProblemLib.DataModel;
 using System.Collections.Generic;
 using ProblemLib.Logging;
+using ProblemLib.Preprocessing;
+using ProblemLib;
 
 namespace ProblemDistribution.Model
 {
@@ -18,6 +20,8 @@ namespace ProblemDistribution.Model
     class DistributionOptimizer : Population<TaskDistribution>
     {
         private DistributionServer server;
+        private String osrmAddress;
+        private PreprocessedDataCache cache;
         private List<Worker> workers;
         private List<Task> tasks;
 
@@ -27,8 +31,108 @@ namespace ProblemDistribution.Model
 
         #region Preprocessing
 
-        public void PreprocessProblemData(Int32 start, Int32 len, Action<Int32, Int32> progressCallback)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="len"></param>
+        /// <param name="progressCallback"></param>
+        /// <remarks>
+        /// progressCallback accepts 2 arguments. 1st is operation code. 2nd is current iteration index.
+        /// </remarks>
+        public void PreprocessProblemData(Int64 start, Int32 len, Action<Int32, Int32> progressCallback)
         {
+            // update existing cache
+            cache.Factory.PullFromStore(cache, CacheType.NearestNode);
+            cache.Factory.PullFromStore(cache, CacheType.DistanceTime);
+
+            
+            if (start > 0 && len > 0)
+            {   // preprocess task-task data
+                // create preprocessing partition
+                PreprocessingPartition<Task> partition = new PreprocessingPartition<Task>(tasks.ToArray(), start, len);
+
+                // precalculate progress reporting intervals
+                int interval = partition.Size / 100;
+
+                int counter = 0;
+                int icounter = 0;
+                foreach (Pair<Task, Task> p in partition)
+                {
+                    if (!cache.IsIstanceTimeEntryCached(p.First.Coordinates, p.Second.Coordinates))
+                    {   // preprocess only if not found
+                        // get dt pair from uncached redis api
+                        Pair<Int32, Int32> dt = OsrmAPI.GetDistanceTime(osrmAddress, p.First.Coordinates, p.Second.Coordinates);
+                        // add to cache
+                        cache.AddCachedDistanceTimeEntry(p.First.Coordinates, p.Second.Coordinates, dt);
+                    }
+
+                    counter++;
+                    icounter++;
+
+                    // report progress if necessary
+                    if (icounter >= interval)
+                    {
+                        icounter = 0;
+                        progressCallback(ControlCodes.Preprocessing, counter);
+                    }
+                }
+
+                // wait for permission to upload data
+                progressCallback(ControlCodes.WaitingForSync, counter);
+
+                // upload data
+                try
+                {
+                    cache.Factory.PushToStore(cache, CacheType.DistanceTime);
+                    progressCallback(ControlCodes.Acknowledge, counter);   // upload success, acknowledge
+                }
+                catch (Exception x)
+                {
+                    throw new ProblemLib.ErrorHandling.ProblemLibException(ErrorCodes.RedisConnectionFailed, x);
+                }
+
+            }
+            else if (start == -1 && len == -1)
+            {   // preprocess nearest-node data
+                Task[] taskArray = tasks.ToArray();
+
+                // precalculate progress reporting intervals
+                int interval = taskArray.Length / 100;
+
+                int counter = 0;
+                for (int i = 0; i < taskArray.Length; i++, counter++)
+                {
+                    Coordinate current = taskArray[i].Coordinates;
+                    if (!cache.IsNearestNodeEntryCached(current))
+                    {
+                        Coordinate nearestNode = OsrmAPI.FindNearestNode(osrmAddress, current);
+                        cache.AddCachedNearestNodeEntry(current, nearestNode);
+                    }
+
+                    // report progress every {interval} iterations
+                    if (counter >= interval)
+                    {
+                        counter = 0;
+                        progressCallback(ControlCodes.Preprocessing, i);
+                    }
+                }
+
+                // report final progress and wait for permission to sync
+                progressCallback(ControlCodes.WaitingForSync, taskArray.Length);
+
+                // upload data
+                try
+                {
+                    cache.Factory.PushToStore(cache, CacheType.NearestNode);
+                    progressCallback(ControlCodes.Acknowledge, taskArray.Length);   // upload success, acknowledge
+                }
+                catch (Exception x)
+                {
+                    throw new ProblemLib.ErrorHandling.ProblemLibException(ErrorCodes.RedisConnectionFailed, x);
+                }
+
+            }
             
         }
 
@@ -36,10 +140,6 @@ namespace ProblemDistribution.Model
 
         #region Optimizing
 
-        /// <summary>
-        /// Interface to the OSRM server
-        /// </summary>
-        public Osrm Osrm { get; private set; }
         /// <summary>
         /// Cost function used by this optimizer instance
         /// </summary>
@@ -83,8 +183,11 @@ namespace ProblemDistribution.Model
             
             // create osrm instance
             String redisAddress = String.Format("{0}:{1}", config.RedisServer, config.RedisServerPort);
-            String osrmAddress = String.Format("http://{0}:{1}/", config.OsrmServer, config.OsrmServerPort);
-            Osrm = Osrm.GetInstance(config.ProblemID, redisAddress, osrmAddress);
+            osrmAddress = String.Format("http://{0}:{1}/", config.OsrmServer, config.OsrmServerPort);
+            
+            // create cache
+            RedisDataCacheFactory redisFactory = new RedisDataCacheFactory(config.RedisServer.ToString(), config.RedisServerPort, config.ProblemID);
+            cache = redisFactory.CreateCache();
 
             // configure population size
             int problemComplexity = tasks.Count * workers.Count;

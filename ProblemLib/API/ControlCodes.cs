@@ -42,6 +42,20 @@ namespace ProblemLib.API
 
         #endregion
 
+        #region Preprocessing Codes (0xD6)
+
+        /// <summary>
+        /// Preprocessing in progress
+        /// </summary>
+        public const UInt16 Preprocessing = 0xD600;
+
+        /// <summary>
+        /// Preprocessing finished, waiting for permission to upload data to master server
+        /// </summary>
+        public const UInt16 WaitingForSync = 0xD601;
+
+        #endregion
+
         #region Connection Related Codes
 
         /// <summary>

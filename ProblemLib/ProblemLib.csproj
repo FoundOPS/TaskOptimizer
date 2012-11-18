@@ -63,7 +63,7 @@
   <ItemGroup>
     <Compile Include="API\ControlCodes.cs" />
     <Compile Include="API\ErrorCodes.cs" />
-    <Compile Include="API\NewOsrm.cs" />
+    <Compile Include="API\OsrmAPI.cs" />
     <Compile Include="API\Model\DateWindow.cs" />
     <Compile Include="API\Model\OptimizationRequest.cs" />
     <Compile Include="API\Model\OptimizationResponse.cs" />

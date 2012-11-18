@@ -38,6 +38,12 @@ namespace ProblemLib.Preprocessing
         }
 
         /// <summary>
+        /// Provides access to underlying factory class
+        /// </summary>
+        public ICacheFactory Factory
+        { get { return factory; } }
+
+        /// <summary>
         /// Underlying dictionary for distance-time entries.
         /// For use in ICacheFactory only, do not use unless absolutely necessary!!!
         /// </summary>
@@ -117,7 +123,7 @@ namespace ProblemLib.Preprocessing
             if (distanceTimeCache.ContainsKey(key))
                 throw new ProblemLib.ErrorHandling.ProblemLibException(
                     ErrorCodes.AttemptToAddRedundantCacheEntry,
-                    new Exception(String.Format("Attempt to add a redundant cache entry! Key=({0}, {1});", a, b)));
+                    new Exception(String.Format("Attempt to add a redundant cache entry! Key=({0}, {1});", key.First, key.Second)));
 
             // add entry
             distanceTimeCache.Add(key, dt);
@@ -182,7 +188,7 @@ namespace ProblemLib.Preprocessing
             if (nearestLocationCache.ContainsKey(key))
                throw new ProblemLib.ErrorHandling.ProblemLibException(
                    ErrorCodes.AttemptToAddRedundantCacheEntry,
-                   new Exception(String.Format("Attempt to add a redundant cache entry! Key=({0}, {1});", a, b)));
+                   new Exception(String.Format("Attempt to add a redundant cache entry! Key=({0}, {1});", key.First, key.Second)));
 
             // add entry
             nearestLocationCache.Add(key, value);
