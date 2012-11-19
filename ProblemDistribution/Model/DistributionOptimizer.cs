@@ -17,7 +17,7 @@ namespace ProblemDistribution.Model
     /// Due to multithreaded nature of the server software, nearly all previously statis
     /// stuff is now exposed via this class.
     /// </remarks>
-    class DistributionOptimizer : Population<TaskDistribution>
+    class DistributionOptimizer : Population<TaskDistribution>, IDisposable
     {
         private DistributionServer server;
         private String osrmAddress;
@@ -41,14 +41,14 @@ namespace ProblemDistribution.Model
         /// progressCallback accepts 2 arguments. 1st is operation code. 2nd is current iteration index. 
         /// progressCallback returns true if controller requests termination of preprocessing progress
         /// </remarks>
-        public void PreprocessProblemData(Int64 start, Int32 len, Func<UInt16, Int32, Int32, Boolean> progressCallback)
+        public void PreprocessProblemData(CacheType type, Int64 start, Int32 len, Func<UInt16, Int32, Int32, Boolean> progressCallback)
         {
             // update existing cache
             cache.Factory.PullFromStore(cache, CacheType.NearestNode);
             cache.Factory.PullFromStore(cache, CacheType.DistanceTime);
 
             
-            if (start > 0 && len > 0)
+            if (type == CacheType.DistanceTime)
             {   // preprocess task-task data
                 // create preprocessing partition
                 PreprocessingPartition<Task> partition = new PreprocessingPartition<Task>(tasks.ToArray(), start, len);
@@ -96,10 +96,11 @@ namespace ProblemDistribution.Model
                 }
 
             }
-            else if (start == -1 && len == -1)
+            else if (type == CacheType.NearestNode)
             {   // preprocess nearest-node data
-                Task[] taskArray = tasks.ToArray();
-
+                ProblemLib.DataModel.Task[] taskArray = new ProblemLib.DataModel.Task[len];
+                tasks.CopyTo((int)start, taskArray, 0, len);
+                
                 // precalculate progress reporting intervals
                 int interval = taskArray.Length / 100;
 
@@ -192,6 +193,14 @@ namespace ProblemDistribution.Model
             RedisDataCacheFactory redisFactory = new RedisDataCacheFactory(config.RedisServer.ToString(), config.RedisServerPort, config.ProblemID);
             cache = redisFactory.CreateCache();
 
+            isInitialized = true;
+        }
+
+        /// <summary>
+        /// Prepares this optimizatior for optimization
+        /// </summary>
+        public void InitializeForOptimization()
+        {
             // configure population size
             int problemComplexity = tasks.Count * workers.Count;
             _populationSize = (int)(10 * Math.Log10(problemComplexity) / Math.Log10(Math.E));
@@ -221,9 +230,8 @@ namespace ProblemDistribution.Model
 
             // first update of the fitness
             UpdateFitness();
-
-            isInitialized = true;
         }
+
         /// <summary>
         /// Causes this distribution and all its children to reevaluate their fitness values.
         /// </summary>
@@ -349,5 +357,10 @@ namespace ProblemDistribution.Model
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            cache.Factory.Dispose();
+        }
     }
 }

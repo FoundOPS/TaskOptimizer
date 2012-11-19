@@ -11,6 +11,7 @@ using ProblemLib.DataModel;
 using ProblemLib.Logging;
 using ProblemLib.ErrorHandling;
 using ProblemDistribution.Model;
+using ProblemLib.Preprocessing;
 
 namespace ProblemDistribution
 {
@@ -75,6 +76,9 @@ namespace ProblemDistribution
 
             // Get client 
             var client = (TcpClient)tcpClient;
+            client.ReceiveTimeout = Int32.MaxValue;
+
+            EndPoint clientAddress = client.Client.RemoteEndPoint;
             GlobalLogger.SendLogMessage("ServerEvent", "Client Connected {0}", client.Client.RemoteEndPoint.ToString());
 
             // Get client stream and create writer/reader
@@ -84,8 +88,10 @@ namespace ProblemDistribution
 
             // Create Optimizer for this client
             var optimizer = new DistributionOptimizer(this);
+#if !DEBUG
             try
             {
+#endif
                 // Start accepting messages
                 while (runClientThread)
                 {
@@ -126,7 +132,7 @@ namespace ProblemDistribution
                                 // create a callback delegate, returns true if abort signal received
                                 Func<UInt16, Int32, Int32, Boolean> progressCallback = (UInt16 cb_code, Int32 cb_entry, Int32 cb_capacity) =>
                                     {
-                                        // send code & progress to controller
+                                        // send code & progress to controller (10 bytes)
                                         bw.Write(cb_code);
                                         bw.Write(cb_entry);
                                         bw.Write(cb_capacity);
@@ -146,12 +152,19 @@ namespace ProblemDistribution
                                     };
                                 
                                 // read configuration from network
-                                while (client.Available < 12) ; // wait for data
+                                while (client.Available < 13) ; // wait for data
+                                CacheType type = (CacheType)br.ReadByte();
                                 Int64 start = br.ReadInt64();
                                 Int32 length = br.ReadInt32();
 
+                                GlobalLogger.SendLogMessage("Preprocessing", "Preprocessing parameters received!");
+                                GlobalLogger.SendLogMessage("Preprocessing", "Type = {0}; Start = {1}; Length = {2}", type, start, length);
+
+                                // ack reception of data
+                                bw.Write(ControlCodes.Acknowledge);
+
                                 // start work
-                                optimizer.PreprocessProblemData(start, length, progressCallback);
+                                optimizer.PreprocessProblemData(type, start, length, progressCallback);
                             }
                             break;
                         case ControlCodes.TerminateConnection: // Terminate connection!
@@ -159,6 +172,7 @@ namespace ProblemDistribution
                                 runClientThread = false;
                                 // NOTE release resources here!
 
+                                
 
                                 // Send ACK and terminate connection
                                 bw.Write(ControlCodes.Acknowledge);
@@ -166,9 +180,11 @@ namespace ProblemDistribution
                             }
                             break;
                     }
-
                 }
+
+#if !DEBUG                
             }
+     
             catch (ProblemLibException x) // ProblemLibException represents expected errors with assigned error codes
             { // Expected errors are handed back to the controller
                 GlobalLogger.SendLogMessage("Error", "An expected error was caught in DistributionServer.StartNewClient()");
@@ -178,6 +194,7 @@ namespace ProblemDistribution
                 bw.Write(x.ErrorCode);
                 bw.Write(x.TimeStamp.Ticks);
             }
+
             catch (Exception ex) // any other exception is unexpected
             {
                 GlobalLogger.SendLogMessage("Error", "An unexpected exception of type {0} occured: {1}", ex.GetType().FullName, ex.Message);
@@ -186,8 +203,9 @@ namespace ProblemDistribution
                 bw.Write(ErrorCodes.UnknownError);
                 bw.Write(DateTime.Now.Ticks);
             }
+#endif
 
-            GlobalLogger.SendLogMessage("ServerEvent", "Client Disconnected {0}", client.Client.RemoteEndPoint.ToString());
+            GlobalLogger.SendLogMessage("ServerEvent", "Client Disconnected {0}", clientAddress.ToString());
         }
     }
 

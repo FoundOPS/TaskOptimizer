@@ -18,7 +18,7 @@ namespace ProblemLib.Preprocessing
     /// Factory for creating cache data.
     /// Should also contain all the interfacing with persistent store.
     /// </summary>
-    public interface ICacheFactory
+    public interface ICacheFactory : IDisposable
     {
         /// <summary>
         /// Creates a data cache object.

@@ -1,4 +1,4 @@
-﻿#define USE_DEBUG_INNER
+﻿//#define USE_DEBUG_INNER
 
 using System;
 using System.Collections.Generic;

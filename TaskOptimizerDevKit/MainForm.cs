@@ -139,35 +139,19 @@ namespace TaskOptimizerDevKit
 
         #endregion
 
-        private void btnPpCfgGenId_Click(object sender, EventArgs e)
+
+        private void button2_Click(object sender, EventArgs e)
         {
-            Guid id = Guid.NewGuid();
-            txtPpCfgId.Text = id.ToString();
+            pprocStateMan.SetCurrentState("wsPprocConfig");
         }
 
-        private void btnPpCfgRedisPing_Click(object sender, EventArgs e)
-        {
-            if (!Utils.IsValidIp(txtPpCfgRedisAddr.Text))
-            {
-                erp.Clear();
-                erp.SetError(txtPpCfgRedisAddr, "Value not a valid IP!");
-                return;
-            }
 
-            pprocRedisPing.Address = Utils.ToIpAddress(txtPpCfgRedisAddr.Text);
-        }
 
-        private void btnPpCfgOsrmPing_Click(object sender, EventArgs e)
-        {
-            if (!Utils.IsValidIp(txtPpCfgOsrmAddr.Text))
-            {
-                erp.Clear();
-                erp.SetError(txtPpCfgOsrmAddr, "Value not a valid IP!");
-                return;
-            }
 
-            pprocOsrmPing.Address = Utils.ToIpAddress(txtPpCfgOsrmAddr.Text);
-        }
+
+ 
+
+        
 
     }
 }

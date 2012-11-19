@@ -140,5 +140,10 @@ namespace ProblemLib.Preprocessing
                     break;
             }
         }
+
+        public void Dispose()
+        {
+            redisServer.Dispose();
+        }
     }
 }

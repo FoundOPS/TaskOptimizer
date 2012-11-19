@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using ProblemLib.Logging;
 using ProblemLib.Preprocessing;
 using ProblemLib.Utilities;
 
@@ -56,7 +57,14 @@ namespace ProblemLib.API
             String actionString = "nearest?loc=" + c.lat + "," + c.lon;
             LocResponse response = NetworkUtilities.JsonRequest<LocResponse>(
                 new Uri(osrmAddress + actionString));
+
+            if (response.Mapped_Coordinate.Length < 2)
+            {
+                GlobalLogger.SendLogMessage("OSRM_Error", "Coordinate out of bounds ({0}, {1})", c.First, c.Second);
+                return new Coordinate(0, 0);
+            }
             return new Coordinate(response.Mapped_Coordinate[0], response.Mapped_Coordinate[1]);
+
         }
 
         /// <summary>
