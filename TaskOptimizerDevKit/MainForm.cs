@@ -11,16 +11,19 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using ProblemLib;
 using ProblemLib.API;
+using Nightingale; 
 
 namespace TaskOptimizerDevKit
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
         const String LOCATION_LIST_FILE = "locations.csv";
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
+
+            InitializePreprocessing();
         }
 
         #region Global Events/Data
@@ -44,7 +47,6 @@ namespace TaskOptimizerDevKit
         }
 
         #endregion
-
 
         #region OSRM API Calls
 
@@ -85,7 +87,6 @@ namespace TaskOptimizerDevKit
                 lbOsrmArgs.EndUpdate();
             }
         }
-
 
         private void btnOsrmSubmit_Click(object sender, EventArgs e)
         {
@@ -131,8 +132,42 @@ namespace TaskOptimizerDevKit
             }
         }
 
+        private void llnOsrmClear_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            lbOsrmArgs.Items.Clear();
+        }
+
         #endregion
 
+        private void btnPpCfgGenId_Click(object sender, EventArgs e)
+        {
+            Guid id = Guid.NewGuid();
+            txtPpCfgId.Text = id.ToString();
+        }
+
+        private void btnPpCfgRedisPing_Click(object sender, EventArgs e)
+        {
+            if (!Utils.IsValidIp(txtPpCfgRedisAddr.Text))
+            {
+                erp.Clear();
+                erp.SetError(txtPpCfgRedisAddr, "Value not a valid IP!");
+                return;
+            }
+
+            pprocRedisPing.Address = Utils.ToIpAddress(txtPpCfgRedisAddr.Text);
+        }
+
+        private void btnPpCfgOsrmPing_Click(object sender, EventArgs e)
+        {
+            if (!Utils.IsValidIp(txtPpCfgOsrmAddr.Text))
+            {
+                erp.Clear();
+                erp.SetError(txtPpCfgOsrmAddr, "Value not a valid IP!");
+                return;
+            }
+
+            pprocOsrmPing.Address = Utils.ToIpAddress(txtPpCfgOsrmAddr.Text);
+        }
 
     }
 }

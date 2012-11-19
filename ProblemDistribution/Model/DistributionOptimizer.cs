@@ -38,9 +38,10 @@ namespace ProblemDistribution.Model
         /// <param name="len"></param>
         /// <param name="progressCallback"></param>
         /// <remarks>
-        /// progressCallback accepts 2 arguments. 1st is operation code. 2nd is current iteration index.
+        /// progressCallback accepts 2 arguments. 1st is operation code. 2nd is current iteration index. 
+        /// progressCallback returns true if controller requests termination of preprocessing progress
         /// </remarks>
-        public void PreprocessProblemData(Int64 start, Int32 len, Action<Int32, Int32> progressCallback)
+        public void PreprocessProblemData(Int64 start, Int32 len, Func<UInt16, Int32, Int32, Boolean> progressCallback)
         {
             // update existing cache
             cache.Factory.PullFromStore(cache, CacheType.NearestNode);
@@ -74,18 +75,20 @@ namespace ProblemDistribution.Model
                     if (icounter >= interval)
                     {
                         icounter = 0;
-                        progressCallback(ControlCodes.Preprocessing, counter);
+                        if (progressCallback(ControlCodes.Preprocessing, counter, partition.Size))
+                            return;
                     }
                 }
 
                 // wait for permission to upload data
-                progressCallback(ControlCodes.WaitingForSync, counter);
+                if (progressCallback(ControlCodes.WaitingForSync, counter, partition.Size))
+                    return;
 
                 // upload data
                 try
                 {
                     cache.Factory.PushToStore(cache, CacheType.DistanceTime);
-                    progressCallback(ControlCodes.Acknowledge, counter);   // upload success, acknowledge
+                    progressCallback(ControlCodes.Acknowledge, counter, partition.Size);   // upload success, acknowledge
                 }
                 catch (Exception x)
                 {
@@ -114,18 +117,18 @@ namespace ProblemDistribution.Model
                     if (counter >= interval)
                     {
                         counter = 0;
-                        progressCallback(ControlCodes.Preprocessing, i);
+                        if (progressCallback(ControlCodes.Preprocessing, i, taskArray.Length)) return;
                     }
                 }
 
                 // report final progress and wait for permission to sync
-                progressCallback(ControlCodes.WaitingForSync, taskArray.Length);
+                if (progressCallback(ControlCodes.WaitingForSync, taskArray.Length, taskArray.Length)) return;
 
                 // upload data
                 try
                 {
                     cache.Factory.PushToStore(cache, CacheType.NearestNode);
-                    progressCallback(ControlCodes.Acknowledge, taskArray.Length);   // upload success, acknowledge
+                    progressCallback(ControlCodes.Acknowledge, taskArray.Length, taskArray.Length);   // upload success, acknowledge
                 }
                 catch (Exception x)
                 {

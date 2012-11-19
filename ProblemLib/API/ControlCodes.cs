@@ -19,6 +19,11 @@ namespace ProblemLib.API
         public const UInt16 RequestResend = 0xD401;
 
         /// <summary>
+        /// Requests remote end to calcel current action/task/query.
+        /// </summary>
+        public const UInt16 AbortAction = 0xD402;
+
+        /// <summary>
         /// Represents an error message indicating that the data received caused
         /// an error. May be followed by an error message.
         /// </summary>

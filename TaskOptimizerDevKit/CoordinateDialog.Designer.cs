@@ -80,6 +80,7 @@
             this.Controls.Add(this.listBox1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Name = "CoordinateDialog";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Coordinate Selector";
             this.Load += new System.EventHandler(this.CoordinateDialog_Load);
             this.ResumeLayout(false);

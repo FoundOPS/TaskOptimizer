@@ -84,20 +84,20 @@ namespace ProblemDistribution
 
             // Create Optimizer for this client
             var optimizer = new DistributionOptimizer(this);
-
-            // Start accepting messages
-            while (runClientThread)
+            try
             {
-                while (client.Available < 2) Thread.Sleep(10); // wait 10ms for control code
-
-                ushort code = br.ReadUInt16(); // read control code
-
-                switch (code)
+                // Start accepting messages
+                while (runClientThread)
                 {
-                    case ControlCodes.SendingConfiguration: // configuration data coming!
-                        {
-                            try
+                    while (client.Available < 2) Thread.Sleep(10); // wait 10ms for control code
+
+                    ushort code = br.ReadUInt16(); // read control code
+
+                    switch (code)
+                    {
+                        case ControlCodes.SendingConfiguration: // configuration data coming!
                             {
+
                                 // read configuration from network stream
                                 var cfg = DistributionConfiguration.ReadFromStream(client, br);
 
@@ -118,46 +118,74 @@ namespace ProblemDistribution
 
                                 // send back acknowledge
                                 bw.Write(ControlCodes.Acknowledge);
+
                             }
-                            catch (ProblemLibException x) // ProblemLibException represents expected errors with assigned error codes
-                            { // Expected errors are handed back to the controller
-                                GlobalLogger.SendLogMessage("Error", "An expected error was caught in DistributionServer.StartNewClient()");
-                                GlobalLogger.SendLogMessage("Error", "Error-{0}: {1}", x.ErrorCode, x.InnerException != null ? x.InnerException.Message : "null");
-                                // send back error info
-                                bw.Write(ControlCodes.Error);
-                                bw.Write(x.ErrorCode);
-                                bw.Write(x.TimeStamp.Ticks);
-                            }
-                            catch (Exception ex) // any other exception is unexpected
+                            break;
+                        case ControlCodes.StartPreprocessing:
                             {
-                                GlobalLogger.SendLogMessage("Error", "An unexpected exception of type {0} occured: {1}", ex.GetType().FullName, ex.Message);
-                                // send back error info
-                                bw.Write(ControlCodes.Error);
-                                bw.Write(ErrorCodes.UnknownError);
-                                bw.Write(DateTime.Now.Ticks);
+                                // create a callback delegate, returns true if abort signal received
+                                Func<UInt16, Int32, Int32, Boolean> progressCallback = (UInt16 cb_code, Int32 cb_entry, Int32 cb_capacity) =>
+                                    {
+                                        // send code & progress to controller
+                                        bw.Write(cb_code);
+                                        bw.Write(cb_entry);
+                                        bw.Write(cb_capacity);
+
+                                        // wait for ack/abort orders if needed
+                                        while (cb_code != ControlCodes.Acknowledge) // if the code is ack there is no need for reply
+                                        {
+                                            while (client.Available < 2) ;
+
+                                            // wait for either ack or abort, otherwise continue waiting
+                                            UInt16 cb_orders = br.ReadUInt16();
+                                            if (cb_orders == ControlCodes.Acknowledge) return false;
+                                            else if (cb_orders == ControlCodes.AbortAction) return true;
+                                        }
+
+                                        return false;
+                                    };
+                                
+                                // read configuration from network
+                                while (client.Available < 12) ; // wait for data
+                                Int64 start = br.ReadInt64();
+                                Int32 length = br.ReadInt32();
+
+                                // start work
+                                optimizer.PreprocessProblemData(start, length, progressCallback);
                             }
-                        }
-                        break;
-                    case ControlCodes.StartPreprocessing:
-                        {
-                            //if (optimizer 
-                        }
-                        break;
-                    case ControlCodes.TerminateConnection: // Terminate connection!
-                        {
-                            runClientThread = false;
-                            // NOTE release resources here!
+                            break;
+                        case ControlCodes.TerminateConnection: // Terminate connection!
+                            {
+                                runClientThread = false;
+                                // NOTE release resources here!
 
 
-                            // Send ACK and terminate connection
-                            bw.Write(ControlCodes.Acknowledge);
-                            client.Close();
-                        }
-                        break;
+                                // Send ACK and terminate connection
+                                bw.Write(ControlCodes.Acknowledge);
+                                client.Close();
+                            }
+                            break;
+                    }
+
                 }
-
             }
-
+            catch (ProblemLibException x) // ProblemLibException represents expected errors with assigned error codes
+            { // Expected errors are handed back to the controller
+                GlobalLogger.SendLogMessage("Error", "An expected error was caught in DistributionServer.StartNewClient()");
+                GlobalLogger.SendLogMessage("Error", "Error-{0}: {1}", x.ErrorCode, x.InnerException != null ? x.InnerException.Message : "null");
+                // send back error info
+                bw.Write(ControlCodes.Error);
+                bw.Write(x.ErrorCode);
+                bw.Write(x.TimeStamp.Ticks);
+            }
+            catch (Exception ex) // any other exception is unexpected
+            {
+                GlobalLogger.SendLogMessage("Error", "An unexpected exception of type {0} occured: {1}", ex.GetType().FullName, ex.Message);
+                // send back error info
+                bw.Write(ControlCodes.Error);
+                bw.Write(ErrorCodes.UnknownError);
+                bw.Write(DateTime.Now.Ticks);
+            }
 
             GlobalLogger.SendLogMessage("ServerEvent", "Client Disconnected {0}", client.Client.RemoteEndPoint.ToString());
         }
