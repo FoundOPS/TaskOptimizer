@@ -5,37 +5,18 @@
 Ex. a route with 3 employees and 3 vehicles
 
 Properties
-- Scheduled time hard or soft constraint ?????????
-	- 1/1/2012 3 pm to 1/1/2012 5 pm 
-- Skills
-	- leaf collection, 10/10 efficiency
-	- landscaping, 3/10 efficiency
-	- tree removal, 5/10 efficiency
+
+- Scheduled time
+	- 1/1/2012 3 pm to 1/1/2012 5 pm
+- Overtime (if not defined: hard constraint)
+	- 125%
+- Skills/Cost
+	- leaf collection, $10/hour
+	- landscaping, $12/hour
+	- tree removal, $15/hour
 - Capacities
 	- volume, 3000 (gallons)
 	- weight, 1000 (lbs)
-- Cost ????????? overtime
-
-**Task Type** Ex. leaf collection, Id = a
-
-**Skill** The ability to complete a task type
-
-Properties
-
-- TaskType: The Id of the TaskType this skill can complete. 
-	- a (leaf collection)
-- Efficiency: A multiplier of how efficient this is (reducing cost)
-	- 3/10
-- ?? is efficiency related to cost, maybe the efficiency is merged w cost
-
-**Capacity**
-
-Properties
-
-- Id: The type of capacity constraint
-	- a (volume)
-- Amount: The numeric capacity amount
-	- 500 (cubic feet)
 
 **Task** Ex. fix toilet
 
@@ -45,31 +26,22 @@ Properties
 	- $200
 - Skill Constraint
 	- Leaf collection, hard
-- Time Constraint
-	- 3 - 5 pm, soft, 1.3 penalty ????
+- Window Constraints
+	- 3 - 5 pm, 125% penalty (soft)
+- (FUTURE) Linked task - must be consecutively done
 
 Questions: Dynamic value
 		- worth more if performed by specific resources (higher rating resource group)
 
-**Skill Constraint : IConstraint**
+**Constraints**
 
-**Time Constraint : IConstraint**
+Hard constraints cannot charge price for a task if not met.
 
-**IConstraint**
-
-Hard: cannot charge price for a task if not met.
-Soft: price penalty if not met.
-
-Properties
-
-- TaskTypeId: The skill required type 
-- Multiplier: 0
-	- 0, it's a hard constraint
-	- .3, multiplier to cost
+Soft constraints charge a penalty cost (if resource group) or price (if task).
 
 **Utility**
 
-??Value - cost
+Value - Cost
 
 ## Use Cases ##
 
@@ -91,6 +63,7 @@ Goal: Optimize the industry utility of tasks & resource
 - 65,000 Tasks
 
 Continually add tasks to the system
+
 Remove a resource (24) hours before it needs to be used
 
 ## Design Concepts ##
@@ -99,6 +72,7 @@ Remove a resource (24) hours before it needs to be used
 
 Stop entire request
 
+	- Single company: optimize for ideal amount (until efficiency gains <= computing cost)
 	- Single company: optimize for 5 minutes
 
 Never stop it. Remove tasks a threshold before they need to be performed (and remove assigned availability on resources).
