@@ -1,34 +1,53 @@
 ###Terms###
 
-**Resource Group**: A group of resources available to complete tasks during a specified period of time
+1) **Resource Group**
+
+A group of resources available to complete tasks.
 
 Ex. a route with 3 employees and 3 vehicles
 
 Properties
 
-- Scheduled time
-	- 1/1/2012 3 pm to 1/1/2012 5 pm
-- Overtime (if not defined: hard constraint)
-	- 125%
-- Skills/Cost
-	- leaf collection, $10/hour
-	- landscaping, $12/hour
-	- tree removal, $15/hour
-- Capacities
-	- volume, 3000 (gallons)
-	- weight, 1000 (lbs)
+- StartPoint
+	- 1305 Cumberland Ave, 47906
+- Scheduled
+	- 1/1/2012 9 am to 1/1/2012 5 pm
+- Task Capabilities / Time Efficiency
+	- leaf collection, 10/10
+	- landscaping, 3/10
+	- tree removal, 7/10
+- Wage
+	- $50 / hour
 
-**Task** Ex. fix toilet
+FUTURE
+
+- ?? Capacities (if any filled must return to location before continuing skill)
+	- volume, 3000 (gallons), 12414 English Garden Court, 47906 or .....
+	- weight, 1000 (lbs)
+- Overtime (if not defined: hard constraint)
+	- 125% (first hour, employee specific, etc)
+
+- Maximum distance before refueled
+
+2) **Task** Ex. fix toilet
 
 Properties
 
+- Type
+	- Leaf collection
 - Price: The monetary reward for completing a task
 	- $200
-- Skill Constraint
-	- Leaf collection, hard
-- Window Constraints
-	- 3 - 5 pm, 125% penalty (soft)
-- (FUTURE) Linked task - must be consecutively done
+- Time
+	- 30 minutes
+- Window Constraints - Penalty (1-100%)
+	- 3 - 5 pm, 1/1/2012 - 1/2/2012, 100%
+	- 1 - 4 pm, 1/3/2012 - 1/5/2012, 25%
+
+FUTURE
+- Capacity
+	- 100 lbs
+- Linked task - must be done consecutively or serially & or in the same group
+- Dynamic price in the future (script api for internal variables: distance previous location)
 
 Questions: Dynamic value
 		- worth more if performed by specific resources (higher rating resource group)
@@ -52,21 +71,13 @@ Goal: Optimize the utility of tasks & resources for the week
 Parameters
 
 - 10,000 Tasks
+- 50 Resource Groups
 
-**Industry Use**
-
-Goal: Optimize the industry utility of tasks & resource 
-
-- 25,000 Resource Groups
-	- 3 available time windows each
-	- belonging to 10,000 different resource group ids
-- 65,000 Tasks
-
-Continually add tasks to the system
-
-Remove a resource (24) hours before it needs to be used
 
 ## Design Concepts ##
+
+**When to start the algorithm**
+
 
 **When to stop the algorithm**
 
@@ -74,11 +85,6 @@ Stop entire request
 
 	- Single company: optimize for ideal amount (until efficiency gains <= computing cost)
 	- Single company: optimize for 5 minutes
-
-Never stop it. Remove tasks a threshold before they need to be performed (and remove assigned availability on resources).
-
-	- Single company: optimize until 12 hours before resources are used
-	- Industry: lock tasks 24 hours before their service
 
 **Meta heuristics**
 
@@ -90,3 +96,26 @@ Never stop it. Remove tasks a threshold before they need to be performed (and re
 **Scalability**
 
 Partition by creating optimization requests for tasks and resources that do not have overlapping skills
+
+Use distance oracle when cache > 1/2 of memory (8 gb worth of cache ~ 5,000 locations); if everything is in memory. Could store some and prioritize.
+
+
+**(FUTURE: LIVE DISPATCHING/SEPERATE ALGORITHM)**
+
+Adding tasks on demand
+
+Goal: Optimize the industry utility of tasks & resources
+
+- 25,000 Resource Groups
+	- 3 available time windows each
+	- belonging to 10,000 different resource group ids
+- 65,000 Tasks
+
+Continually add tasks to the system
+
+Remove a resource (24) hours before it needs to be used
+
+Never stop it. Remove tasks a threshold before they need to be performed (and remove assigned availability on resources).
+
+	- Single company: optimize until 12 hours before resources are used
+	- Industry: lock tasks 24 hours before their service
