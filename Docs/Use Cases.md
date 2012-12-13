@@ -42,6 +42,9 @@ Properties
 - Window Constraints - Penalty (1-100%)
 	- 3 - 5 pm, 1/1/2012 - 1/2/2012, 100%
 	- 1 - 4 pm, 1/3/2012 - 1/5/2012, 25%
+- Optional Target Date & Last Date
+	Ensure jobs happen on a user defined recurrence. By penalizing exponentially weight of distance from target date
+
 
 FUTURE
 - Capacity
